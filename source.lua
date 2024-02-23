@@ -53,7 +53,14 @@ local Target = nil
 if RunService:IsStudio() then
     Fluent = require(script:WaitForChild("Fluent", math.huge))
 else
-    Fluent = loadstring(game:HttpGet("https://ttwizz.su/Fluent.txt", true))()
+    local Success, Result = pcall(function()
+        return game:HttpGet("https://ttwizz.su/Fluent.txt", true)
+    end)
+    if Success and string.find(Result, "dawid") then
+        Fluent = loadstring(game:HttpGet("https://ttwizz.su/Fluent.txt", true))()
+    else
+        Fluent = loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
+    end
 end
 
 
@@ -114,6 +121,9 @@ do
     })
     task.spawn(function()
         while task.wait(1) do
+            if not Fluent then
+                break
+            end
             if AimPartDropdown.Value == "Random" then
                 Configuration.AimPart = AimPartDropdown.Values[math.random(1, 2)]
             end
