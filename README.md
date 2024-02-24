@@ -1,4 +1,4 @@
-<div style="text-align: center">
+<div align="center">
     <h1>Open Aimbot</h1>
     <p>
         <!-- GitHub Releases -->
@@ -49,7 +49,7 @@ Open Aimbot is a **universal** open source utility. It offers a wide selection o
 loadstring(game:HttpGet("https://raw.githubusercontent.com/ttwizz/Open-Aimbot/master/source.lua", true))()
 ```
 
-<p style="text-align: center">
+<p align="center">
     <img src="https://gyazo.com/fabd3ffc2cd0035dafacfdbc1e46a52e.gif" alt="OpenAimbot" />
     Copyright (c) 2024 ttwiz_z
 </p>
