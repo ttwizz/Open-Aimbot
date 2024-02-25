@@ -5,9 +5,9 @@
         <a href="https://github.com/ttwizz/Open-Aimbot/releases">
             <img src="icons/github-icon.svg" alt="GitHub Releases" />
         </a>
-        <!-- Discord -->
+        <!-- Discord Server -->
         <a href="https://dsc.gg/pixx">
-            <img src="icons/discord-icon.svg" alt="Discord Server Invite" />
+            <img src="icons/discord-icon.svg" alt="Discord Server" />
         </a>
     </p>
     <!-- Project Information -->
@@ -36,7 +36,7 @@ ___
 ### Open Aimbot
 Open Aimbot is a **universal** open source utility. It offers a wide selection of extensive functionality, including:
 - ***Detection Bypasses***
-- *Team*, *Friend*, *Wall*, *Transparency* Checks
+- *Team*, *Friend*, *Wall*, *Magnitude*, *Transparency* Checks
 - Ability to set *Sensitivity*, *Activation Keys*, *Target Objects*, *Display Notification Logs*, *ESP* and other more subtle options
 - Availability of *Security Warnings* and *Maximum User-Friendliness*
 - A *Beautiful* and *Unique Interface* that supports *Minimization*, *Maximization* and even ***Resizing***
@@ -50,6 +50,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/ttwizz/Open-Aimbot/ma
 ```
 
 <p align="center">
-    <img src="https://gyazo.com/fabd3ffc2cd0035dafacfdbc1e46a52e.gif" alt="OpenAimbot" />
+    <img src="https://gyazo.com/fabd3ffc2cd0035dafacfdbc1e46a52e.gif" alt="Open Aimbot" />
     Copyright (c) 2024 ttwiz_z
 </p>

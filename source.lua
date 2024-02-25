@@ -1,11 +1,13 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
+    Release 1.2
     
-    Author: @ttwiz_z
+    Author: ttwiz_z (ttwizz)
     License: MIT
     GitHub: https://github.com/ttwizz/Open-Aimbot
 --]]
+
 
 
 --// Configuration
@@ -19,6 +21,8 @@ Configuration.AimPart = "HumanoidRootPart"
 Configuration.TeamCheck = false
 Configuration.FriendCheck = false
 Configuration.WallCheck = false
+Configuration.MagnitudeCheck = false
+Configuration.TriggerMagnitude = 500
 Configuration.TransparencyCheck = false
 Configuration.IgnoredTransparency = 0.5
 Configuration.ESP = false
@@ -72,7 +76,7 @@ do
         SubTitle = "By @ttwiz_z",
         TabWidth = 160,
         Size = UDim2.fromOffset(580, 460),
-        Acrylic = true,
+        Acrylic = false,
         Theme = "Rose"
     })
 
@@ -144,6 +148,23 @@ do
     WallCheckToggle:OnChanged(function(Value)
         Configuration.WallCheck = Value
     end)
+
+    local MagnitudeCheckToggle = Tabs.Aimbot:AddToggle("MagnitudeCheckToggle", { Title = "Magnitude Check", Description = "Toggles the Magnitude Check", Default = Configuration.MagnitudeCheck })
+    MagnitudeCheckToggle:OnChanged(function(Value)
+        Configuration.MagnitudeCheck = Value
+    end)
+
+    local TriggerMagnitudeSlider = Tabs.Aimbot:AddSlider("TriggerMagnitudeSlider", {
+        Title = "Trigger Magnitude",
+        Description = "Distance between the Native and the Target Character",
+        Default = Configuration.TriggerMagnitude,
+        Min = 10,
+        Max = 1000,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.TriggerMagnitude = math.round(Value)
+        end
+    })
 
     local TransparencyCheckToggle = Tabs.Aimbot:AddToggle("TransparencyCheckToggle", { Title = "Transparency Check", Description = "Toggles the Transparency Check", Default = Configuration.TransparencyCheck })
     TransparencyCheckToggle:OnChanged(function(Value)
@@ -330,17 +351,26 @@ local function IsReady(Target)
     if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
         local _Player = Players:GetPlayerFromCharacter(Target)
         local TargetPart = Target:FindFirstChild(Configuration.AimPart)
+        local NativePart = nil
+        if (Configuration.WallCheck or Configuration.MagnitudeCheck) and Player.Character and Player.Character:FindFirstChild(Configuration.AimPart) and Player.Character:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
+            NativePart = Player.Character:FindFirstChild(Configuration.AimPart)
+        end
         if Configuration.TeamCheck and _Player.TeamColor == Player.TeamColor then
             return false
         elseif Configuration.FriendCheck and _Player:IsFriendsWith(Player.UserId) then
             return false
-        elseif Configuration.WallCheck and Player.Character then
-            local RayDirection = Camera.CFrame.Position - TargetPart.Position
+        elseif Configuration.WallCheck and NativePart then
+            local RayDirection = (TargetPart.Position - NativePart.Position).Unit * (TargetPart.Position - NativePart.Position).Magnitude
             local RaycastParameters = RaycastParams.new()
             RaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
             RaycastParameters.FilterDescendantsInstances = {Player.Character}
-            local RaycastResult = workspace:Raycast(TargetPart.Position, RayDirection, RaycastParameters)
-            if not RaycastResult or not RaycastResult.Instance or not (RaycastResult.Instance:FindFirstAncestor(_Player.Name) or RaycastResult.Instance:GetFullName() == "Workspace.Body") then
+            local RaycastResult = workspace:Raycast(NativePart.Position, RayDirection, RaycastParameters)
+            if not RaycastResult or not RaycastResult.Instance or not RaycastResult.Instance:FindFirstAncestor(_Player.Name) then
+                return false
+            end
+        elseif Configuration.MagnitudeCheck and NativePart then
+            local Magnitude = (TargetPart.Position - NativePart.Position).Magnitude
+            if Magnitude > Configuration.TriggerMagnitude then
                 return false
             end
         elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
@@ -407,7 +437,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     local Vector, IsInViewport = Camera:WorldToViewportPoint(Part.Position)
                     if IsInViewport then
                         local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if Magnitude < Configuration.TriggerDistance and not Target then
+                        if Magnitude <= Configuration.TriggerDistance and not Target then
                             Target = Character
                             CreateESP(Target)
                             Notify(string.format("[Target]: @%s", _Player.Name))
