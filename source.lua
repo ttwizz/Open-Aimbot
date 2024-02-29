@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.2
+    Release 1.3
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -15,20 +15,21 @@
 local Configuration = {}
 
 Configuration.Aimbot = false
-Configuration.ShowNotifications = true
 Configuration.AimKey = "V"
 Configuration.AimPart = "HumanoidRootPart"
+Configuration.ESP = false
 Configuration.TeamCheck = false
 Configuration.FriendCheck = false
 Configuration.WallCheck = false
+Configuration.DistanceCheck = false
+Configuration.TriggerDistance = 100
 Configuration.MagnitudeCheck = false
 Configuration.TriggerMagnitude = 500
 Configuration.TransparencyCheck = false
 Configuration.IgnoredTransparency = 0.5
-Configuration.ESP = false
-Configuration.TriggerDistance = 100
 Configuration.UseSensitivity = false
 Configuration.Sensitivity = 0.1
+Configuration.ShowNotifications = true
 
 
 --// Services
@@ -90,17 +91,14 @@ do
         Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
-    local AimbotToggle = Tabs.Aimbot:AddToggle("AimbotToggle", { Title = "Aimbot Toggle", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
+    local AimbotSection = Tabs.Aimbot:AddSection("Aimbot")
+
+    local AimbotToggle = AimbotSection:AddToggle("AimbotToggle", { Title = "Aimbot Toggle", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
     AimbotToggle:OnChanged(function(Value)
         Configuration.Aimbot = Value
     end)
 
-    local NotificationsToggle = Tabs.Aimbot:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = Configuration.ShowNotifications })
-    NotificationsToggle:OnChanged(function(Value)
-        Configuration.ShowNotifications = Value
-    end)
-
-    local AimKeybind = Tabs.Aimbot:AddKeybind("AimKeybind", {
+    local AimKeybind = AimbotSection:AddKeybind("AimKeybind", {
         Title = "Aim Key",
         Description = "Changes the Aim Key",
         Mode = "Hold",
@@ -111,7 +109,7 @@ do
     })
     Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
 
-    local AimPartDropdown = Tabs.Aimbot:AddDropdown("AimPartDropdown", {
+    local AimPartDropdown = AimbotSection:AddDropdown("AimPartDropdown", {
         Title = "Aim Part",
         Description = "Changes the Aim Part",
         Values = {"Head", "HumanoidRootPart", "Random"},
@@ -134,56 +132,9 @@ do
         end
     end)
 
-    local TeamCheckToggle = Tabs.Aimbot:AddToggle("TeamCheckToggle", { Title = "Team Check", Description = "Toggles the Team Check", Default = Configuration.TeamCheck })
-    TeamCheckToggle:OnChanged(function(Value)
-        Configuration.TeamCheck = Value
-    end)
+    local ESPSection = Tabs.Aimbot:AddSection("ESP")
 
-    local FriendCheckToggle = Tabs.Aimbot:AddToggle("FriendCheckToggle", { Title = "Friend Check", Description = "Toggles the Friend Check", Default = Configuration.FriendCheck })
-    FriendCheckToggle:OnChanged(function(Value)
-        Configuration.FriendCheck = Value
-    end)
-
-    local WallCheckToggle = Tabs.Aimbot:AddToggle("WallCheckToggle", { Title = "Wall Check", Description = "Toggles the Wall Check", Default = Configuration.WallCheck })
-    WallCheckToggle:OnChanged(function(Value)
-        Configuration.WallCheck = Value
-    end)
-
-    local MagnitudeCheckToggle = Tabs.Aimbot:AddToggle("MagnitudeCheckToggle", { Title = "Magnitude Check", Description = "Toggles the Magnitude Check", Default = Configuration.MagnitudeCheck })
-    MagnitudeCheckToggle:OnChanged(function(Value)
-        Configuration.MagnitudeCheck = Value
-    end)
-
-    local TriggerMagnitudeSlider = Tabs.Aimbot:AddSlider("TriggerMagnitudeSlider", {
-        Title = "Trigger Magnitude",
-        Description = "Distance between the Native and the Target Character",
-        Default = Configuration.TriggerMagnitude,
-        Min = 10,
-        Max = 1000,
-        Rounding = 1,
-        Callback = function(Value)
-            Configuration.TriggerMagnitude = math.round(Value)
-        end
-    })
-
-    local TransparencyCheckToggle = Tabs.Aimbot:AddToggle("TransparencyCheckToggle", { Title = "Transparency Check", Description = "Toggles the Transparency Check", Default = Configuration.TransparencyCheck })
-    TransparencyCheckToggle:OnChanged(function(Value)
-        Configuration.TransparencyCheck = Value
-    end)
-
-    local IgnoredTransparencySlider = Tabs.Aimbot:AddSlider("IgnoredTransparencySlider", {
-        Title = "Ignored Transparency",
-        Description = "Target is ignored if its Transparency is > than or = to the set one",
-        Default = Configuration.IgnoredTransparency,
-        Min = 0.1,
-        Max = 1,
-        Rounding = 1,
-        Callback = function(Value)
-            Configuration.IgnoredTransparency = Value
-        end
-    })
-
-    local ESPToggle = Tabs.Aimbot:AddToggle("ESPToggle", { Title = "ESP", Description = "ESPs the Target", Default = Configuration.ESP })
+    local ESPToggle = ESPSection:AddToggle("ESPToggle", { Title = "ESP", Description = "ESPs the Target", Default = Configuration.ESP })
     ESPToggle:OnChanged(function(Value)
         if not Value then
             Configuration.ESP = Value
@@ -209,7 +160,31 @@ do
         end
     end)
 
-    local TriggerDistanceSlider = Tabs.Aimbot:AddSlider("TriggerDistanceSlider", {
+    local SimpleChecksSection = Tabs.Aimbot:AddSection("Simple Checks")
+
+    local TeamCheckToggle = SimpleChecksSection:AddToggle("TeamCheckToggle", { Title = "Team Check", Description = "Toggles the Team Check", Default = Configuration.TeamCheck })
+    TeamCheckToggle:OnChanged(function(Value)
+        Configuration.TeamCheck = Value
+    end)
+
+    local FriendCheckToggle = SimpleChecksSection:AddToggle("FriendCheckToggle", { Title = "Friend Check", Description = "Toggles the Friend Check", Default = Configuration.FriendCheck })
+    FriendCheckToggle:OnChanged(function(Value)
+        Configuration.FriendCheck = Value
+    end)
+
+    local WallCheckToggle = SimpleChecksSection:AddToggle("WallCheckToggle", { Title = "Wall Check", Description = "Toggles the Wall Check", Default = Configuration.WallCheck })
+    WallCheckToggle:OnChanged(function(Value)
+        Configuration.WallCheck = Value
+    end)
+
+    local AdvancedChecksSection = Tabs.Aimbot:AddSection("Advanced Checks")
+
+    local DistanceCheckToggle = AdvancedChecksSection:AddToggle("DistanceCheckToggle", { Title = "Distance Check", Description = "Toggles the Distance Check", Default = Configuration.DistanceCheck })
+    DistanceCheckToggle:OnChanged(function(Value)
+        Configuration.DistanceCheck = Value
+    end)
+
+    local TriggerDistanceSlider = AdvancedChecksSection:AddSlider("TriggerDistanceSlider", {
         Title = "Trigger Distance",
         Description = "Distance between the Mouse and the Aim Part",
         Default = Configuration.TriggerDistance,
@@ -221,12 +196,48 @@ do
         end
     })
 
-    local UseSensitivityToggle = Tabs.Aimbot:AddToggle("UseSensitivityToggle", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
+    local MagnitudeCheckToggle = AdvancedChecksSection:AddToggle("MagnitudeCheckToggle", { Title = "Magnitude Check", Description = "Toggles the Magnitude Check", Default = Configuration.MagnitudeCheck })
+    MagnitudeCheckToggle:OnChanged(function(Value)
+        Configuration.MagnitudeCheck = Value
+    end)
+
+    local TriggerMagnitudeSlider = AdvancedChecksSection:AddSlider("TriggerMagnitudeSlider", {
+        Title = "Trigger Magnitude",
+        Description = "Distance between the Native and the Target Character",
+        Default = Configuration.TriggerMagnitude,
+        Min = 10,
+        Max = 1000,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.TriggerMagnitude = math.round(Value)
+        end
+    })
+
+    local TransparencyCheckToggle = AdvancedChecksSection:AddToggle("TransparencyCheckToggle", { Title = "Transparency Check", Description = "Toggles the Transparency Check", Default = Configuration.TransparencyCheck })
+    TransparencyCheckToggle:OnChanged(function(Value)
+        Configuration.TransparencyCheck = Value
+    end)
+
+    local IgnoredTransparencySlider = AdvancedChecksSection:AddSlider("IgnoredTransparencySlider", {
+        Title = "Ignored Transparency",
+        Description = "Target is ignored if its Transparency is > than or = to the set one",
+        Default = Configuration.IgnoredTransparency,
+        Min = 0.1,
+        Max = 1,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.IgnoredTransparency = Value
+        end
+    })
+
+    local SensitivitySection = Tabs.Aimbot:AddSection("Sensitivity")
+
+    local UseSensitivityToggle = SensitivitySection:AddToggle("UseSensitivityToggle", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
     UseSensitivityToggle:OnChanged(function(Value)
         Configuration.UseSensitivity = Value
     end)
 
-    local SensitivitySlider = Tabs.Aimbot:AddSlider("SensitivitySlider", {
+    local SensitivitySlider = SensitivitySection:AddSlider("SensitivitySlider", {
         Title = "Sensitivity",
         Description = "Makes the Camera Smooth when Aiming",
         Default = Configuration.Sensitivity,
@@ -237,6 +248,13 @@ do
             Configuration.Sensitivity = Value
         end
     })
+
+    local NotificationsSection = Tabs.Aimbot:AddSection("Notifications")
+
+    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = Configuration.ShowNotifications })
+    NotificationsToggle:OnChanged(function(Value)
+        Configuration.ShowNotifications = Value
+    end)
 
     local UISection = Tabs.Settings:AddSection("UI")
 
@@ -437,7 +455,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     local Vector, IsInViewport = Camera:WorldToViewportPoint(Part.Position)
                     if IsInViewport then
                         local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if Magnitude <= Configuration.TriggerDistance and not Target then
+                        if Magnitude <= (Configuration.DistanceCheck and Configuration.TriggerDistance or math.huge) and not Target then
                             Target = Character
                             CreateESP(Target)
                             Notify(string.format("[Target]: @%s", _Player.Name))
