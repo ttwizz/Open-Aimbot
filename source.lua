@@ -10,7 +10,7 @@
 
 
 
---// Configuration
+--! Configuration
 
 local Configuration = {}
 
@@ -32,7 +32,7 @@ Configuration.Sensitivity = 0.1
 Configuration.ShowNotifications = true
 
 
---// Services
+--! Services
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -42,14 +42,14 @@ local Debris = game:GetService("Debris")
 local TweenService = game:GetService("TweenService")
 
 
---// Constants
+--! Constants
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 local Camera = workspace.CurrentCamera
 
 
---// Fields
+--! Fields
 
 local Fluent = nil
 local Aiming = false
@@ -69,7 +69,7 @@ else
 end
 
 
---// UI Initialization
+--! UI Initialization
 
 do
     local Window = Fluent:CreateWindow({
@@ -184,7 +184,7 @@ do
         Configuration.DistanceCheck = Value
     end)
 
-    local TriggerDistanceSlider = AdvancedChecksSection:AddSlider("TriggerDistanceSlider", {
+    AdvancedChecksSection:AddSlider("TriggerDistanceSlider", {
         Title = "Trigger Distance",
         Description = "Distance between the Mouse and the Aim Part",
         Default = Configuration.TriggerDistance,
@@ -201,7 +201,7 @@ do
         Configuration.MagnitudeCheck = Value
     end)
 
-    local TriggerMagnitudeSlider = AdvancedChecksSection:AddSlider("TriggerMagnitudeSlider", {
+    AdvancedChecksSection:AddSlider("TriggerMagnitudeSlider", {
         Title = "Trigger Magnitude",
         Description = "Distance between the Native and the Target Character",
         Default = Configuration.TriggerMagnitude,
@@ -218,7 +218,7 @@ do
         Configuration.TransparencyCheck = Value
     end)
 
-    local IgnoredTransparencySlider = AdvancedChecksSection:AddSlider("IgnoredTransparencySlider", {
+    AdvancedChecksSection:AddSlider("IgnoredTransparencySlider", {
         Title = "Ignored Transparency",
         Description = "Target is ignored if its Transparency is > than or = to the set one",
         Default = Configuration.IgnoredTransparency,
@@ -237,7 +237,7 @@ do
         Configuration.UseSensitivity = Value
     end)
 
-    local SensitivitySlider = SensitivitySection:AddSlider("SensitivitySlider", {
+    SensitivitySection:AddSlider("SensitivitySlider", {
         Title = "Sensitivity",
         Description = "Makes the Camera Smooth when Aiming",
         Default = Configuration.Sensitivity,
@@ -316,7 +316,7 @@ do
 end
 
 
---// Notification Handler
+--! Notification Handler
 
 local function Notify(Message)
     if Fluent and Configuration.ShowNotifications then
@@ -332,7 +332,7 @@ end
 Notify("Successfully initialized!")
 
 
---// Resetting Fields
+--! Resetting Fields
 
 local function ResetFields()
     Aiming = false
@@ -340,7 +340,7 @@ local function ResetFields()
 end
 
 
---// Binding Key
+--! Binding Key
 
 local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
     if not Fluent then
@@ -363,7 +363,7 @@ local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Inpu
 end)
 
 
---// Checking Target
+--! Checking Target
 
 local function IsReady(Target)
     if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
@@ -401,14 +401,14 @@ local function IsReady(Target)
 end
 
 
---// String Generation
+--! String Generation
 
 local function GenerateString()
     return string.lower(string.reverse(string.sub(HttpService:GenerateGUID(false), 1, 8)))
 end
 
 
---// ESP Creation
+--! ESP Creation
 
 local function CreateESP(Character)
     if Configuration.ESP and not Character:FindFirstChildWhichIsA("SelectionBox") then
@@ -434,7 +434,7 @@ local function CreateESP(Character)
 end
 
 
---// Aimbot Loop
+--! Aimbot Loop
 
 local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
     pcall(function()
