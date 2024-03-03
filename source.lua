@@ -678,10 +678,10 @@ function ESPLibrary:Initialize(Target)
             self.NameESP.Text = string.format("@%s", self.Player.Name)
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady
-            self.NameESP.Visible = Configuration.NameESP and IsCharacterReady
-            self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady
         end
+        self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
+        self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
+        self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady and IsInViewport
     end
     return self
 end
@@ -719,10 +719,10 @@ function ESPLibrary:Visualize()
             self.TracerESP.Color = Configuration.ESPColour
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady
-            self.NameESP.Visible = Configuration.NameESP and IsCharacterReady
-            self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady
         end
+        self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
+        self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
+        self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady and IsInViewport
     end
 end
 
