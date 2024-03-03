@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.4.3
+    Release 1.4.4
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -561,6 +561,7 @@ local function Visualize(Object)
         FoV.Thickness = Configuration.FoVThickness
         FoV.Transparency = Configuration.FoVTransparency
         FoV.Color = Configuration.FoVColour
+        FoV.NumSides = 1000
         FoV.Filled = false
         if FoV.ZIndex then
             FoV.ZIndex = 2
