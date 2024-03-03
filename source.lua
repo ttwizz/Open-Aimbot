@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.3
+    Release 1.4
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -97,9 +97,7 @@ do
         Theme = "Rose"
     })
 
-    local Tabs = {
-        Aimbot = Window:AddTab({ Title = "Aimbot", Icon = "bot" })
-    }
+    local Tabs = { Aimbot = Window:AddTab({ Title = "Aimbot", Icon = "bot" }) }
 
     Tabs.Aimbot:AddParagraph({
         Title = "Open Aimbot",
@@ -608,24 +606,22 @@ local function Visualize(Object)
     end
 end
 
-local Visuals = {
-    FoV = Visualize("FoV")
-}
+local Visuals = { FoV = Visualize("FoV") }
 
 local function ClearVisual(Visual)
-    if Visual then
+    if Visual and table.find(Visuals, Visual) then
         if Visual.Destroy then
             Visual:Destroy()
-        else
+        elseif Visual.Remove then
             Visual:Remove()
         end
+        table.remove(Visuals, table.find(Visuals, Visual))
     end
 end
 
 local function ClearVisuals()
-    for Index, Visual in next, Visuals do
+    for _, Visual in next, Visuals do
         ClearVisual(Visual)
-        table.remove(Visuals, Index)
     end
 end
 
@@ -644,6 +640,7 @@ local function VisualizeFoV()
 end
 
 local ESPLibrary = {}
+
 ESPLibrary.__index = ESPLibrary
 
 function ESPLibrary:Initialize(Target)
@@ -666,6 +663,10 @@ function ESPLibrary:Initialize(Target)
     local Head = self.Character:FindFirstChild("Head")
     local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
     if Head and HumanoidRootPart then
+        local IsCharacterReady = true
+        if Configuration.SmartESP then
+            IsCharacterReady = IsReady(self.Character)
+        end
         local HumanoidRootPartPosition, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
         local TopPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position + Vector3.new(0, 0.5, 0))
         local BottomPosition = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Vector3.new(0, 3, 0))
@@ -675,9 +676,9 @@ function ESPLibrary:Initialize(Target)
             self.NameESP.Text = string.format("@%s", self.Player.Name)
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.ESPBox.Visible = Configuration.ESPBox
-            self.NameESP.Visible = Configuration.NameESP
-            self.TracerESP.Visible = Configuration.TracerESP
+            self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady
+            self.NameESP.Visible = Configuration.NameESP and IsCharacterReady
+            self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady
         end
     end
     return self
@@ -693,6 +694,10 @@ function ESPLibrary:Visualize()
     local Head = self.Character:FindFirstChild("Head")
     local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
     if Head and HumanoidRootPart then
+        local IsCharacterReady = true
+        if Configuration.SmartESP then
+            IsCharacterReady = IsReady(self.Character)
+        end
         local HumanoidRootPartPosition, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
         local TopPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position + Vector3.new(0, 0.5, 0))
         local BottomPosition = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Vector3.new(0, 3, 0))
@@ -712,9 +717,9 @@ function ESPLibrary:Visualize()
             self.TracerESP.Color = Configuration.ESPColour
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.ESPBox.Visible = Configuration.ESPBox
-            self.NameESP.Visible = Configuration.NameESP
-            self.TracerESP.Visible = Configuration.TracerESP
+            self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady
+            self.NameESP.Visible = Configuration.NameESP and IsCharacterReady
+            self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady
         end
     end
 end
@@ -725,9 +730,6 @@ function ESPLibrary:Disconnect()
     ClearVisual(self.ESPBox)
     ClearVisual(self.NameESP)
     ClearVisual(self.TracerESP)
-    table.remove(Visuals, table.find(Visuals, self.ESPBox))
-    table.remove(Visuals, table.find(Visuals, self.NameESP))
-    table.remove(Visuals, table.find(Visuals, self.TracerESP))
 end
 
 
@@ -744,14 +746,8 @@ end
 
 local function CharacterAdded(_Character)
     if _Character then
-        if Configuration.SmartESP then
-            local IsCharacterReady, Character = IsReady(_Character)
-            if IsCharacterReady then
-                Tracking[#Tracking + 1] = ESPLibrary:Initialize(Character)
-            end
-        else
-            Tracking[#Tracking + 1] = ESPLibrary:Initialize(_Character)
-        end
+        local _Player = Players:GetPlayerFromCharacter(_Character)
+        Tracking[_Player.UserId] = ESPLibrary:Initialize(_Character)
     end
 end
 
@@ -766,14 +762,28 @@ local function CharacterRemoving(_Character)
     end
 end
 
-local function DisconnectConnections()
-    for Index, Connection in next, Connections do
-        Connection:Disconnect()
+local function DisconnectTracking(Index)
+    if Index and Tracking[Index] then
+        Tracking[Index]:Disconnect()
+        table.remove(Tracking, Index)
+    end
+end
+
+local function DisconnectConnection(Index)
+    if Index and Connections[Index] then
+        for _, Connection in next, Connections[Index] do
+            Connection:Disconnect()
+        end
         table.remove(Connections, Index)
     end
-    for Index, Tracked in next, Tracking do
-        Tracked:Disconnect()
-        table.remove(Tracking, Index)
+end
+
+local function DisconnectConnections()
+    for Index, _ in next, Connections do
+        DisconnectConnection(Index)
+    end
+    for Index, _ in next, Tracking do
+        DisconnectTracking(Index)
     end
 end
 
@@ -783,8 +793,7 @@ local function InitializePlayers()
             if _Player ~= Player and _Player.Character then
                 local _Character = _Player.Character
                 CharacterAdded(_Character)
-                Connections[#Connections + 1] = _Player.CharacterAdded:Connect(CharacterAdded)
-                Connections[#Connections + 1] = _Player.CharacterRemoving:Connect(CharacterRemoving)
+                Connections[_Player.UserId] = { _Player.CharacterAdded:Connect(CharacterAdded), _Player.CharacterRemoving:Connect(CharacterRemoving) }
             end
         end
     end
@@ -800,17 +809,23 @@ local PlayerAdded; PlayerAdded = Players.PlayerAdded:Connect(function(_Player)
         PlayerAdded:Disconnect()
     end
     if _Player ~= Player then
-        Connections[#Connections + 1] = _Player.CharacterAdded:Connect(CharacterAdded)
-        Connections[#Connections + 1] = _Player.CharacterRemoving:Connect(CharacterRemoving)
+        Connections[_Player.UserId] = { _Player.CharacterAdded:Connect(CharacterAdded), _Player.CharacterRemoving:Connect(CharacterRemoving) }
     end
 end)
 
 local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_Player)
-    if Fluent and _Player == Player then
-        Fluent:Destroy()
-        ResetFields()
-        DisconnectConnections()
-        ClearVisuals()
+    if Fluent then
+        if _Player == Player then
+            Fluent:Destroy()
+            ResetFields()
+            DisconnectConnections()
+            ClearVisuals()
+            PlayerRemoving:Disconnect()
+        else
+            DisconnectConnection(_Player.UserId)
+            DisconnectTracking(_Player.UserId)
+        end
+    else
         PlayerRemoving:Disconnect()
     end
 end)
