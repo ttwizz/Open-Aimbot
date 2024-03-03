@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.4.7
+    Release 1.4.8
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -627,8 +627,7 @@ end
 
 local function VisualizeFoV()
     if not Fluent then
-        ClearVisuals()
-        return
+        return ClearVisuals()
     end
     local MouseLocation = UserInputService:GetMouseLocation()
     Visuals.FoV.Position = Vector2.new(MouseLocation.X, MouseLocation.Y)
@@ -689,11 +688,9 @@ end
 
 function ESPLibrary:Visualize()
     if not Fluent then
-        ClearVisuals()
-        return
+        return ClearVisuals()
     elseif not self.Character then
-        self:Disconnect()
-        return
+        return self:Disconnect()
     end
     local Head = self.Character:FindFirstChild("Head")
     local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
