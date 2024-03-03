@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.4.6
+    Release 1.4.7
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -557,50 +557,49 @@ local function Visualize(Object)
         return nil
     elseif string.lower(Object) == "fov" then
         local FoV = getfenv().Drawing.new("Circle")
+        FoV.Visible = false
+        if FoV.ZIndex then
+            FoV.ZIndex = 2
+        end
+        FoV.Filled = false
+        FoV.NumSides = 1000
         FoV.Radius = Configuration.FoVRadius
         FoV.Thickness = Configuration.FoVThickness
         FoV.Transparency = Configuration.FoVTransparency
         FoV.Color = Configuration.FoVColour
-        FoV.NumSides = 1000
-        FoV.Filled = false
-        if FoV.ZIndex then
-            FoV.ZIndex = 2
-        end
-        FoV.Visible = false
         return FoV
     elseif string.lower(Object) == "espbox" then
         local ESPBox = getfenv().Drawing.new("Square")
-        ESPBox.Thickness = Configuration.ESPThickness
-        ESPBox.Transparency = Configuration.ESPTransparency
-        ESPBox.Color = Configuration.ESPColour
-        ESPBox.Filled = false
+        ESPBox.Visible = false
         if ESPBox.ZIndex then
             ESPBox.ZIndex = 1
         end
-        ESPBox.Visible = false
+        ESPBox.Filled = false
+        ESPBox.Thickness = Configuration.ESPThickness
+        ESPBox.Transparency = Configuration.ESPTransparency
+        ESPBox.Color = Configuration.ESPColour
         return ESPBox
     elseif string.lower(Object) == "nameesp" then
         local NameESP = getfenv().Drawing.new("Text")
-        NameESP.Size = Configuration.NameESPSize
-        NameESP.Transparency = Configuration.ESPTransparency
-        NameESP.Color = Configuration.ESPColour
-        NameESP.Center = true
-        NameESP.Outline = true
+        NameESP.Visible = false
         if NameESP.ZIndex then
             NameESP.ZIndex = 1
         end
-        NameESP.Visible = false
+        NameESP.Center = true
+        NameESP.Outline = true
+        NameESP.Size = Configuration.NameESPSize
+        NameESP.Transparency = Configuration.ESPTransparency
+        NameESP.Color = Configuration.ESPColour
         return NameESP
     elseif string.lower(Object) == "traceresp" then
         local TracerESP = getfenv().Drawing.new("Line")
-        TracerESP.Thickness = Configuration.ESPThickness
-        TracerESP.Transparency = Configuration.ESPTransparency
-        TracerESP.Color = Configuration.ESPColour
-        TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
+        TracerESP.Visible = false
         if TracerESP.ZIndex then
             TracerESP.ZIndex = 1
         end
-        TracerESP.Visible = false
+        TracerESP.Thickness = Configuration.ESPThickness
+        TracerESP.Transparency = Configuration.ESPTransparency
+        TracerESP.Color = Configuration.ESPColour
         return TracerESP
     else
         return nil
@@ -678,6 +677,7 @@ function ESPLibrary:Initialize(Target)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.NameESP.Text = string.format("@%s", self.Player.Name)
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
+            self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
         end
         self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
