@@ -692,6 +692,7 @@ function ESPLibrary:Visualize()
         ClearVisuals()
         return
     elseif not self.Character then
+        self:Disconnect()
         return
     end
     local Head = self.Character:FindFirstChild("Head")
