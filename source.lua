@@ -14,22 +14,41 @@
 
 local Configuration = {}
 
+--? Aimbot
+
 Configuration.Aimbot = false
 Configuration.AimKey = "V"
 Configuration.AimPart = "HumanoidRootPart"
-Configuration.ESP = false
 Configuration.TeamCheck = false
 Configuration.FriendCheck = false
 Configuration.WallCheck = false
-Configuration.DistanceCheck = false
-Configuration.TriggerDistance = 100
+Configuration.FoVCheck = false
+Configuration.FoVRadius = 100
 Configuration.MagnitudeCheck = false
 Configuration.TriggerMagnitude = 500
 Configuration.TransparencyCheck = false
 Configuration.IgnoredTransparency = 0.5
+Configuration.GroupCheck = false
+Configuration.WhitelistedGroup = 0
 Configuration.UseSensitivity = false
 Configuration.Sensitivity = 0.1
 Configuration.ShowNotifications = true
+
+--? Visuals
+
+Configuration.ShowFoV = false
+Configuration.FoVThickness = 2
+Configuration.FoVTransparency = 0.8
+Configuration.FoVColour = Color3.fromRGB(255, 255, 255)
+Configuration.SmartESP = false
+Configuration.ESPBox = false
+Configuration.NameESP = false
+Configuration.NameESPSize = 16
+Configuration.TracerESP = false
+Configuration.ESPThickness = 2
+Configuration.ESPTransparency = 0.8
+Configuration.ESPColour = Color3.fromRGB(255, 255, 255)
+Configuration.RainbowVisuals = false
 
 
 --! Services
@@ -37,8 +56,6 @@ Configuration.ShowNotifications = true
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
-local Debris = game:GetService("Debris")
 local TweenService = game:GetService("TweenService")
 
 
@@ -46,7 +63,6 @@ local TweenService = game:GetService("TweenService")
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
-local Camera = workspace.CurrentCamera
 
 
 --! Fields
@@ -62,9 +78,9 @@ else
         return game:HttpGet("https://ttwizz.su/Fluent.txt", true)
     end)
     if Success and string.find(Result, "dawid") then
-        Fluent = loadstring(game:HttpGet("https://ttwizz.su/Fluent.txt", true))()
+        Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.su/Fluent.txt", true))()
     else
-        Fluent = loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
+        Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
     end
 end
 
@@ -82,8 +98,7 @@ do
     })
 
     local Tabs = {
-        Aimbot = Window:AddTab({ Title = "Aimbot", Icon = "box" }),
-        Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+        Aimbot = Window:AddTab({ Title = "Aimbot", Icon = "bot" })
     }
 
     Tabs.Aimbot:AddParagraph({
@@ -112,7 +127,7 @@ do
     local AimPartDropdown = AimbotSection:AddDropdown("AimPartDropdown", {
         Title = "Aim Part",
         Description = "Changes the Aim Part",
-        Values = {"Head", "HumanoidRootPart", "Random"},
+        Values = { "Head", "HumanoidRootPart", "Random" },
         Multi = false,
         Default = 2,
         Callback = function(Value)
@@ -129,34 +144,6 @@ do
             if AimPartDropdown.Value == "Random" then
                 Configuration.AimPart = AimPartDropdown.Values[math.random(1, 2)]
             end
-        end
-    end)
-
-    local ESPSection = Tabs.Aimbot:AddSection("ESP")
-
-    local ESPToggle = ESPSection:AddToggle("ESPToggle", { Title = "ESP", Description = "ESPs the Target", Default = Configuration.ESP })
-    ESPToggle:OnChanged(function(Value)
-        if not Value then
-            Configuration.ESP = Value
-        else
-            Window:Dialog({
-                Title = "Warning",
-                Content = "This option can be detected! Activate it anyway?",
-                Buttons = {
-                    {
-                        Title = "Confirm",
-                        Callback = function()
-                            Configuration.ESP = Value
-                        end
-                    },
-                    {
-                        Title = "Cancel",
-                        Callback = function()
-                            ESPToggle:SetValue(false)
-                        end
-                    }
-                }
-            })
         end
     end)
 
@@ -179,20 +166,20 @@ do
 
     local AdvancedChecksSection = Tabs.Aimbot:AddSection("Advanced Checks")
 
-    local DistanceCheckToggle = AdvancedChecksSection:AddToggle("DistanceCheckToggle", { Title = "Distance Check", Description = "Toggles the Distance Check", Default = Configuration.DistanceCheck })
-    DistanceCheckToggle:OnChanged(function(Value)
-        Configuration.DistanceCheck = Value
+    local FoVCheckToggle = AdvancedChecksSection:AddToggle("FoVCheckToggle", { Title = "FoV Check", Description = "Toggles the FoV Check", Default = Configuration.FoVCheck })
+    FoVCheckToggle:OnChanged(function(Value)
+        Configuration.FoVCheck = Value
     end)
 
-    AdvancedChecksSection:AddSlider("TriggerDistanceSlider", {
-        Title = "Trigger Distance",
-        Description = "Distance between the Mouse and the Aim Part",
-        Default = Configuration.TriggerDistance,
+    AdvancedChecksSection:AddSlider("FoVRadiusSlider", {
+        Title = "FoV Radius",
+        Description = "Changes the FoV Radius",
+        Default = Configuration.FoVRadius,
         Min = 10,
         Max = 1000,
         Rounding = 1,
         Callback = function(Value)
-            Configuration.TriggerDistance = math.round(Value)
+            Configuration.FoVRadius = math.round(Value)
         end
     })
 
@@ -230,6 +217,23 @@ do
         end
     })
 
+    local GroupCheckToggle = AdvancedChecksSection:AddToggle("GroupCheckToggle", { Title = "Group Check", Description = "Toggles the Group Check", Default = Configuration.GroupCheck })
+    GroupCheckToggle:OnChanged(function(Value)
+        Configuration.GroupCheck = Value
+    end)
+
+    AdvancedChecksSection:AddInput("WhitelistedGroupInput", {
+        Title = "Whitelisted Group",
+        Description = "After typing, press Enter",
+        Default = Configuration.WhitelistedGroup,
+        Numeric = true,
+        Finished = true,
+        Placeholder = "Group Id",
+        Callback = function(Value)
+            Configuration.WhitelistedGroup = #Value > 0 and Value or 0
+        end
+    })
+
     local SensitivitySection = Tabs.Aimbot:AddSection("Sensitivity")
 
     local UseSensitivityToggle = SensitivitySection:AddToggle("UseSensitivityToggle", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
@@ -249,12 +253,150 @@ do
         end
     })
 
-    local NotificationsSection = Tabs.Aimbot:AddSection("Notifications")
+    if getfenv().Drawing then
+        Tabs["Visuals"] = Window:AddTab({ Title = "Visuals", Icon = "box" })
 
-    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = Configuration.ShowNotifications })
-    NotificationsToggle:OnChanged(function(Value)
-        Configuration.ShowNotifications = Value
-    end)
+        local FoVSection = Tabs.Visuals:AddSection("FoV")
+
+        local ShowFoVToggle = FoVSection:AddToggle("ShowFoVToggle", { Title = "Show FoV", Description = "Toggles the FoV Show", Default = Configuration.ShowFoV })
+        ShowFoVToggle:OnChanged(function(Value)
+            Configuration.ShowFoV = Value
+        end)
+
+        FoVSection:AddSlider("FoVThicknessSlider", {
+            Title = "FoV Thickness",
+            Description = "Changes the FoV Thickness",
+            Default = Configuration.FoVThickness,
+            Min = 1,
+            Max = 10,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.FoVThickness = Value
+            end
+        })
+
+        FoVSection:AddSlider("FoVTransparencySlider", {
+            Title = "FoV Transparency",
+            Description = "Changes the FoV Transparency",
+            Default = Configuration.FoVTransparency,
+            Min = 0.1,
+            Max = 1,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.FoVTransparency = Value
+            end
+        })
+
+        local FoVColourPicker = FoVSection:AddColorpicker("FoVColourPicker", {
+            Title = "FoV Colour",
+            Description = "Changes the FoV Colour",
+            Transparency = 0,
+            Default = Configuration.FoVColour,
+            Callback = function(Value)
+                Configuration.FoVColour = Value
+            end
+        })
+
+        local ESPSection = Tabs.Visuals:AddSection("ESP")
+
+        local SmartESPToggle = ESPSection:AddToggle("SmartESPToggle", { Title = "Smart ESP", Description = "Does not ESP the Whitelisted Players", Default = Configuration.SmartESP })
+        SmartESPToggle:OnChanged(function(Value)
+            Configuration.SmartESP = Value
+        end)
+
+        local ESPBoxToggle = ESPSection:AddToggle("ESPBoxToggle", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
+        ESPBoxToggle:OnChanged(function(Value)
+            Configuration.ESPBox = Value
+        end)
+
+        local NameESPToggle = ESPSection:AddToggle("NameESPToggle", { Title = "Name ESP", Description = "Creates the Name ESP above the Players", Default = Configuration.NameESP })
+        NameESPToggle:OnChanged(function(Value)
+            Configuration.NameESP = Value
+        end)
+
+        ESPSection:AddSlider("NameESPSizeSlider", {
+            Title = "Name ESP Size",
+            Description = "Changes the Name ESP Size",
+            Default = Configuration.NameESPSize,
+            Min = 8,
+            Max = 28,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.NameESPSize = Value
+            end
+        })
+
+        local TracerESPToggle = ESPSection:AddToggle("TracerESPToggle", { Title = "Tracer ESP", Description = "Creates the Tracer ESP in the direction of the Players", Default = Configuration.TracerESP })
+        TracerESPToggle:OnChanged(function(Value)
+            Configuration.TracerESP = Value
+        end)
+
+        ESPSection:AddSlider("ESPThicknessSlider", {
+            Title = "ESP Thickness",
+            Description = "Changes the ESP Thickness",
+            Default = Configuration.ESPThickness,
+            Min = 1,
+            Max = 10,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.ESPThickness = Value
+            end
+        })
+
+        ESPSection:AddSlider("ESPTransparencySlider", {
+            Title = "ESP Transparency",
+            Description = "Changes the ESP Transparency",
+            Default = Configuration.ESPTransparency,
+            Min = 0.1,
+            Max = 1,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.ESPTransparency = Value
+            end
+        })
+
+        local ESPColourPicker = ESPSection:AddColorpicker("ESPColourPicker", {
+            Title = "ESP Colour",
+            Description = "Changes the ESP Colour",
+            Transparency = 0,
+            Default = Configuration.ESPColour,
+            Callback = function(Value)
+                Configuration.ESPColour = Value
+            end
+        })
+
+        local VisualsSection = Tabs.Visuals:AddSection("Visuals")
+
+        local RainbowVisualsToggle = VisualsSection:AddToggle("RainbowVisualsToggle", { Title = "Rainbow Visuals", Description = "Makes the Visuals Rainbow", Default = Configuration.RainbowVisuals })
+        RainbowVisualsToggle:OnChanged(function(Value)
+            Configuration.RainbowVisuals = Value
+        end)
+        task.spawn(function()
+            while task.wait() do
+                for Index = 1, 230 do
+                    if not Fluent then
+                        break
+                    elseif RainbowVisualsToggle.Value then
+                        FoVColourPicker:SetValue({ Index / 230, 1, 1 }, FoVColourPicker.Transparency)
+                        ESPColourPicker:SetValue({ Index / 230, 1, 1 }, ESPColourPicker.Transparency)
+                    end
+                    task.wait()
+                end
+            end
+        end)
+    else
+        Window:Dialog({
+            Title = "Warning",
+            Content = "Your Software does not support the Drawing Library! Access to the Visuals Tab is restricted.",
+            Buttons = {
+                {
+                    Title = "Confirm"
+                }
+            }
+        })
+    end
+
+    Tabs["Settings"] = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
     local UISection = Tabs.Settings:AddSection("UI")
 
@@ -312,6 +454,13 @@ do
     UISection:AddKeybind("MinimizeKeybind", { Title = "Minimize Key", Description = "Changes the Minimize Key", Default = "RightShift" })
     Fluent.MinimizeKeybind = Fluent.Options.MinimizeKeybind
 
+    local NotificationsSection = Tabs.Settings:AddSection("Notifications")
+
+    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = Configuration.ShowNotifications })
+    NotificationsToggle:OnChanged(function(Value)
+        Configuration.ShowNotifications = Value
+    end)
+
     Window:SelectTab(1)
 end
 
@@ -319,7 +468,7 @@ end
 --! Notification Handler
 
 local function Notify(Message)
-    if Fluent and Configuration.ShowNotifications then
+    if Fluent and Configuration.ShowNotifications and Message then
         Fluent:Notify({
             Title = "Open Aimbot",
             Content = Message,
@@ -381,7 +530,7 @@ local function IsReady(Target)
             local RayDirection = (TargetPart.Position - NativePart.Position).Unit * (TargetPart.Position - NativePart.Position).Magnitude
             local RaycastParameters = RaycastParams.new()
             RaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
-            RaycastParameters.FilterDescendantsInstances = {Player.Character}
+            RaycastParameters.FilterDescendantsInstances = { Player.Character }
             local RaycastResult = workspace:Raycast(NativePart.Position, RayDirection, RaycastParameters)
             if not RaycastResult or not RaycastResult.Instance or not RaycastResult.Instance:FindFirstAncestor(_Player.Name) then
                 return false
@@ -393,6 +542,8 @@ local function IsReady(Target)
             end
         elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
             return false
+        elseif Configuration.GroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) then
+            return false
         end
         return true, Target, TargetPart
     else
@@ -401,37 +552,268 @@ local function IsReady(Target)
 end
 
 
---! String Generation
+--! Visuals Handler
 
-local function GenerateString()
-    return string.lower(string.reverse(string.sub(HttpService:GenerateGUID(false), 1, 8)))
-end
-
-
---! ESP Creation
-
-local function CreateESP(Character)
-    if Configuration.ESP and not Character:FindFirstChildWhichIsA("SelectionBox") then
-        local Hitbox = Instance.new("SelectionBox", Character)
-        task.spawn(function()
-            while task.wait() do
-                for Index = 1, 230 do
-                    if not Character:FindFirstChildWhichIsA("SelectionBox") then
-                        break
-                    elseif not Fluent or Target ~= Character then
-                        Debris:AddItem(Hitbox, 0)
-                        break
-                    end
-                    Hitbox.Name = GenerateString()
-                    Hitbox.Color3 = Color3.fromHSV(Index / 230, 1, 1)
-                    task.wait()
-                end
-            end
-        end)
-        Hitbox.LineThickness = 0.05
-        Hitbox.Adornee = Character
+local function Visualize(Object)
+    if not Fluent or not getfenv().Drawing or not Object then
+        return nil
+    elseif string.lower(Object) == "fov" then
+        local FoV = getfenv().Drawing.new("Circle")
+        FoV.Radius = Configuration.FoVRadius
+        FoV.Thickness = Configuration.FoVThickness
+        FoV.Transparency = Configuration.FoVTransparency
+        FoV.Color = Configuration.FoVColour
+        FoV.Filled = false
+        if FoV.ZIndex then
+            FoV.ZIndex = 2
+        end
+        FoV.Visible = false
+        return FoV
+    elseif string.lower(Object) == "espbox" then
+        local ESPBox = getfenv().Drawing.new("Square")
+        ESPBox.Thickness = Configuration.ESPThickness
+        ESPBox.Transparency = Configuration.ESPTransparency
+        ESPBox.Color = Configuration.ESPColour
+        ESPBox.Filled = false
+        if ESPBox.ZIndex then
+            ESPBox.ZIndex = 1
+        end
+        ESPBox.Visible = false
+        return ESPBox
+    elseif string.lower(Object) == "nameesp" then
+        local NameESP = getfenv().Drawing.new("Text")
+        NameESP.Size = Configuration.NameESPSize
+        NameESP.Transparency = Configuration.ESPTransparency
+        NameESP.Color = Configuration.ESPColour
+        NameESP.Center = true
+        NameESP.Outline = true
+        if NameESP.ZIndex then
+            NameESP.ZIndex = 1
+        end
+        NameESP.Visible = false
+        return NameESP
+    elseif string.lower(Object) == "traceresp" then
+        local TracerESP = getfenv().Drawing.new("Line")
+        TracerESP.Thickness = Configuration.ESPThickness
+        TracerESP.Transparency = Configuration.ESPTransparency
+        TracerESP.Color = Configuration.ESPColour
+        TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
+        if TracerESP.ZIndex then
+            TracerESP.ZIndex = 1
+        end
+        TracerESP.Visible = false
+        return TracerESP
+    else
+        return nil
     end
 end
+
+local Visuals = {
+    FoV = Visualize("FoV")
+}
+
+local function ClearVisual(Visual)
+    if Visual then
+        if Visual.Destroy then
+            Visual:Destroy()
+        else
+            Visual:Remove()
+        end
+    end
+end
+
+local function ClearVisuals()
+    for Index, Visual in next, Visuals do
+        ClearVisual(Visual)
+        table.remove(Visuals, Index)
+    end
+end
+
+local function VisualizeFoV()
+    if not Fluent then
+        ClearVisuals()
+        return
+    end
+    local MouseLocation = UserInputService:GetMouseLocation()
+    Visuals.FoV.Position = Vector2.new(MouseLocation.X, MouseLocation.Y)
+    Visuals.FoV.Radius = Configuration.FoVRadius
+    Visuals.FoV.Thickness = Configuration.FoVThickness
+    Visuals.FoV.Transparency = Configuration.FoVTransparency
+    Visuals.FoV.Color = Configuration.FoVColour
+    Visuals.FoV.Visible = Configuration.ShowFoV
+end
+
+local ESPLibrary = {}
+
+ESPLibrary.__index = ESPLibrary
+
+function ESPLibrary:Initialize(Target)
+    if not Fluent then
+        ClearVisuals()
+        return nil
+    elseif not Target then
+        return nil
+    end
+    local self = {}
+    setmetatable(self, ESPLibrary)
+    self.Player = Players:GetPlayerFromCharacter(Target)
+    self.Character = Target
+    self.ESPBox = Visualize("ESPBox")
+    self.NameESP = Visualize("NameESP")
+    self.TracerESP = Visualize("TracerESP")
+    table.insert(Visuals, self.ESPBox)
+    table.insert(Visuals, self.NameESP)
+    table.insert(Visuals, self.TracerESP)
+    local Head = self.Character:FindFirstChild("Head")
+    local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
+    if Head and HumanoidRootPart then
+        local HumanoidRootPartPosition, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
+        local TopPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position + Vector3.new(0, 0.5, 0))
+        local BottomPosition = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Vector3.new(0, 3, 0))
+        if IsInViewport then
+            self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
+            self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+            self.NameESP.Text = string.format("@%s", self.Player.Name)
+            self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
+            self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+            self.ESPBox.Visible = Configuration.ESPBox
+            self.NameESP.Visible = Configuration.NameESP
+            self.TracerESP.Visible = Configuration.TracerESP
+        end
+    end
+    return self
+end
+
+function ESPLibrary:Visualize()
+    if not Fluent then
+        ClearVisuals()
+        return
+    elseif not self.Character then
+        return
+    end
+    local Head = self.Character:FindFirstChild("Head")
+    local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
+    if Head and HumanoidRootPart then
+        local HumanoidRootPartPosition, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
+        local TopPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position + Vector3.new(0, 0.5, 0))
+        local BottomPosition = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Vector3.new(0, 3, 0))
+        if IsInViewport then
+            self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
+            self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+            self.ESPBox.Thickness = Configuration.ESPThickness
+            self.ESPBox.Transparency = Configuration.ESPTransparency
+            self.ESPBox.Color = Configuration.ESPColour
+            self.NameESP.Text = string.format("@%s", self.Player.Name)
+            self.NameESP.Size = Configuration.NameESPSize
+            self.NameESP.Transparency = Configuration.ESPTransparency
+            self.NameESP.Color = Configuration.ESPColour
+            self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
+            self.TracerESP.Thickness = Configuration.ESPThickness
+            self.TracerESP.Transparency = Configuration.ESPTransparency
+            self.TracerESP.Color = Configuration.ESPColour
+            self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
+            self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+            self.ESPBox.Visible = Configuration.ESPBox
+            self.NameESP.Visible = Configuration.NameESP
+            self.TracerESP.Visible = Configuration.TracerESP
+        end
+    end
+end
+
+function ESPLibrary:Disconnect()
+    self.Player = nil
+    self.Character = nil
+    ClearVisual(self.ESPBox)
+    ClearVisual(self.NameESP)
+    ClearVisual(self.TracerESP)
+    table.remove(Visuals, table.find(Visuals, self.ESPBox))
+    table.remove(Visuals, table.find(Visuals, self.NameESP))
+    table.remove(Visuals, table.find(Visuals, self.TracerESP))
+end
+
+
+--! Tracking Handler
+
+local Tracking = {}
+local Connections = {}
+
+local function VisualizeESP()
+    for _, Tracked in next, Tracking do
+        Tracked:Visualize()
+    end
+end
+
+local function CharacterAdded(_Character)
+    if _Character then
+        if Configuration.SmartESP then
+            local IsCharacterReady, Character = IsReady(_Character)
+            if IsCharacterReady then
+                Tracking[#Tracking + 1] = ESPLibrary:Initialize(Character)
+            end
+        else
+            Tracking[#Tracking + 1] = ESPLibrary:Initialize(_Character)
+        end
+    end
+end
+
+local function CharacterRemoving(_Character)
+    if _Character then
+        for Index, Tracked in next, Tracking do
+            if Tracked.Character == _Character then
+                Tracked:Disconnect()
+                table.remove(Tracking, Index)
+            end
+        end
+    end
+end
+
+local function DisconnectConnections()
+    for Index, Connection in next, Connections do
+        Connection:Disconnect()
+        table.remove(Connections, Index)
+    end
+    for Index, Tracked in next, Tracking do
+        Tracked:Disconnect()
+        table.remove(Tracking, Index)
+    end
+end
+
+local function InitializePlayers()
+    if getfenv().Drawing then
+        for _, _Player in next, Players:GetPlayers() do
+            if _Player ~= Player and _Player.Character then
+                local _Character = _Player.Character
+                CharacterAdded(_Character)
+                Connections[#Connections + 1] = _Player.CharacterAdded:Connect(CharacterAdded)
+                Connections[#Connections + 1] = _Player.CharacterRemoving:Connect(CharacterRemoving)
+            end
+        end
+    end
+end
+
+task.spawn(InitializePlayers)
+
+
+--! Player Events
+
+local PlayerAdded; PlayerAdded = Players.PlayerAdded:Connect(function(_Player)
+    if not Fluent or not getfenv().Drawing then
+        PlayerAdded:Disconnect()
+    end
+    if _Player ~= Player then
+        Connections[#Connections + 1] = _Player.CharacterAdded:Connect(CharacterAdded)
+        Connections[#Connections + 1] = _Player.CharacterRemoving:Connect(CharacterRemoving)
+    end
+end)
+
+local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_Player)
+    if Fluent and _Player == Player then
+        Fluent:Destroy()
+        DisconnectConnections()
+        ClearVisuals()
+        PlayerRemoving:Disconnect()
+    end
+end)
 
 
 --! Aimbot Loop
@@ -441,6 +823,8 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         if Fluent.Unloaded then
             Fluent = nil
             ResetFields()
+            DisconnectConnections()
+            ClearVisuals()
             AimbotLoop:Disconnect()
         elseif not Configuration.Aimbot then
             if Aiming then
@@ -448,27 +832,30 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             end
             ResetFields()
         end
+        if getfenv().Drawing then
+            task.spawn(VisualizeFoV)
+            task.spawn(VisualizeESP)
+        end
         if Aiming then
             for _, _Player in next, Players:GetPlayers() do
                 local IsCharacterReady, Character, Part = IsReady(_Player.Character)
                 if _Player ~= Player and IsCharacterReady then
-                    local Vector, IsInViewport = Camera:WorldToViewportPoint(Part.Position)
+                    local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
                     if IsInViewport then
                         local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if Magnitude <= (Configuration.DistanceCheck and Configuration.TriggerDistance or math.huge) and not Target then
+                        if Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or math.huge) and not Target then
                             Target = Character
-                            CreateESP(Target)
                             Notify(string.format("[Target]: @%s", _Player.Name))
                         end
                     end
                 end
             end
-            local IsTargetReady, self, Part = IsReady(Target)
+            local IsTargetReady, _, Part = IsReady(Target)
             if IsTargetReady then
                 if Configuration.UseSensitivity then
-                    TweenService:Create(Camera, TweenInfo.new(Configuration.Sensitivity), {CFrame = CFrame.new(Camera.CFrame.Position, Part.Position)}):Play()
+                    TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position) }):Play()
                 else
-                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, Part.Position)
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position)
                 end
             else
                 Target = nil
