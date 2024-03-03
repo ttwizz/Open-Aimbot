@@ -639,8 +639,9 @@ local function VisualizeFoV()
     Visuals.FoV.Visible = Configuration.ShowFoV
 end
 
-local ESPLibrary = {}
+--? ESP Library
 
+local ESPLibrary = {}
 ESPLibrary.__index = ESPLibrary
 
 function ESPLibrary:Initialize(Target)
@@ -744,24 +745,6 @@ local function VisualizeESP()
     end
 end
 
-local function CharacterAdded(_Character)
-    if _Character then
-        local _Player = Players:GetPlayerFromCharacter(_Character)
-        Tracking[_Player.UserId] = ESPLibrary:Initialize(_Character)
-    end
-end
-
-local function CharacterRemoving(_Character)
-    if _Character then
-        for Index, Tracked in next, Tracking do
-            if Tracked.Character == _Character then
-                Tracked:Disconnect()
-                table.remove(Tracking, Index)
-            end
-        end
-    end
-end
-
 local function DisconnectTracking(Index)
     if Index and Tracking[Index] then
         Tracking[Index]:Disconnect()
@@ -775,6 +758,23 @@ local function DisconnectConnection(Index)
             Connection:Disconnect()
         end
         table.remove(Connections, Index)
+    end
+end
+
+local function CharacterAdded(_Character)
+    if _Character then
+        local _Player = Players:GetPlayerFromCharacter(_Character)
+        Tracking[_Player.UserId] = ESPLibrary:Initialize(_Character)
+    end
+end
+
+local function CharacterRemoving(_Character)
+    if _Character then
+        for Index, Tracked in next, Tracking do
+            if Tracked.Character == _Character then
+                DisconnectTracking(Index)
+            end
+        end
     end
 end
 
