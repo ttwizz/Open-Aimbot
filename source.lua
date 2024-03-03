@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.4
+    Release 1.4.3
     
     Author: ttwiz_z (ttwizz)
     License: MIT
