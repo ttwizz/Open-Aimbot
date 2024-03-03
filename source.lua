@@ -644,7 +644,6 @@ local function VisualizeFoV()
 end
 
 local ESPLibrary = {}
-
 ESPLibrary.__index = ESPLibrary
 
 function ESPLibrary:Initialize(Target)
@@ -809,6 +808,7 @@ end)
 local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_Player)
     if Fluent and _Player == Player then
         Fluent:Destroy()
+        ResetFields()
         DisconnectConnections()
         ClearVisuals()
         PlayerRemoving:Disconnect()
