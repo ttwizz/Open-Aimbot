@@ -761,6 +761,15 @@ local function DisconnectConnection(Index)
     end
 end
 
+local function DisconnectConnections()
+    for Index, _ in next, Connections do
+        DisconnectConnection(Index)
+    end
+    for Index, _ in next, Tracking do
+        DisconnectTracking(Index)
+    end
+end
+
 local function CharacterAdded(_Character)
     if _Character then
         local _Player = Players:GetPlayerFromCharacter(_Character)
@@ -775,15 +784,6 @@ local function CharacterRemoving(_Character)
                 DisconnectTracking(Index)
             end
         end
-    end
-end
-
-local function DisconnectConnections()
-    for Index, _ in next, Connections do
-        DisconnectConnection(Index)
-    end
-    for Index, _ in next, Tracking do
-        DisconnectTracking(Index)
     end
 end
 
