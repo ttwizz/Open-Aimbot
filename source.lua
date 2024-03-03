@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.4.5
+    Release 1.4.6
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -640,7 +640,8 @@ local function VisualizeFoV()
     Visuals.FoV.Visible = Configuration.ShowFoV
 end
 
---? ESP Library
+
+--! ESP Library
 
 local ESPLibrary = {}
 ESPLibrary.__index = ESPLibrary
