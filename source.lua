@@ -864,7 +864,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
                     if IsInViewport then
                         local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if (Magnitude < Closest) and (Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or math.huge)) then
+                        if (Magnitude < Closest) and (Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest)) then
                             Closest = Magnitude
                             Target = Character
                         end
