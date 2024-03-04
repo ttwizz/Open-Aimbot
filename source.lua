@@ -858,15 +858,17 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         if Aiming then
             local Closest = math.huge
             local OldTarget = Target
-            for _, _Player in next, Players:GetPlayers() do
-                local IsCharacterReady, Character, Part = IsReady(_Player.Character)
-                if _Player ~= Player and IsCharacterReady then
-                    local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
-                    if IsInViewport then
-                        local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if (Magnitude < Closest) and (Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest)) then
-                            Closest = Magnitude
-                            Target = Character
+            if not IsReady(OldTarget) then
+                for _, _Player in next, Players:GetPlayers() do
+                    local IsCharacterReady, Character, Part = IsReady(_Player.Character)
+                    if _Player ~= Player and IsCharacterReady then
+                        local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
+                        if IsInViewport then
+                            local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
+                            if (Magnitude < Closest) and (Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest)) then
+                                Closest = Magnitude
+                                Target = Character
+                            end
                         end
                     end
                 end
