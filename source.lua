@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.4.8
+    Release 1.4.9
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -722,6 +722,10 @@ function ESPLibrary:Visualize()
         self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
         self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
         self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady and IsInViewport
+    else
+        self.ESPBox.Visible = false
+        self.NameESP.Visible = false
+        self.TracerESP.Visible = false
     end
 end
 
