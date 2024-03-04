@@ -48,6 +48,7 @@ Configuration.TracerESP = false
 Configuration.ESPThickness = 2
 Configuration.ESPTransparency = 0.8
 Configuration.ESPColour = Color3.fromRGB(255, 255, 255)
+Configuration.ESPUseTeamColour = false
 Configuration.RainbowVisuals = false
 
 
@@ -362,6 +363,11 @@ do
                 Configuration.ESPColour = Value
             end
         })
+
+        local UseTeamColourToggle = ESPSection:AddToggle("UseTeamColourToggle", { Title = "Use Team Colour", Description = "Make the ESP colour match the player team", Default = Configuration.ESPUseTeamColour })
+        UseTeamColourToggle:OnChanged(function(Value)
+            Configuration.ESPUseTeamColour = Value
+        end)
 
         local VisualsSection = Tabs.Visuals:AddSection("Visuals")
 
@@ -718,6 +724,15 @@ function ESPLibrary:Visualize()
             self.TracerESP.Color = Configuration.ESPColour
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+
+            local team = self.Player.Team                        
+
+            if team and team.TeamColor and Configuration.ESPUseTeamColour then
+                local teamColor = team.TeamColor.Color
+                self.ESPBox.Color = teamColor
+                self.NameESP.Color = teamColor
+                self.TracerESP.Color = teamColor
+            end 
         end
         self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
         self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
