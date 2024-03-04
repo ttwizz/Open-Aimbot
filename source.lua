@@ -725,7 +725,7 @@ function ESPLibrary:Visualize()
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
 
-            if self.Player.TeamColor and Configuration.ESPUseTeamColour then
+            if Configuration.ESPUseTeamColour and self.Player.TeamColor then
                 local teamColor = self.Player.TeamColor.Color
                 self.ESPBox.Color = teamColor
                 self.NameESP.Color = teamColor
