@@ -719,15 +719,12 @@ function ESPLibrary:Visualize()
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.ESPBox.Thickness = Configuration.ESPThickness
             self.ESPBox.Transparency = Configuration.ESPTransparency
-            self.ESPBox.Color = Configuration.ESPColour
             self.NameESP.Text = string.format("@%s", self.Player.Name)
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPTransparency
-            self.NameESP.Color = Configuration.ESPColour
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.Thickness = Configuration.ESPThickness
             self.TracerESP.Transparency = Configuration.ESPTransparency
-            self.TracerESP.Color = Configuration.ESPColour
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
@@ -735,6 +732,10 @@ function ESPLibrary:Visualize()
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
+            else
+                self.ESPBox.Color = Configuration.ESPColour
+                self.NameESP.Color = Configuration.ESPColour
+                self.TracerESP.Color = Configuration.ESPColour
             end
         end
         self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
