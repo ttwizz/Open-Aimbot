@@ -498,8 +498,7 @@ end
 local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
     if not Fluent then
         InputBegan:Disconnect()
-    end
-    if not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and Input.KeyCode == Configuration.AimKey and not Aiming then
+    elseif not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and Input.KeyCode == Configuration.AimKey and not Aiming then
         Aiming = true
         Notify("[Aiming Mode]: ON")
     end
@@ -508,8 +507,7 @@ end)
 local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Input)
     if not Fluent then
         InputEnded:Disconnect()
-    end
-    if not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming then
+    elseif not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming then
         ResetFields()
         Notify("[Aiming Mode]: OFF")
     end
@@ -549,7 +547,7 @@ local function IsReady(Target)
         elseif Configuration.GroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) then
             return false
         end
-        return true, Target, TargetPart
+        return true, Target, _Player, TargetPart
     else
         return false
     end
@@ -830,8 +828,7 @@ task.spawn(InitializePlayers)
 local PlayerAdded; PlayerAdded = Players.PlayerAdded:Connect(function(_Player)
     if not Fluent or not getfenv().Drawing then
         PlayerAdded:Disconnect()
-    end
-    if _Player ~= Player then
+    elseif _Player ~= Player then
         Connections[_Player.UserId] = { _Player.CharacterAdded:Connect(CharacterAdded), _Player.CharacterRemoving:Connect(CharacterRemoving) }
     end
 end)
@@ -875,21 +872,28 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             task.spawn(VisualizeESP)
         end
         if Aiming then
-            for _, _Player in next, Players:GetPlayers() do
-                local IsCharacterReady, Character, Part = IsReady(_Player.Character)
-                if _Player ~= Player and IsCharacterReady then
-                    local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
-                    if IsInViewport then
-                        local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or math.huge) and not Target then
-                            Target = Character
-                            Notify(string.format("[Target]: @%s", _Player.Name))
+            local OldTarget = Target
+            local Closest = math.huge
+            if not IsReady(OldTarget) then
+                for _, _Player in next, Players:GetPlayers() do
+                    local IsCharacterReady, Character, _, Part = IsReady(_Player.Character)
+                    if _Player ~= Player and IsCharacterReady then
+                        local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
+                        if IsInViewport then
+                            local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
+                            if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
+                                Target = Character
+                                Closest = Magnitude
+                            end
                         end
                     end
                 end
             end
-            local IsTargetReady, _, Part = IsReady(Target)
+            local IsTargetReady, _, _Player, Part = IsReady(Target)
             if IsTargetReady then
+                if OldTarget ~= Target then
+                    Notify(string.format("[Target]: @%s", _Player.Name))
+                end
                 if Configuration.UseSensitivity then
                     TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position) }):Play()
                 else
