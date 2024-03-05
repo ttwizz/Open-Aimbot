@@ -872,21 +872,28 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             task.spawn(VisualizeESP)
         end
         if Aiming then
-            for _, _Player in next, Players:GetPlayers() do
-                local IsCharacterReady, Character, Part = IsReady(_Player.Character)
-                if _Player ~= Player and IsCharacterReady then
-                    local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
-                    if IsInViewport then
-                        local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or math.huge) and not Target then
-                            Target = Character
-                            Notify(string.format("[Target]: @%s", _Player.Name))
+            local Closest = math.huge
+            local OldTarget = Target
+            if not IsReady(OldTarget) then
+                for _, _Player in next, Players:GetPlayers() do
+                    local IsCharacterReady, Character, Part = IsReady(_Player.Character)
+                    if _Player ~= Player and IsCharacterReady then
+                        local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
+                        if IsInViewport then
+                            local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
+                            if (Magnitude < Closest) and (Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest)) then
+                                Closest = Magnitude
+                                Target = Character
+                            end
                         end
                     end
                 end
             end
             local IsTargetReady, _, Part = IsReady(Target)
             if IsTargetReady then
+                if OldTarget ~= Target then
+                    Notify(string.format("[Target]: @%s", Target.Name))
+                end
                 if Configuration.UseSensitivity then
                     TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position) }):Play()
                 else
