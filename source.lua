@@ -498,8 +498,7 @@ end
 local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
     if not Fluent then
         InputBegan:Disconnect()
-    end
-    if not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and Input.KeyCode == Configuration.AimKey and not Aiming then
+    elseif not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and Input.KeyCode == Configuration.AimKey and not Aiming then
         Aiming = true
         Notify("[Aiming Mode]: ON")
     end
@@ -508,8 +507,7 @@ end)
 local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Input)
     if not Fluent then
         InputEnded:Disconnect()
-    end
-    if not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming then
+    elseif not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming then
         ResetFields()
         Notify("[Aiming Mode]: OFF")
     end
@@ -830,8 +828,7 @@ task.spawn(InitializePlayers)
 local PlayerAdded; PlayerAdded = Players.PlayerAdded:Connect(function(_Player)
     if not Fluent or not getfenv().Drawing then
         PlayerAdded:Disconnect()
-    end
-    if _Player ~= Player then
+    elseif _Player ~= Player then
         Connections[_Player.UserId] = { _Player.CharacterAdded:Connect(CharacterAdded), _Player.CharacterRemoving:Connect(CharacterRemoving) }
     end
 end)
