@@ -364,8 +364,8 @@ do
             end
         })
 
-        local UseTeamColourToggle = ESPSection:AddToggle("UseTeamColourToggle", { Title = "Use Team Colour", Description = "Make the ESP colour match the player team", Default = Configuration.ESPUseTeamColour })
-        UseTeamColourToggle:OnChanged(function(Value)
+        local ESPUseTeamColourToggle = ESPSection:AddToggle("ESPUseTeamColourToggle", { Title = "Use Team Colour", Description = "Makes the ESP Colour match the Target Player Team", Default = Configuration.ESPUseTeamColour })
+        ESPUseTeamColourToggle:OnChanged(function(Value)
             Configuration.ESPUseTeamColour = Value
         end)
 
@@ -684,6 +684,12 @@ function ESPLibrary:Initialize(Target)
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+            if Configuration.ESPUseTeamColour then
+                local TeamColour = self.Player.TeamColor.Color
+                self.ESPBox.Color = TeamColour
+                self.NameESP.Color = TeamColour
+                self.TracerESP.Color = TeamColour
+            end
         end
         self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
         self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
@@ -724,13 +730,12 @@ function ESPLibrary:Visualize()
             self.TracerESP.Color = Configuration.ESPColour
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-
-            if Configuration.ESPUseTeamColour and self.Player.TeamColor then
-                local teamColor = self.Player.TeamColor.Color
-                self.ESPBox.Color = teamColor
-                self.NameESP.Color = teamColor
-                self.TracerESP.Color = teamColor
-            end 
+            if Configuration.ESPUseTeamColour then
+                local TeamColour = self.Player.TeamColor.Color
+                self.ESPBox.Color = TeamColour
+                self.NameESP.Color = TeamColour
+                self.TracerESP.Color = TeamColour
+            end
         end
         self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
         self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
