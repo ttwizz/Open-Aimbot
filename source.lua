@@ -380,7 +380,7 @@ do
                 for Index = 1, 230 do
                     if not Fluent then
                         break
-                    elseif RainbowVisualsToggle.Value then
+                    elseif Configuration.RainbowVisuals then
                         FoVColourPicker:SetValue({ Index / 230, 1, 1 }, FoVColourPicker.Transparency)
                         ESPColourPicker:SetValue({ Index / 230, 1, 1 }, ESPColourPicker.Transparency)
                     end
@@ -684,7 +684,7 @@ function ESPLibrary:Initialize(Target)
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            if Configuration.ESPUseTeamColour then
+            if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
@@ -730,7 +730,7 @@ function ESPLibrary:Visualize()
             self.TracerESP.Color = Configuration.ESPColour
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            if Configuration.ESPUseTeamColour then
+            if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
