@@ -543,7 +543,7 @@ do
                     local ExportedConfiguration = Configuration
                     for Key, Value in next, ExportedConfiguration do
                         if Key == "AimKey" then
-                            ExportedConfiguration["AimKey"] = UserInputService:GetStringForKeyCode(Value)
+                            ExportedConfiguration["AimKey"] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
                         elseif Key == "FoVColour" then
                             ExportedConfiguration["FoVColour"] = PackColour(Value)
                         elseif Key == "ESPColour" then
