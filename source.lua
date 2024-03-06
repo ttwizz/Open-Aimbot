@@ -10,14 +10,46 @@
 
 
 
+--! Services
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+
+--! Colour Handler
+
+local function PackColour(Colour)
+    if not Colour then
+        return {R = 255, G = 255, B = 255}
+    end
+    return {R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255}
+end
+
+local function UnpackColour(Colour)
+    if not Colour then
+        return Color3.fromRGB(255, 255, 255)
+    end
+    return Color3.fromRGB(Colour.R, Colour.G, Colour.B)
+end
+
+
 --! Importing Configuration
 
 local ImportedConfiguration = {}
 
 pcall(function()
     if getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
-        local HttpService = game:GetService("HttpService")
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
+        for Key, Value in next, ImportedConfiguration do
+            if Key == "FoVColour" then
+                ImportedConfiguration["FoVColour"] = UnpackColour(Value)
+            elseif Key == "ESPColour" then
+                ImportedConfiguration["ESPColour"] = UnpackColour(Value)
+            end
+        end
     end
 end)
 
@@ -63,14 +95,6 @@ Configuration.ESPTransparency = ImportedConfiguration["ESPTransparency"] or 0.8
 Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(255, 255, 255)
 Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
 Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
-
-
---! Services
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 
 
 --! Constants
@@ -155,7 +179,7 @@ do
             end
             if AimPartDropdown.Value == "Random" then
                 local Values = AimPartDropdown.Values
-                table.remove(Values, table.find(Values, AimPartDropdown.Value))
+                table.remove(Values, table.find(Values, "Random"))
                 Configuration.AimPart = Values[math.random(1, #Values)]
             end
         end
@@ -507,6 +531,78 @@ do
     NotificationsToggle:OnChanged(function(Value)
         Configuration.ShowNotifications = Value
     end)
+
+    if getfenv().isfile and getfenv().writefile and getfenv().delfile then
+        local ConfigurationManager = Tabs.Settings:AddSection("Configuration Manager")
+
+        ConfigurationManager:AddButton({
+            Title = "Export Configuration",
+            Description = "Overwrites the Game Configuration File",
+            Callback = function()
+                local Success = pcall(function()
+                    local ExportedConfiguration = Configuration
+                    for Key, Value in next, ExportedConfiguration do
+                        if Key == "FoVColour" then
+                            ExportedConfiguration["FoVColour"] = PackColour(Value)
+                        elseif Key == "ESPColour" then
+                            ExportedConfiguration["ESPColour"] = PackColour(Value)
+                        end
+                    end
+                    ExportedConfiguration = tostring(HttpService:JSONEncode(ExportedConfiguration))
+                    getfenv().writefile(string.format("%s.ttwizz", game.GameId), ExportedConfiguration)
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("Configuration File %s.ttwizz has been successfully overwritten!", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                end)
+                if not Success then
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("An Error occurred when overwriting the Configuration File %s.ttwizz", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                end
+            end
+        })
+
+        ConfigurationManager:AddButton({
+            Title = "Delete Configuration File",
+            Description = "Deletes the Game Configuration File",
+            Callback = function()
+                if getfenv().isfile(string.format("%s.ttwizz", game.GameId)) then
+                    getfenv().delfile(string.format("%s.ttwizz", game.GameId))
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("Configuration File %s.ttwizz has been successfully deleted!", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                else
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("Configuration File %s.ttwizz could not be found!", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                end
+            end
+        })
+    end
 
     Window:SelectTab(1)
 end
