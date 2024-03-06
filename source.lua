@@ -10,46 +10,59 @@
 
 
 
---! Configuration
+--! Importing Configuration
+
+local ImportedConfiguration = {}
+
+pcall(function()
+    if getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
+        local HttpService = game:GetService("HttpService")
+        ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
+    end
+end)
+
+
+--! Initializing Configuration
 
 local Configuration = {}
 
 --? Aimbot
 
-Configuration.Aimbot = false
-Configuration.AimKey = "V"
-Configuration.AimPart = "HumanoidRootPart"
-Configuration.TeamCheck = false
-Configuration.FriendCheck = false
-Configuration.WallCheck = false
-Configuration.FoVCheck = false
-Configuration.FoVRadius = 100
-Configuration.MagnitudeCheck = false
-Configuration.TriggerMagnitude = 500
-Configuration.TransparencyCheck = false
-Configuration.IgnoredTransparency = 0.5
-Configuration.GroupCheck = false
-Configuration.WhitelistedGroup = 0
-Configuration.UseSensitivity = false
-Configuration.Sensitivity = 0.1
-Configuration.ShowNotifications = true
+Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
+Configuration.AimKey = ImportedConfiguration["AimKey"] or "V"
+Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart", "Random" }
+Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
+Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
+Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
+Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
+Configuration.FoVCheck = ImportedConfiguration["FoVCheck"] or false
+Configuration.FoVRadius = ImportedConfiguration["FoVRadius"] or 100
+Configuration.MagnitudeCheck = ImportedConfiguration["MagnitudeCheck"] or false
+Configuration.TriggerMagnitude = ImportedConfiguration["TriggerMagnitude"] or 500
+Configuration.TransparencyCheck = ImportedConfiguration["TransparencyCheck"] or false
+Configuration.IgnoredTransparency = ImportedConfiguration["IgnoredTransparency"] or 0.5
+Configuration.GroupCheck = ImportedConfiguration["GroupCheck"] or false
+Configuration.WhitelistedGroup = ImportedConfiguration["WhitelistedGroup"] or 0
+Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
+Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 0.1
+Configuration.ShowNotifications = ImportedConfiguration["ShowNotifications"] or true
 
 --? Visuals
 
-Configuration.ShowFoV = false
-Configuration.FoVThickness = 2
-Configuration.FoVTransparency = 0.8
-Configuration.FoVColour = Color3.fromRGB(255, 255, 255)
-Configuration.SmartESP = false
-Configuration.ESPBox = false
-Configuration.NameESP = false
-Configuration.NameESPSize = 16
-Configuration.TracerESP = false
-Configuration.ESPThickness = 2
-Configuration.ESPTransparency = 0.8
-Configuration.ESPColour = Color3.fromRGB(255, 255, 255)
-Configuration.ESPUseTeamColour = false
-Configuration.RainbowVisuals = false
+Configuration.ShowFoV = ImportedConfiguration["ShowFoV"] or false
+Configuration.FoVThickness = ImportedConfiguration["FoVThickness"] or 2
+Configuration.FoVTransparency = ImportedConfiguration["FoVTransparency"] or 0.8
+Configuration.FoVColour = ImportedConfiguration["FoVColour"] or Color3.fromRGB(255, 255, 255)
+Configuration.SmartESP = ImportedConfiguration["SmartESP"] or false
+Configuration.ESPBox = ImportedConfiguration["ESPBox"] or false
+Configuration.NameESP = ImportedConfiguration["NameESP"] or false
+Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
+Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
+Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
+Configuration.ESPTransparency = ImportedConfiguration["ESPTransparency"] or 0.8
+Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(255, 255, 255)
+Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
+Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
 
 
 --! Services
@@ -126,9 +139,9 @@ do
     local AimPartDropdown = AimbotSection:AddDropdown("AimPartDropdown", {
         Title = "Aim Part",
         Description = "Changes the Aim Part",
-        Values = { "Head", "HumanoidRootPart", "Random" },
+        Values = Configuration.AimPartDropdownValues,
         Multi = false,
-        Default = 2,
+        Default = Configuration.AimPart,
         Callback = function(Value)
             if Value ~= "Random" then
                 Configuration.AimPart = Value
@@ -141,10 +154,40 @@ do
                 break
             end
             if AimPartDropdown.Value == "Random" then
-                Configuration.AimPart = AimPartDropdown.Values[math.random(1, 2)]
+                local Values = AimPartDropdown.Values
+                table.remove(Values, table.find(Values, AimPartDropdown.Value))
+                Configuration.AimPart = Values[math.random(1, #Values)]
             end
         end
     end)
+
+    AimbotSection:AddInput("AddAimPartInput", {
+        Title = "Add Aim Part",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Part Name",
+        Callback = function(Value)
+            if #Value > 0 and not table.find(AimPartDropdown.Values, Value) then
+                table.insert(AimPartDropdown.Values, Value)
+                AimPartDropdown:SetValue(Value)
+            end
+        end
+    })
+
+    AimbotSection:AddInput("RemoveAimPartInput", {
+        Title = "Remove Aim Part",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Part Name",
+        Callback = function(Value)
+            if #Value > 0 and table.find(AimPartDropdown.Values, Value) and Value ~= "Random" then
+                table.remove(AimPartDropdown.Values, table.find(AimPartDropdown.Values, Value))
+                AimPartDropdown:SetValue(nil)
+            end
+        end
+    })
 
     local SimpleChecksSection = Tabs.Aimbot:AddSection("Simple Checks")
 
@@ -417,7 +460,7 @@ do
     if Fluent.UseAcrylic then
         UISection:AddToggle("AcrylicToggle", {
             Title = "Acrylic",
-            Description = "Blurred background requires graphic quality 8+",
+            Description = "Blurred Background requires Graphic Quality >= 8",
             Default = Fluent.Acrylic,
             Callback = function(Value)
                 if not Value then
@@ -425,7 +468,7 @@ do
                 else
                     Window:Dialog({
                         Title = "Warning",
-                        Content = "This option can be detected! Activate it anyway?",
+                        Content = "This Option can be detected! Activate it anyway?",
                         Buttons = {
                             {
                                 Title = "Confirm",
@@ -517,7 +560,7 @@ end)
 --! Checking Target
 
 local function IsReady(Target)
-    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
+    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
         local _Player = Players:GetPlayerFromCharacter(Target)
         local TargetPart = Target:FindFirstChild(Configuration.AimPart)
         local NativePart = nil
@@ -614,7 +657,7 @@ local Visuals = { FoV = Visualize("FoV") }
 
 local function ClearVisual(Visual, Key)
     local FoundVisual = table.find(Visuals, Visual)
-    if Visual and (FoundVisual or Key == "FoV") then
+    if Visual and (FoundVisual or Key and Key == "FoV") then
         if Visual.Destroy then
             Visual:Destroy()
         elseif Visual.Remove then
@@ -622,7 +665,7 @@ local function ClearVisual(Visual, Key)
         end
         if FoundVisual then
             table.remove(Visuals, FoundVisual)
-        elseif Key == "FoV" then
+        elseif Key and Key == "FoV" then
             Visuals["FoV"] = nil
         end
     end
