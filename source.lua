@@ -622,6 +622,8 @@ local function ClearVisual(Visual, Key)
         end
         if FoundVisual then
             table.remove(Visuals, FoundVisual)
+        elseif Key == "FoV" then
+            Visuals["FoV"] = nil
         end
     end
 end
@@ -769,28 +771,28 @@ local function VisualizeESP()
     end
 end
 
-local function DisconnectTracking(Index)
-    if Index and Tracking[Index] then
-        Tracking[Index]:Disconnect()
-        table.remove(Tracking, Index)
+local function DisconnectTracking(Key)
+    if Key and Tracking[Key] then
+        Tracking[Key]:Disconnect()
+        table.remove(Tracking, Key)
     end
 end
 
-local function DisconnectConnection(Index)
-    if Index and Connections[Index] then
-        for _, Connection in next, Connections[Index] do
+local function DisconnectConnection(Key)
+    if Key and Connections[Key] then
+        for _, Connection in next, Connections[Key] do
             Connection:Disconnect()
         end
-        table.remove(Connections, Index)
+        table.remove(Connections, Key)
     end
 end
 
 local function DisconnectConnections()
-    for Index, _ in next, Connections do
-        DisconnectConnection(Index)
+    for Key, _ in next, Connections do
+        DisconnectConnection(Key)
     end
-    for Index, _ in next, Tracking do
-        DisconnectTracking(Index)
+    for Key, _ in next, Tracking do
+        DisconnectTracking(Key)
     end
 end
 
@@ -803,9 +805,9 @@ end
 
 local function CharacterRemoving(_Character)
     if _Character then
-        for Index, Tracked in next, Tracking do
+        for Key, Tracked in next, Tracking do
             if Tracked.Character == _Character then
-                DisconnectTracking(Index)
+                DisconnectTracking(Key)
             end
         end
     end
