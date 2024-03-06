@@ -10,54 +10,91 @@
 
 
 
---! Configuration
+--! Services
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+
+--! Colour Handler
+
+local function PackColour(Colour)
+    if not Colour then
+        return {R = 255, G = 255, B = 255}
+    end
+    return {R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255}
+end
+
+local function UnpackColour(Colour)
+    if not Colour then
+        return Color3.fromRGB(255, 255, 255)
+    end
+    return Color3.fromRGB(Colour.R, Colour.G, Colour.B)
+end
+
+
+--! Importing Configuration
+
+local ImportedConfiguration = {}
+
+pcall(function()
+    if getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
+        ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
+        for Key, Value in next, ImportedConfiguration do
+            if Key == "FoVColour" then
+                ImportedConfiguration["FoVColour"] = UnpackColour(Value)
+            elseif Key == "ESPColour" then
+                ImportedConfiguration["ESPColour"] = UnpackColour(Value)
+            end
+        end
+    end
+end)
+
+
+--! Initializing Configuration
 
 local Configuration = {}
 
 --? Aimbot
 
-Configuration.Aimbot = false
-Configuration.AimKey = "V"
-Configuration.AimPart = "HumanoidRootPart"
-Configuration.TeamCheck = false
-Configuration.FriendCheck = false
-Configuration.WallCheck = false
-Configuration.FoVCheck = false
-Configuration.FoVRadius = 100
-Configuration.MagnitudeCheck = false
-Configuration.TriggerMagnitude = 500
-Configuration.TransparencyCheck = false
-Configuration.IgnoredTransparency = 0.5
-Configuration.GroupCheck = false
-Configuration.WhitelistedGroup = 0
-Configuration.UseSensitivity = false
-Configuration.Sensitivity = 0.1
-Configuration.ShowNotifications = true
+Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
+Configuration.AimKey = ImportedConfiguration["AimKey"] or "V"
+Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart", "Random" }
+Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
+Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
+Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
+Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
+Configuration.FoVCheck = ImportedConfiguration["FoVCheck"] or false
+Configuration.FoVRadius = ImportedConfiguration["FoVRadius"] or 100
+Configuration.MagnitudeCheck = ImportedConfiguration["MagnitudeCheck"] or false
+Configuration.TriggerMagnitude = ImportedConfiguration["TriggerMagnitude"] or 500
+Configuration.TransparencyCheck = ImportedConfiguration["TransparencyCheck"] or false
+Configuration.IgnoredTransparency = ImportedConfiguration["IgnoredTransparency"] or 0.5
+Configuration.GroupCheck = ImportedConfiguration["GroupCheck"] or false
+Configuration.WhitelistedGroup = ImportedConfiguration["WhitelistedGroup"] or 0
+Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
+Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 0.1
+Configuration.ShowNotifications = ImportedConfiguration["ShowNotifications"] or true
 
 --? Visuals
 
-Configuration.ShowFoV = false
-Configuration.FoVThickness = 2
-Configuration.FoVTransparency = 0.8
-Configuration.FoVColour = Color3.fromRGB(255, 255, 255)
-Configuration.SmartESP = false
-Configuration.ESPBox = false
-Configuration.NameESP = false
-Configuration.NameESPSize = 16
-Configuration.TracerESP = false
-Configuration.ESPThickness = 2
-Configuration.ESPTransparency = 0.8
-Configuration.ESPColour = Color3.fromRGB(255, 255, 255)
-Configuration.ESPUseTeamColour = false
-Configuration.RainbowVisuals = false
-
-
---! Services
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+Configuration.ShowFoV = ImportedConfiguration["ShowFoV"] or false
+Configuration.FoVThickness = ImportedConfiguration["FoVThickness"] or 2
+Configuration.FoVTransparency = ImportedConfiguration["FoVTransparency"] or 0.8
+Configuration.FoVColour = ImportedConfiguration["FoVColour"] or Color3.fromRGB(255, 255, 255)
+Configuration.SmartESP = ImportedConfiguration["SmartESP"] or false
+Configuration.ESPBox = ImportedConfiguration["ESPBox"] or false
+Configuration.NameESP = ImportedConfiguration["NameESP"] or false
+Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
+Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
+Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
+Configuration.ESPTransparency = ImportedConfiguration["ESPTransparency"] or 0.8
+Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(255, 255, 255)
+Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
+Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
 
 
 --! Constants
@@ -126,9 +163,9 @@ do
     local AimPartDropdown = AimbotSection:AddDropdown("AimPartDropdown", {
         Title = "Aim Part",
         Description = "Changes the Aim Part",
-        Values = { "Head", "HumanoidRootPart", "Random" },
+        Values = Configuration.AimPartDropdownValues,
         Multi = false,
-        Default = 2,
+        Default = Configuration.AimPart,
         Callback = function(Value)
             if Value ~= "Random" then
                 Configuration.AimPart = Value
@@ -141,10 +178,40 @@ do
                 break
             end
             if AimPartDropdown.Value == "Random" then
-                Configuration.AimPart = AimPartDropdown.Values[math.random(1, 2)]
+                local Values = AimPartDropdown.Values
+                table.remove(Values, table.find(Values, "Random"))
+                Configuration.AimPart = Values[math.random(1, #Values)]
             end
         end
     end)
+
+    AimbotSection:AddInput("AddAimPartInput", {
+        Title = "Add Aim Part",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Part Name",
+        Callback = function(Value)
+            if #Value > 0 and not table.find(AimPartDropdown.Values, Value) then
+                table.insert(AimPartDropdown.Values, Value)
+                AimPartDropdown:SetValue(Value)
+            end
+        end
+    })
+
+    AimbotSection:AddInput("RemoveAimPartInput", {
+        Title = "Remove Aim Part",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Part Name",
+        Callback = function(Value)
+            if #Value > 0 and table.find(AimPartDropdown.Values, Value) and Value ~= "Random" then
+                table.remove(AimPartDropdown.Values, table.find(AimPartDropdown.Values, Value))
+                AimPartDropdown:SetValue(nil)
+            end
+        end
+    })
 
     local SimpleChecksSection = Tabs.Aimbot:AddSection("Simple Checks")
 
@@ -417,7 +484,7 @@ do
     if Fluent.UseAcrylic then
         UISection:AddToggle("AcrylicToggle", {
             Title = "Acrylic",
-            Description = "Blurred background requires graphic quality 8+",
+            Description = "Blurred Background requires Graphic Quality >= 8",
             Default = Fluent.Acrylic,
             Callback = function(Value)
                 if not Value then
@@ -425,7 +492,7 @@ do
                 else
                     Window:Dialog({
                         Title = "Warning",
-                        Content = "This option can be detected! Activate it anyway?",
+                        Content = "This Option can be detected! Activate it anyway?",
                         Buttons = {
                             {
                                 Title = "Confirm",
@@ -464,6 +531,78 @@ do
     NotificationsToggle:OnChanged(function(Value)
         Configuration.ShowNotifications = Value
     end)
+
+    if getfenv().isfile and getfenv().writefile and getfenv().delfile then
+        local ConfigurationManager = Tabs.Settings:AddSection("Configuration Manager")
+
+        ConfigurationManager:AddButton({
+            Title = "Export Configuration",
+            Description = "Overwrites the Game Configuration File",
+            Callback = function()
+                local Success = pcall(function()
+                    local ExportedConfiguration = Configuration
+                    for Key, Value in next, ExportedConfiguration do
+                        if Key == "FoVColour" then
+                            ExportedConfiguration["FoVColour"] = PackColour(Value)
+                        elseif Key == "ESPColour" then
+                            ExportedConfiguration["ESPColour"] = PackColour(Value)
+                        end
+                    end
+                    ExportedConfiguration = tostring(HttpService:JSONEncode(ExportedConfiguration))
+                    getfenv().writefile(string.format("%s.ttwizz", game.GameId), ExportedConfiguration)
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("Configuration File %s.ttwizz has been successfully overwritten!", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                end)
+                if not Success then
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("An Error occurred when overwriting the Configuration File %s.ttwizz", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                end
+            end
+        })
+
+        ConfigurationManager:AddButton({
+            Title = "Delete Configuration File",
+            Description = "Deletes the Game Configuration File",
+            Callback = function()
+                if getfenv().isfile(string.format("%s.ttwizz", game.GameId)) then
+                    getfenv().delfile(string.format("%s.ttwizz", game.GameId))
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("Configuration File %s.ttwizz has been successfully deleted!", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                else
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("Configuration File %s.ttwizz could not be found!", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                end
+            end
+        })
+    end
 
     Window:SelectTab(1)
 end
@@ -517,7 +656,7 @@ end)
 --! Checking Target
 
 local function IsReady(Target)
-    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
+    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
         local _Player = Players:GetPlayerFromCharacter(Target)
         local TargetPart = Target:FindFirstChild(Configuration.AimPart)
         local NativePart = nil
@@ -614,7 +753,7 @@ local Visuals = { FoV = Visualize("FoV") }
 
 local function ClearVisual(Visual, Key)
     local FoundVisual = table.find(Visuals, Visual)
-    if Visual and (FoundVisual or Key == "FoV") then
+    if Visual and (FoundVisual or Key and Key == "FoV") then
         if Visual.Destroy then
             Visual:Destroy()
         elseif Visual.Remove then
@@ -622,7 +761,7 @@ local function ClearVisual(Visual, Key)
         end
         if FoundVisual then
             table.remove(Visuals, FoundVisual)
-        elseif Key == "FoV" then
+        elseif Key and Key == "FoV" then
             Visuals["FoV"] = nil
         end
     end
