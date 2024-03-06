@@ -612,20 +612,23 @@ end
 
 local Visuals = { FoV = Visualize("FoV") }
 
-local function ClearVisual(Visual)
-    if Visual and table.find(Visuals, Visual) then
+local function ClearVisual(Visual, Key)
+    local FoundVisual = table.find(Visuals, Visual)
+    if Visual and (FoundVisual or Key == "FoV") then
         if Visual.Destroy then
             Visual:Destroy()
         elseif Visual.Remove then
             Visual:Remove()
         end
-        table.remove(Visuals, table.find(Visuals, Visual))
+        if FoundVisual then
+            table.remove(Visuals, FoundVisual)
+        end
     end
 end
 
 local function ClearVisuals()
-    for _, Visual in next, Visuals do
-        ClearVisual(Visual)
+    for Key, Visual in next, Visuals do
+        ClearVisual(Visual, Key)
     end
 end
 
