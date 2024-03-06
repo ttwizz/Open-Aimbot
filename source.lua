@@ -542,7 +542,9 @@ do
                 local Success = pcall(function()
                     local ExportedConfiguration = Configuration
                     for Key, Value in next, ExportedConfiguration do
-                        if Key == "FoVColour" then
+                        if Key == "AimKey" then
+                            ExportedConfiguration["AimKey"] = UserInputService:GetStringForKeyCode(Value)
+                        elseif Key == "FoVColour" then
                             ExportedConfiguration["FoVColour"] = PackColour(Value)
                         elseif Key == "ESPColour" then
                             ExportedConfiguration["ESPColour"] = PackColour(Value)
