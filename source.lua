@@ -40,26 +40,20 @@ end
 
 local ImportedConfiguration = {}
 
-local function ImportConfiguration(Configuration)
-    if Configuration and getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
-        Configuration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
-        for Key, Value in next, Configuration do
+pcall(function()
+    if getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
+        ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
+        for Key, Value in next, ImportedConfiguration do
             if Key == "AimKey" then
-                if Configuration == ImportedConfiguration then
-                    Configuration["AimKey"] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
-                else
-                    Configuration["AimKey"] = typeof(Value) == "string" and #UserInputService:GetStringForKeyCode(Enum.KeyCode[Value]) > 0 and Enum.KeyCode[Value] or Enum.KeyCode.V
-                end
+                ImportedConfiguration["AimKey"] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
             elseif Key == "FoVColour" then
-                Configuration["FoVColour"] = UnpackColour(Value)
+                ImportedConfiguration["FoVColour"] = UnpackColour(Value)
             elseif Key == "ESPColour" then
-                Configuration["ESPColour"] = UnpackColour(Value)
+                ImportedConfiguration["ESPColour"] = UnpackColour(Value)
             end
         end
     end
-end
-
-pcall(ImportConfiguration, ImportedConfiguration)
+end)
 
 
 --! Initializing Configuration
@@ -544,35 +538,6 @@ do
 
     if getfenv().isfile and getfenv().readfile and getfenv().writefile and getfenv().delfile then
         local ConfigurationManager = Tabs.Settings:AddSection("Configuration Manager")
-
-        ConfigurationManager:AddButton({
-            Title = "Import Configuration",
-            Description = "Imports the Game Configuration File",
-            Callback = function()
-                local Success = pcall(ImportConfiguration, Configuration)
-                if Success then
-                    Window:Dialog({
-                        Title = "Configuration Manager",
-                        Content = string.format("Configuration File %s.ttwizz has been successfully imported!", game.GameId),
-                        Buttons = {
-                            {
-                                Title = "Confirm"
-                            }
-                        }
-                    })
-                else
-                    Window:Dialog({
-                        Title = "Configuration Manager",
-                        Content = string.format("An Error occurred when importing the Configuration File %s.ttwizz", game.GameId),
-                        Buttons = {
-                            {
-                                Title = "Confirm"
-                            }
-                        }
-                    })
-                end
-            end
-        })
 
         ConfigurationManager:AddButton({
             Title = "Export Configuration",
