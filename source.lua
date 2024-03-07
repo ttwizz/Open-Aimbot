@@ -177,7 +177,7 @@ do
                 break
             end
             if Configuration.RandomAimPart and #Configuration.AimPartDropdownValues > 0 then
-                Configuration.AimPart = Configuration.AimPartDropdownValues[math.random(1, #Configuration.AimPartDropdownValues)]
+                AimPartDropdown:SetValue(Configuration.AimPartDropdownValues[math.random(1, #Configuration.AimPartDropdownValues)])
             end
         end
     end)
