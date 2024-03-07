@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.4.9
+    Release 1.5
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -13,9 +13,9 @@
 --! Services
 
 local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
 
@@ -44,7 +44,9 @@ pcall(function()
     if getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
         for Key, Value in next, ImportedConfiguration do
-            if Key == "FoVColour" then
+            if Key == "AimKey" then
+                ImportedConfiguration["AimKey"] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
+            elseif Key == "FoVColour" then
                 ImportedConfiguration["FoVColour"] = UnpackColour(Value)
             elseif Key == "ESPColour" then
                 ImportedConfiguration["ESPColour"] = UnpackColour(Value)
@@ -124,7 +126,7 @@ else
 end
 
 
---! UI Initialization
+--! Initializing UI
 
 do
     local Window = Fluent:CreateWindow({
@@ -534,7 +536,7 @@ do
         Configuration.ShowNotifications = Value
     end)
 
-    if getfenv().isfile and getfenv().writefile and getfenv().delfile then
+    if getfenv().isfile and getfenv().readfile and getfenv().writefile and getfenv().delfile then
         local ConfigurationManager = Tabs.Settings:AddSection("Configuration Manager")
 
         ConfigurationManager:AddButton({
@@ -972,6 +974,15 @@ task.spawn(InitializePlayers)
 
 
 --! Player Events
+
+local OnTeleport; OnTeleport = Player.OnTeleport:Connect(function()
+    if not Fluent or not getfenv().queue_on_teleport then
+        OnTeleport:Disconnect()
+    else
+        getfenv().queue_on_teleport("getfenv().loadstring(game:HttpGet(\"https://raw.githubusercontent.com/ttwizz/Open-Aimbot/master/source.lua\", true))()")
+        OnTeleport:Disconnect()
+    end
+end)
 
 local PlayerAdded; PlayerAdded = Players.PlayerAdded:Connect(function(_Player)
     if not Fluent or not getfenv().Drawing then
