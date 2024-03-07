@@ -62,8 +62,9 @@ local Configuration = {}
 
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
 Configuration.AimKey = ImportedConfiguration["AimKey"] or "V"
-Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart", "Random" }
+Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
+Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
 Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
 Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
 Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
@@ -167,9 +168,7 @@ do
         Multi = false,
         Default = Configuration.AimPart,
         Callback = function(Value)
-            if Value ~= "Random" then
-                Configuration.AimPart = Value
-            end
+            Configuration.AimPart = Value
         end
     })
     task.spawn(function()
@@ -177,12 +176,15 @@ do
             if not Fluent then
                 break
             end
-            if AimPartDropdown.Value == "Random" then
-                local Values = AimPartDropdown.Values
-                table.remove(Values, table.find(Values, "Random"))
-                Configuration.AimPart = Values[math.random(1, #Values)]
+            if Configuration.RandomAimPart and #Configuration.AimPartDropdownValues > 0 then
+                AimPartDropdown:SetValue(Configuration.AimPartDropdownValues[math.random(1, #Configuration.AimPartDropdownValues)])
             end
         end
+    end)
+
+    local RandomAimPartToggle = AimbotSection:AddToggle("RandomAimPartToggle", { Title = "Random Aim Part", Description = "Selects every second a Random Aim Part from Dropdown", Default = Configuration.RandomAimPart })
+    RandomAimPartToggle:OnChanged(function(Value)
+        Configuration.RandomAimPart = Value
     end)
 
     AimbotSection:AddInput("AddAimPartInput", {
@@ -192,8 +194,8 @@ do
         Finished = true,
         Placeholder = "Part Name",
         Callback = function(Value)
-            if #Value > 0 and not table.find(AimPartDropdown.Values, Value) then
-                table.insert(AimPartDropdown.Values, Value)
+            if #Value > 0 and not table.find(Configuration.AimPartDropdownValues, Value) then
+                table.insert(Configuration.AimPartDropdownValues, Value)
                 AimPartDropdown:SetValue(Value)
             end
         end
@@ -206,8 +208,8 @@ do
         Finished = true,
         Placeholder = "Part Name",
         Callback = function(Value)
-            if #Value > 0 and table.find(AimPartDropdown.Values, Value) and Value ~= "Random" then
-                table.remove(AimPartDropdown.Values, table.find(AimPartDropdown.Values, Value))
+            if #Value > 0 and table.find(Configuration.AimPartDropdownValues, Value) then
+                table.remove(Configuration.AimPartDropdownValues, table.find(Configuration.AimPartDropdownValues, Value))
                 AimPartDropdown:SetValue(nil)
             end
         end
