@@ -543,7 +543,7 @@ do
             Title = "Export Configuration",
             Description = "Overwrites the Game Configuration File",
             Callback = function()
-                local Success = pcall(function()
+                xpcall(function()
                     local ExportedConfiguration = Configuration
                     for Key, Value in next, ExportedConfiguration do
                         if Key == "AimKey" then
@@ -565,8 +565,7 @@ do
                             }
                         }
                     })
-                end)
-                if not Success then
+                end, function()
                     Window:Dialog({
                         Title = "Configuration Manager",
                         Content = string.format("An Error occurred when overwriting the Configuration File %s.ttwizz", game.GameId),
@@ -576,7 +575,7 @@ do
                             }
                         }
                     })
-                end
+                end)
             end
         })
 
