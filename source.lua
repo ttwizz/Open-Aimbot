@@ -79,6 +79,8 @@ Configuration.IgnoredTransparency = ImportedConfiguration["IgnoredTransparency"]
 Configuration.GroupCheck = ImportedConfiguration["GroupCheck"] or false
 Configuration.WhitelistedGroup = ImportedConfiguration["WhitelistedGroup"] or 0
 Configuration.PlayerCheck = ImportedConfiguration["PlayerCheck"] or false
+Configuration.IgnoredPlayersDropdownValues = ImportedConfiguration["IgnoredPlayersDropdownValues"] or {}
+Configuration.IgnoredPlayers = ImportedConfiguration["IgnoredPlayers"] or {}
 Configuration.TargetPlayersDropdownValues = ImportedConfiguration["TargetPlayersDropdownValues"] or {}
 Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
@@ -107,6 +109,22 @@ Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
+
+
+--! Name Handler
+
+local function GetFullName(String)
+    if String and #String >= 3 and #String <= 20 then
+        for _, _Player in next, Players:GetPlayers() do
+            if _Player ~= Player and string.sub(string.lower(_Player.Name), 1, #string.lower(String)) == string.lower(String) then
+                return _Player.Name
+            end
+        end
+        return ""
+    else
+        return ""
+    end
+end
 
 
 --! Fields
@@ -312,6 +330,58 @@ do
         Configuration.PlayerCheck = Value
     end)
 
+    local IgnoredPlayersDropdown = AdvancedChecksSection:AddDropdown("IgnoredPlayersDropdown", {
+        Title = "Ignored Players",
+        Description = "Sets the Ignored Players",
+        Values = Configuration.IgnoredPlayersDropdownValues,
+        Multi = true,
+        Default = Configuration.IgnoredPlayers
+    })
+    IgnoredPlayersDropdown:OnChanged(function(Value)
+        Configuration.IgnoredPlayers = {}
+        for Key, _ in next, Value do
+            table.insert(Configuration.IgnoredPlayers, Key)
+        end
+    end)
+
+    AdvancedChecksSection:AddInput("AddIgnoredPlayerInput", {
+        Title = "Add Ignored Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
+                table.insert(Configuration.IgnoredPlayersDropdownValues, Value)
+                if not table.find(Configuration.IgnoredPlayers, Value) then
+                    IgnoredPlayersDropdown.Value[Value] = true
+                    table.insert(Configuration.IgnoredPlayers, Value)
+                end
+                IgnoredPlayersDropdown:BuildDropdownList()
+            end
+        end
+    })
+
+    AdvancedChecksSection:AddInput("RemoveIgnoredPlayerInput", {
+        Title = "Remove Ignored Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
+                if table.find(Configuration.IgnoredPlayers, Value) then
+                    IgnoredPlayersDropdown.Value[Value] = nil
+                    table.remove(Configuration.IgnoredPlayers, table.find(Configuration.IgnoredPlayers, Value))
+                end
+                table.remove(Configuration.IgnoredPlayersDropdownValues, table.find(Configuration.IgnoredPlayersDropdownValues, Value))
+                IgnoredPlayersDropdown:BuildDropdownList()
+            end
+        end
+    })
+
     local TargetPlayersDropdown = AdvancedChecksSection:AddDropdown("TargetPlayersDropdown", {
         Title = "Target Players",
         Description = "Sets the Target Players",
@@ -333,7 +403,8 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            if #Value > 0 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
                 table.insert(Configuration.TargetPlayersDropdownValues, Value)
                 if not table.find(Configuration.TargetPlayers, Value) then
                     TargetPlayersDropdown.Value[Value] = true
@@ -351,7 +422,8 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            if #Value > 0 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
                 if table.find(Configuration.TargetPlayers, Value) then
                     TargetPlayersDropdown.Value[Value] = nil
                     table.remove(Configuration.TargetPlayers, table.find(Configuration.TargetPlayers, Value))
@@ -748,7 +820,7 @@ local function IsReady(Target)
             return false
         elseif Configuration.GroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) then
             return false
-        elseif Configuration.PlayerCheck and not table.find(Configuration.TargetPlayers, _Player.Name) then
+        elseif Configuration.PlayerCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) and not table.find(Configuration.TargetPlayers, _Player.Name) then
             return false
         end
         return true, Target, _Player, TargetPart
