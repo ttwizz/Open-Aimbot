@@ -78,6 +78,9 @@ Configuration.TransparencyCheck = ImportedConfiguration["TransparencyCheck"] or 
 Configuration.IgnoredTransparency = ImportedConfiguration["IgnoredTransparency"] or 0.5
 Configuration.GroupCheck = ImportedConfiguration["GroupCheck"] or false
 Configuration.WhitelistedGroup = ImportedConfiguration["WhitelistedGroup"] or 0
+Configuration.PlayerCheck = ImportedConfiguration["PlayerCheck"] or false
+Configuration.TargetPlayersDropdownValues = ImportedConfiguration["TargetPlayersDropdownValues"] or {}
+Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 0.1
 Configuration.ShowNotifications = ImportedConfiguration["ShowNotifications"] or true
@@ -301,6 +304,61 @@ do
         Placeholder = "Group Id",
         Callback = function(Value)
             Configuration.WhitelistedGroup = #Value > 0 and Value or 0
+        end
+    })
+
+    local PlayerCheckToggle = AdvancedChecksSection:AddToggle("PlayerCheckToggle", { Title = "Player Check", Description = "Toggles the Player Check", Default = Configuration.PlayerCheck })
+    PlayerCheckToggle:OnChanged(function(Value)
+        Configuration.PlayerCheck = Value
+    end)
+
+    local TargetPlayersDropdown = AdvancedChecksSection:AddDropdown("TargetPlayersDropdown", {
+        Title = "Target Players",
+        Description = "Sets the Target Players",
+        Values = Configuration.TargetPlayersDropdownValues,
+        Multi = true,
+        Default = Configuration.TargetPlayers
+    })
+    TargetPlayersDropdown:OnChanged(function(Value)
+        Configuration.TargetPlayers = {}
+        for Key, _ in next, Value do
+            table.insert(Configuration.TargetPlayers, Key)
+        end
+    end)
+
+    AdvancedChecksSection:AddInput("AddTargetPlayerInput", {
+        Title = "Add Target Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            if #Value > 0 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
+                table.insert(Configuration.TargetPlayersDropdownValues, Value)
+                if not table.find(Configuration.TargetPlayers, Value) then
+                    TargetPlayersDropdown.Value[Value] = true
+                    table.insert(Configuration.TargetPlayers, Value)
+                end
+                TargetPlayersDropdown:BuildDropdownList()
+            end
+        end
+    })
+
+    AdvancedChecksSection:AddInput("RemoveTargetPlayerInput", {
+        Title = "Remove Target Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            if #Value > 0 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
+                if table.find(Configuration.TargetPlayers, Value) then
+                    TargetPlayersDropdown.Value[Value] = nil
+                    table.remove(Configuration.TargetPlayers, table.find(Configuration.TargetPlayers, Value))
+                end
+                table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
+                TargetPlayersDropdown:BuildDropdownList()
+            end
         end
     })
 
@@ -689,6 +747,8 @@ local function IsReady(Target)
         elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
             return false
         elseif Configuration.GroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) then
+            return false
+        elseif Configuration.PlayerCheck and not table.find(Configuration.TargetPlayers, _Player.Name) then
             return false
         end
         return true, Target, _Player, TargetPart
