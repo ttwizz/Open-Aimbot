@@ -232,19 +232,18 @@ do
         Placeholder = "Part Name",
         Callback = function(Value)
             if #Value > 0 and table.find(Configuration.AimPartDropdownValues, Value) then
+                if #Configuration.AimPartDropdownValues == 1 then
+                    Configuration.AimPartDropdownValues[1] = "--"
+                    AimPartDropdown:SetValue("--")
+                    Configuration.AimPart = nil
+                end
                 table.remove(Configuration.AimPartDropdownValues, table.find(Configuration.AimPartDropdownValues, Value))
-                AimPartDropdown:SetValue(nil)
+                if Configuration.AimPart == Value then
+                    AimPartDropdown:SetValue(nil)
+                else
+                    AimPartDropdown:BuildDropdownList()
+                end
             end
-        end
-    })
-
-    AimbotSection:AddButton({
-        Title = "Clear Aim Part Dropdown",
-        Description = "Clears the Aim Part Dropdown",
-        Callback = function()
-            AimPartDropdown:SetValues({})
-            Configuration.AimPartDropdownValues = {}
-            Configuration.AimPart = nil
         end
     })
 
@@ -386,19 +385,13 @@ do
                     IgnoredPlayersDropdown.Value[Value] = nil
                     table.remove(Configuration.IgnoredPlayers, table.find(Configuration.IgnoredPlayers, Value))
                 end
+                if #Configuration.IgnoredPlayersDropdownValues == 1 then
+                    Configuration.IgnoredPlayersDropdownValues[1] = "--"
+                    IgnoredPlayersDropdown:SetValue({ "--" })
+                end
                 table.remove(Configuration.IgnoredPlayersDropdownValues, table.find(Configuration.IgnoredPlayersDropdownValues, Value))
                 IgnoredPlayersDropdown:BuildDropdownList()
             end
-        end
-    })
-
-    AdvancedChecksSection:AddButton({
-        Title = "Clear Ignored Players Dropdown",
-        Description = "Clears the Ignored Players Dropdown",
-        Callback = function()
-            IgnoredPlayersDropdown:SetValues({})
-            Configuration.IgnoredPlayersDropdownValues = {}
-            Configuration.IgnoredPlayers = {}
         end
     })
 
@@ -448,19 +441,13 @@ do
                     TargetPlayersDropdown.Value[Value] = nil
                     table.remove(Configuration.TargetPlayers, table.find(Configuration.TargetPlayers, Value))
                 end
+                if #Configuration.TargetPlayersDropdownValues == 1 then
+                    Configuration.TargetPlayersDropdownValues[1] = "--"
+                    TargetPlayersDropdown:SetValue({ "--" })
+                end
                 table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
                 TargetPlayersDropdown:BuildDropdownList()
             end
-        end
-    })
-
-    AdvancedChecksSection:AddButton({
-        Title = "Clear Target Players Dropdown",
-        Description = "Clears the Target Players Dropdown",
-        Callback = function()
-            TargetPlayersDropdown:SetValues({})
-            Configuration.TargetPlayersDropdownValues = {}
-            Configuration.TargetPlayers = {}
         end
     })
 
