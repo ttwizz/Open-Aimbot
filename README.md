@@ -37,8 +37,8 @@ ___
 Open Aimbot is a **universal** open source utility. It offers a wide selection of extensive functionality, including:
 - ***Over 30 Features***
 - ***Detection Bypasses***
-- *Team*, *Friend*, *Wall*, *FoV*, *Magnitude*, *Transparency*, *Group* Checks
-- Ability to set *Sensitivity*, *Activation Keys*, *Target Objects*, *Display Notification Log*, *ESP*, *FoV*, *Tracers* and other more subtle options
+- *Team*, *Friend*, *Wall*, *FoV*, *Magnitude*, *Transparency*, *Group*, *Player* Checks
+- Ability to set *Sensitivity*, *Activation Keys*, *Target Objects*, *Ignored & Target Players*, *Display Notification Log*, *TriggerBot*, *ESP*, *FoV*, *Tracers* and other more subtle options
 - Availability of *Security Warnings*, *Maximum User-Friendliness* and ***Configuration Manager***
 - A *Beautiful* and *Unique Interface* that supports *Minimization*, *Maximization* and even ***Resizing***
 - ***Support For Absolutely All Exploits***
@@ -51,6 +51,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/ttwizz/Open-Aimbot/ma
 ```
 
 <p align="center">
-    <img src="https://gyazo.com/57409eb4c1edf4dfd48063a81df4d11a.gif" alt="Open Aimbot" />
+    <img src="https://gyazo.com/5f9ae91f83f2caf34217290d026dde85.gif" alt="Open Aimbot" />
     Copyright (c) 2024 ttwiz_z
 </p>
