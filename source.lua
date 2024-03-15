@@ -67,6 +67,7 @@ Configuration.AimKey = ImportedConfiguration["AimKey"] or "V"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
 Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
+Configuration.TriggerBot = ImportedConfiguration["TriggerBot"] or false
 Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
 Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
 Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
@@ -246,6 +247,13 @@ do
             end
         end
     })
+
+    if getfenv().mouse1click then
+        local TriggerBotToggle = AimbotSection:AddToggle("TriggerBotToggle", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
+        TriggerBotToggle:OnChanged(function(Value)
+            Configuration.TriggerBot = Value
+        end)
+    end
 
     local SimpleChecksSection = Tabs.Aimbot:AddSection("Simple Checks")
 
@@ -810,6 +818,9 @@ end)
 local function IsReady(Target)
     if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
         local _Player = Players:GetPlayerFromCharacter(Target)
+        if _Player == Player then
+            return false
+        end
         local TargetPart = Target:FindFirstChild(Configuration.AimPart)
         local NativePart = nil
         if (Configuration.WallCheck or Configuration.MagnitudeCheck) and Player.Character and Player.Character:FindFirstChild(Configuration.AimPart) and Player.Character:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
@@ -843,6 +854,15 @@ local function IsReady(Target)
         return true, Target, _Player, TargetPart
     else
         return false
+    end
+end
+
+
+--! TriggerBot Handler
+
+local function HandleTriggerBot()
+    if Fluent and getfenv().mouse1click and Configuration.TriggerBot and Mouse.Target and Mouse.Target.Parent and IsReady(Mouse.Target.Parent) then
+        getfenv().mouse1click()
     end
 end
 
@@ -1174,6 +1194,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             end
             ResetFields()
         end
+        task.spawn(HandleTriggerBot)
         if getfenv().Drawing then
             task.spawn(VisualizeFoV)
             task.spawn(VisualizeESP)
@@ -1184,7 +1205,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             if not IsReady(OldTarget) then
                 for _, _Player in next, Players:GetPlayers() do
                     local IsCharacterReady, Character, _, Part = IsReady(_Player.Character)
-                    if _Player ~= Player and IsCharacterReady then
+                    if IsCharacterReady then
                         local Vector, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(Part.Position)
                         if IsInViewport then
                             local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
