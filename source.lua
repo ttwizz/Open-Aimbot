@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.5
+    Pre-release 1.6-rc1
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -342,12 +342,14 @@ do
         end
     })
 
-    local PlayerCheckToggle = AdvancedChecksSection:AddToggle("PlayerCheckToggle", { Title = "Player Check", Description = "Toggles the Player Check", Default = Configuration.PlayerCheck })
+    local ExpertChecksSection = Tabs.Aimbot:AddSection("Expert Checks")
+
+    local PlayerCheckToggle = ExpertChecksSection:AddToggle("PlayerCheckToggle", { Title = "Player Check", Description = "Toggles the Player Check", Default = Configuration.PlayerCheck })
     PlayerCheckToggle:OnChanged(function(Value)
         Configuration.PlayerCheck = Value
     end)
 
-    local IgnoredPlayersDropdown = AdvancedChecksSection:AddDropdown("IgnoredPlayersDropdown", {
+    local IgnoredPlayersDropdown = ExpertChecksSection:AddDropdown("IgnoredPlayersDropdown", {
         Title = "Ignored Players",
         Description = "Sets the Ignored Players",
         Values = Configuration.IgnoredPlayersDropdownValues,
@@ -361,7 +363,7 @@ do
         end
     end)
 
-    AdvancedChecksSection:AddInput("AddIgnoredPlayerInput", {
+    ExpertChecksSection:AddInput("AddIgnoredPlayerInput", {
         Title = "Add Ignored Player",
         Description = "After typing, press Enter",
         Numeric = false,
@@ -380,7 +382,7 @@ do
         end
     })
 
-    AdvancedChecksSection:AddInput("RemoveIgnoredPlayerInput", {
+    ExpertChecksSection:AddInput("RemoveIgnoredPlayerInput", {
         Title = "Remove Ignored Player",
         Description = "After typing, press Enter",
         Numeric = false,
@@ -403,7 +405,7 @@ do
         end
     })
 
-    local TargetPlayersDropdown = AdvancedChecksSection:AddDropdown("TargetPlayersDropdown", {
+    local TargetPlayersDropdown = ExpertChecksSection:AddDropdown("TargetPlayersDropdown", {
         Title = "Target Players",
         Description = "Sets the Target Players",
         Values = Configuration.TargetPlayersDropdownValues,
@@ -417,7 +419,7 @@ do
         end
     end)
 
-    AdvancedChecksSection:AddInput("AddTargetPlayerInput", {
+    ExpertChecksSection:AddInput("AddTargetPlayerInput", {
         Title = "Add Target Player",
         Description = "After typing, press Enter",
         Numeric = false,
@@ -436,7 +438,7 @@ do
         end
     })
 
-    AdvancedChecksSection:AddInput("RemoveTargetPlayerInput", {
+    ExpertChecksSection:AddInput("RemoveTargetPlayerInput", {
         Title = "Remove Target Player",
         Description = "After typing, press Enter",
         Numeric = false,
