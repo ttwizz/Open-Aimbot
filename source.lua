@@ -238,6 +238,16 @@ do
         end
     })
 
+    AimbotSection:AddButton({
+        Title = "Clear Aim Part Dropdown",
+        Description = "Clears the Aim Part Dropdown",
+        Callback = function()
+            AimPartDropdown:SetValues({})
+            Configuration.AimPartDropdownValues = {}
+            Configuration.AimPart = nil
+        end
+    })
+
     local SimpleChecksSection = Tabs.Aimbot:AddSection("Simple Checks")
 
     local TeamCheckToggle = SimpleChecksSection:AddToggle("TeamCheckToggle", { Title = "Team Check", Description = "Toggles the Team Check", Default = Configuration.TeamCheck })
@@ -382,6 +392,16 @@ do
         end
     })
 
+    AdvancedChecksSection:AddButton({
+        Title = "Clear Ignored Players Dropdown",
+        Description = "Clears the Ignored Players Dropdown",
+        Callback = function()
+            IgnoredPlayersDropdown:SetValues({})
+            Configuration.IgnoredPlayersDropdownValues = {}
+            Configuration.IgnoredPlayers = {}
+        end
+    })
+
     local TargetPlayersDropdown = AdvancedChecksSection:AddDropdown("TargetPlayersDropdown", {
         Title = "Target Players",
         Description = "Sets the Target Players",
@@ -431,6 +451,16 @@ do
                 table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
                 TargetPlayersDropdown:BuildDropdownList()
             end
+        end
+    })
+
+    AdvancedChecksSection:AddButton({
+        Title = "Clear Target Players Dropdown",
+        Description = "Clears the Target Players Dropdown",
+        Callback = function()
+            TargetPlayersDropdown:SetValues({})
+            Configuration.TargetPlayersDropdownValues = {}
+            Configuration.TargetPlayers = {}
         end
     })
 
