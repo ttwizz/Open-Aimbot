@@ -7,7 +7,7 @@
     Author: ttwiz_z (ttwizz)
     License: MIT
     GitHub: https://github.com/ttwizz/Open-Aimbot
---]]
+]]
 
 
 
@@ -876,7 +876,7 @@ end
 --! TriggerBot Handler
 
 local function HandleTriggerBot()
-    if Fluent and getfenv().mouse1click and Configuration.TriggerBot and Mouse.Target and Mouse.Target.Parent and IsReady(Mouse.Target.Parent) then
+    if Fluent and getfenv().mouse1click and Configuration.TriggerBot and Mouse.Target and IsReady(Mouse.Target.Parent) then
         getfenv().mouse1click()
     end
 end
