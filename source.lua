@@ -1,7 +1,8 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Pre-release 1.6-rc1
+    Pre-release 1.6-rc2
+    ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -762,6 +763,18 @@ do
                         }
                     })
                 end
+            end
+        })
+    end
+
+    if getfenv().setclipboard then
+        local Discord = Tabs.Settings:AddSection("Discord")
+
+        Discord:AddButton({
+            Title = "Copy Invite Link",
+            Description = "Paste it into the Browser Tab",
+            Callback = function()
+                getfenv().setclipboard("https://ttwizz.su/pix")
             end
         })
     end
