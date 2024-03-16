@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Pre-release 1.6-rc6
+    Pre-release 1.6-rc7
     ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
@@ -64,6 +64,7 @@ local Configuration = {}
 --? Aimbot
 
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
+Configuration.UseMouseMoving = ImportedConfiguration["UseMouseMoving"] or false
 Configuration.AimKey = ImportedConfiguration["AimKey"] or "V"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
@@ -132,7 +133,7 @@ end
 --! Fields
 
 local Fluent = nil
-local MouseSensitivity = nil
+local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 local Aiming = false
 local Target = nil
 local Tween = nil
@@ -150,14 +151,10 @@ else
     end
 end
 
-if not getfenv().mousemoverel then
-    MouseSensitivity = UserInputService.MouseDeltaSensitivity
-end
-
 local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
-    if not Fluent or getfenv().mousemoverel then
+    if not Fluent then
         SensitivityChanged:Disconnect()
-    elseif not Aiming then
+    elseif not Aiming or getfenv().mousemoverel and Configuration.UseMouseMoving then
         MouseSensitivity = UserInputService.MouseDeltaSensitivity
     end
 end)
@@ -188,6 +185,13 @@ do
     AimbotToggle:OnChanged(function(Value)
         Configuration.Aimbot = Value
     end)
+
+    if getfenv().mousemoverel then
+        local UseMouseMovingToggle = AimbotSection:AddToggle("UseMouseMovingToggle", { Title = "Use Mouse Moving", Description = "Uses the Mouse Moving instead of the Camera Moving", Default = Configuration.UseMouseMoving })
+        UseMouseMovingToggle:OnChanged(function(Value)
+            Configuration.UseMouseMoving = Value
+        end)
+    end
 
     local AimKeybind = AimbotSection:AddKeybind("AimKeybind", {
         Title = "Aim Key",
@@ -330,7 +334,7 @@ do
 
     AdvancedChecksSection:AddSlider("IgnoredTransparencySlider", {
         Title = "Ignored Transparency",
-        Description = "Target is ignored if its Transparency is > than or = to the set one",
+        Description = "Target is ignored if its Transparency is > than / = to the set one",
         Default = Configuration.IgnoredTransparency,
         Min = 0.1,
         Max = 1,
@@ -485,7 +489,7 @@ do
 
     SensitivitySection:AddSlider("SensitivitySlider", {
         Title = "Sensitivity",
-        Description = "Makes the Camera Smooth when Aiming",
+        Description = "Smoothes out the Mouse / Camera Movements when Aiming",
         Default = Configuration.Sensitivity,
         Min = Configuration.Sensitivity,
         Max = 0.9,
@@ -833,14 +837,14 @@ local function ResetFields(All)
     if All then
         Aiming = false
     end
-    Target = nil
-    if not getfenv().mousemoverel then
-        if Tween then
-            Tween:Cancel()
-            Tween = nil
-        end
-        UserInputService.MouseDeltaSensitivity = MouseSensitivity
+    if not Aiming then
+        Target = nil
     end
+    if Tween then
+        Tween:Cancel()
+        Tween = nil
+    end
+    UserInputService.MouseDeltaSensitivity = MouseSensitivity
 end
 
 
@@ -1274,7 +1278,8 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 if OldTarget ~= Target then
                     Notify(string.format("[Target]: @%s", _Player.Name))
                 end
-                if getfenv().mousemoverel then
+                if getfenv().mousemoverel and Configuration.UseMouseMoving then
+                    ResetFields(false)
                     local MouseLocation = UserInputService:GetMouseLocation()
                     local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity * 10 or 1
                     getfenv().mousemoverel((Part.Position.X - MouseLocation.X) * Sensitivity, (Part.Position.Y - MouseLocation.Y) * Sensitivity)
