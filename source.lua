@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Pre-release 1.6-rc5
+    Pre-release 1.6-rc6
     ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
@@ -835,11 +835,11 @@ local function ResetFields(All)
     end
     Target = nil
     if not getfenv().mousemoverel then
-        UserInputService.MouseDeltaSensitivity = MouseSensitivity
         if Tween then
             Tween:Cancel()
             Tween = nil
         end
+        UserInputService.MouseDeltaSensitivity = MouseSensitivity
     end
 end
 
@@ -1279,13 +1279,13 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity * 10 or 1
                     getfenv().mousemoverel((Part.Position.X - MouseLocation.X) * Sensitivity, (Part.Position.Y - MouseLocation.Y) * Sensitivity)
                 else
+                    UserInputService.MouseDeltaSensitivity = 0
                     if Configuration.UseSensitivity then
                         Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position) })
                         Tween:Play()
                     else
                         workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position)
                     end
-                    UserInputService.MouseDeltaSensitivity = 0
                 end
             else
                 ResetFields(false)
