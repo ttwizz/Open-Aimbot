@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Pre-release 1.6-rc3
+    Pre-release 1.6-rc4
     ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
@@ -132,7 +132,7 @@ end
 --! Fields
 
 local Fluent = nil
-local MouseSensitivity = UserInputService.MouseDeltaSensitivity
+local MouseSensitivity = nil
 local Aiming = false
 local Target = nil
 local Tween = nil
@@ -148,6 +148,10 @@ else
     else
         Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
     end
+end
+
+if not getfenv().mousemoverel then
+    MouseSensitivity = UserInputService.MouseDeltaSensitivity
 end
 
 local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
