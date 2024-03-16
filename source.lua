@@ -111,7 +111,6 @@ Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
-local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 
 
 --! Name Handler
@@ -133,6 +132,7 @@ end
 --! Fields
 
 local Fluent = nil
+local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 local Aiming = false
 local Target = nil
 local Tween = nil
@@ -149,6 +149,14 @@ else
         Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
     end
 end
+
+local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
+    if not Fluent or getfenv().mousemoverel then
+        SensitivityChanged:Disconnect()
+    elseif UserInputService.MouseDeltaSensitivity ~= 0 then
+        MouseSensitivity = UserInputService.MouseDeltaSensitivity
+    end
+end)
 
 
 --! Initializing UI
@@ -769,9 +777,9 @@ do
         })
     end
 
-    if getfenv().setclipboard then
-        local Discord = Tabs.Settings:AddSection("Discord")
+    local Discord = Tabs.Settings:AddSection("Discord")
 
+    if getfenv().setclipboard then
         Discord:AddButton({
             Title = "Copy Invite Link",
             Description = "Paste it into the Browser Tab",
@@ -787,6 +795,11 @@ do
                     }
                 })
             end
+        })
+    else
+        Discord:AddParagraph({
+            Title = "https://ttwizz.su/pix",
+            Content = "Paste it into the Browser Tab"
         })
     end
 
@@ -812,13 +825,16 @@ Notify("Successfully initialized!")
 
 --! Resetting Fields
 
-local function ResetFields()
-    Aiming = false
+local function ResetFields(All)
+    if All then
+        Aiming = false
+    end
     Target = nil
     if not getfenv().mousemoverel then
         UserInputService.MouseDeltaSensitivity = MouseSensitivity
         if Tween then
             Tween:Cancel()
+            Tween = nil
         end
     end
 end
@@ -839,7 +855,7 @@ local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Inpu
     if not Fluent then
         InputEnded:Disconnect()
     elseif not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming then
-        ResetFields()
+        ResetFields(true)
         Notify("[Aiming Mode]: OFF")
     end
 end)
@@ -1196,7 +1212,7 @@ local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_
     if Fluent then
         if _Player == Player then
             Fluent:Destroy()
-            ResetFields()
+            ResetFields(true)
             DisconnectConnections()
             ClearVisuals()
             PlayerRemoving:Disconnect()
@@ -1216,7 +1232,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
     pcall(function()
         if Fluent.Unloaded then
             Fluent = nil
-            ResetFields()
+            ResetFields(true)
             DisconnectConnections()
             ClearVisuals()
             AimbotLoop:Disconnect()
@@ -1224,7 +1240,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             if Aiming then
                 Notify("[Aiming Mode]: OFF")
             end
-            ResetFields()
+            ResetFields(true)
         end
         task.spawn(HandleTriggerBot)
         if getfenv().Drawing then
@@ -1268,7 +1284,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     UserInputService.MouseDeltaSensitivity = 0
                 end
             else
-                Target = nil
+                ResetFields(false)
             end
         end
     end)
