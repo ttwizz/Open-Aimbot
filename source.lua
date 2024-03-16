@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Pre-release 1.6-rc2
+    Pre-release 1.6-rc3
     ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
@@ -111,6 +111,7 @@ Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
+local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 
 
 --! Name Handler
@@ -134,6 +135,7 @@ end
 local Fluent = nil
 local Aiming = false
 local Target = nil
+local Tween = nil
 
 if RunService:IsStudio() then
     Fluent = require(script:WaitForChild("Fluent", math.huge))
@@ -775,6 +777,15 @@ do
             Description = "Paste it into the Browser Tab",
             Callback = function()
                 getfenv().setclipboard("https://ttwizz.su/pix")
+                Window:Dialog({
+                    Title = "Discord",
+                    Content = "Invite Link has been copied to the Clipboard!",
+                    Buttons = {
+                        {
+                            Title = "Confirm"
+                        }
+                    }
+                })
             end
         })
     end
@@ -804,6 +815,12 @@ Notify("Successfully initialized!")
 local function ResetFields()
     Aiming = false
     Target = nil
+    if not getfenv().mousemoverel then
+        UserInputService.MouseDeltaSensitivity = MouseSensitivity
+        if Tween then
+            Tween:Cancel()
+        end
+    end
 end
 
 
@@ -1237,10 +1254,18 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 if OldTarget ~= Target then
                     Notify(string.format("[Target]: @%s", _Player.Name))
                 end
-                if Configuration.UseSensitivity then
-                    TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position) }):Play()
+                if getfenv().mousemoverel then
+                    local MouseLocation = UserInputService:GetMouseLocation()
+                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity * 10 or 1
+                    getfenv().mousemoverel((Part.Position.X - MouseLocation.X) * Sensitivity, (Part.Position.Y - MouseLocation.Y) * Sensitivity)
                 else
-                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position)
+                    if Configuration.UseSensitivity then
+                        Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position) })
+                        Tween:Play()
+                    else
+                        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Part.Position)
+                    end
+                    UserInputService.MouseDeltaSensitivity = 0
                 end
             else
                 Target = nil
