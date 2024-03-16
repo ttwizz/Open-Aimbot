@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Pre-release 1.6-rc4
+    Pre-release 1.6-rc5
     ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
@@ -157,7 +157,7 @@ end
 local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
     if not Fluent or getfenv().mousemoverel then
         SensitivityChanged:Disconnect()
-    elseif UserInputService.MouseDeltaSensitivity ~= 0 then
+    elseif not Aiming then
         MouseSensitivity = UserInputService.MouseDeltaSensitivity
     end
 end)
