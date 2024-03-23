@@ -1161,6 +1161,12 @@ local function DisconnectConnections()
     end
 end
 
+local function DisconnectAimbot()
+    ResetFields()
+    DisconnectConnections()
+    ClearVisuals()
+end
+
 local function CharacterAdded(_Character)
     if _Character then
         local _Player = Players:GetPlayerFromCharacter(_Character)
@@ -1216,9 +1222,7 @@ local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_
     if Fluent then
         if _Player == Player then
             Fluent:Destroy()
-            ResetFields()
-            DisconnectConnections()
-            ClearVisuals()
+            DisconnectAimbot()
             PlayerRemoving:Disconnect()
         else
             DisconnectConnection(_Player.UserId)
@@ -1233,65 +1237,61 @@ end)
 --! Aimbot Loop
 
 local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if Fluent.Unloaded then
-            Fluent = nil
-            ResetFields()
-            DisconnectConnections()
-            ClearVisuals()
-            AimbotLoop:Disconnect()
-        elseif not Configuration.Aimbot then
-            if Aiming then
-                Notify("[Aiming Mode]: OFF")
-            end
-            ResetFields()
-        end
-        task.spawn(HandleTriggerBot)
-        if getfenv().Drawing then
-            task.spawn(VisualizeFoV)
-            task.spawn(VisualizeESP)
-        end
+    if Fluent.Unloaded then
+        Fluent = nil
+        DisconnectAimbot()
+        AimbotLoop:Disconnect()
+    elseif not Configuration.Aimbot then
         if Aiming then
-            local OldTarget = Target
-            local Closest = math.huge
-            if not IsReady(OldTarget) then
-                for _, _Player in next, Players:GetPlayers() do
-                    local IsCharacterReady, Character, _, PartViewportPosition = IsReady(_Player.Character)
-                    if IsCharacterReady and PartViewportPosition[2] then
-                        local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PartViewportPosition[1].X, PartViewportPosition[1].Y)).Magnitude
-                        if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
-                            Target = Character
-                            Closest = Magnitude
-                        end
+            Notify("[Aiming Mode]: OFF")
+        end
+        ResetFields()
+    end
+    HandleTriggerBot()
+    if getfenv().Drawing then
+        VisualizeFoV()
+        VisualizeESP()
+    end
+    if Aiming then
+        local OldTarget = Target
+        local Closest = math.huge
+        if not IsReady(OldTarget) then
+            for _, _Player in next, Players:GetPlayers() do
+                local IsCharacterReady, Character, _, PartViewportPosition = IsReady(_Player.Character)
+                if IsCharacterReady and PartViewportPosition[2] then
+                    local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PartViewportPosition[1].X, PartViewportPosition[1].Y)).Magnitude
+                    if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
+                        Target = Character
+                        Closest = Magnitude
                     end
                 end
             end
-            local IsTargetReady, _, _Player, PartViewportPosition, PartWorldPosition = IsReady(Target)
-            if IsTargetReady then
-                if OldTarget ~= Target then
-                    Notify(string.format("[Target]: @%s", _Player.Name))
-                end
-                if getfenv().mousemoverel and Configuration.UseMouseMoving then
-                    if PartViewportPosition[2] then
-                        ResetFields(true, true)
-                        local MouseLocation = UserInputService:GetMouseLocation()
-                        local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity * 10 or 1
-                        getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) * Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) * Sensitivity)
-                    else
-                        ResetFields(true)
-                    end
+        end
+        local IsTargetReady, _, _Player, PartViewportPosition, PartWorldPosition = IsReady(Target)
+        if IsTargetReady then
+            if OldTarget ~= Target then
+                Notify(string.format("[Target]: @%s", _Player.Name))
+            end
+            if getfenv().mousemoverel and Configuration.UseMouseMoving then
+                if PartViewportPosition[2] then
+                    ResetFields(true, true)
+                    local MouseLocation = UserInputService:GetMouseLocation()
+                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity * 10 or 1
+                    getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) * Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) * Sensitivity)
                 else
-                    UserInputService.MouseDeltaSensitivity = 0
-                    if Configuration.UseSensitivity then
-                        Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
-                        Tween:Play()
-                    else
-                        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition)
-                    end
+                    ResetFields(true)
                 end
             else
-                ResetFields(true)
+                UserInputService.MouseDeltaSensitivity = 0
+                if Configuration.UseSensitivity then
+                    Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
+                    Tween:Play()
+                else
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition)
+                end
             end
+        else
+            ResetFields(true)
         end
-    end)
+    end
 end)
