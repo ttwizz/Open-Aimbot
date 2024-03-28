@@ -1006,7 +1006,6 @@ end
 --! ESP Library
 
 local ESPLibrary = {}
-ESPLibrary.__index = ESPLibrary
 
 function ESPLibrary:Initialize(Target)
     if not Fluent then
@@ -1015,8 +1014,7 @@ function ESPLibrary:Initialize(Target)
     elseif not Target then
         return nil
     end
-    local self = {}
-    setmetatable(self, ESPLibrary)
+    local self = setmetatable(self, { __index = ESPLibrary })
     self.Player = Players:GetPlayerFromCharacter(Target)
     self.Character = Target
     self.ESPBox = Visualize("ESPBox")
