@@ -491,7 +491,7 @@ do
         Title = "Sensitivity",
         Description = "Smoothes out the Mouse / Camera Movements when Aiming",
         Default = Configuration.Sensitivity,
-        Min = Configuration.Sensitivity,
+        Min = 0.1,
         Max = 0.9,
         Rounding = 1,
         Callback = function(Value)
