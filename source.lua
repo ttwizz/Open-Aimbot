@@ -23,17 +23,11 @@ local TweenService = game:GetService("TweenService")
 --! Colour Handler
 
 local function PackColour(Colour)
-    if not Colour then
-        return {R = 255, G = 255, B = 255}
-    end
-    return {R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255}
+    return Colour and {R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255} or {R = 255, G = 255, B = 255}
 end
 
 local function UnpackColour(Colour)
-    if not Colour then
-        return Color3.fromRGB(255, 255, 255)
-    end
-    return Color3.fromRGB(Colour.R, Colour.G, Colour.B)
+    return Colour and Color3.fromRGB(Colour.R, Colour.G, Colour.B) or Color3.fromRGB(255, 255, 255)
 end
 
 
