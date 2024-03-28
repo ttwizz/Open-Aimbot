@@ -23,7 +23,7 @@ local TweenService = game:GetService("TweenService")
 --! Colour Handler
 
 local function PackColour(Colour)
-    return Colour and {R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255} or {R = 255, G = 255, B = 255}
+    return Colour and typeof(Colour) == "Color3" and { R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255 } or typeof(Colour) == "table" and Colour or { R = 255, G = 255, B = 255 }
 end
 
 local function UnpackColour(Colour)
@@ -40,11 +40,9 @@ pcall(function()
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
         for Key, Value in next, ImportedConfiguration do
             if Key == "AimKey" then
-                ImportedConfiguration["AimKey"] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
-            elseif Key == "FoVColour" then
-                ImportedConfiguration["FoVColour"] = UnpackColour(Value)
-            elseif Key == "ESPColour" then
-                ImportedConfiguration["ESPColour"] = UnpackColour(Value)
+                ImportedConfiguration[Key] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
+            elseif Key == "FoVColour" or Key == "ESPColour" then
+                ImportedConfiguration[Key] = UnpackColour(Value)
             end
         end
     end
@@ -494,7 +492,7 @@ do
     })
 
     if getfenv().Drawing then
-        Tabs["Visuals"] = Window:AddTab({ Title = "Visuals", Icon = "box" })
+        Tabs.Visuals = Window:AddTab({ Title = "Visuals", Icon = "box" })
 
         local FoVSection = Tabs.Visuals:AddSection("FoV")
 
@@ -641,7 +639,7 @@ do
         })
     end
 
-    Tabs["Settings"] = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    Tabs.Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
     local UISection = Tabs.Settings:AddSection("UI")
 
@@ -717,11 +715,9 @@ do
                     local ExportedConfiguration = Configuration
                     for Key, Value in next, ExportedConfiguration do
                         if Key == "AimKey" then
-                            ExportedConfiguration["AimKey"] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
-                        elseif Key == "FoVColour" then
-                            ExportedConfiguration["FoVColour"] = PackColour(Value)
-                        elseif Key == "ESPColour" then
-                            ExportedConfiguration["ESPColour"] = PackColour(Value)
+                            ExportedConfiguration[Key] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
+                        elseif Key == "FoVColour" or Key == "ESPColour" then
+                            ExportedConfiguration[Key] = PackColour(Value)
                         end
                     end
                     ExportedConfiguration = tostring(HttpService:JSONEncode(ExportedConfiguration))
