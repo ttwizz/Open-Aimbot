@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.6
+    Release 1.6.1
     ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
@@ -1014,7 +1014,7 @@ function ESPLibrary:Initialize(Target)
     elseif not Target then
         return nil
     end
-    local self = setmetatable(self, { __index = ESPLibrary })
+    local self = setmetatable({}, { __index = ESPLibrary })
     self.Player = Players:GetPlayerFromCharacter(Target)
     self.Character = Target
     self.ESPBox = Visualize("ESPBox")
