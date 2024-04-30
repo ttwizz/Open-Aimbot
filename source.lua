@@ -56,6 +56,7 @@ local Configuration = {}
 --? Aimbot
 
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
+Configuration.OnePressMode = ImportedConfiguration["OnePressMode"] or false
 Configuration.UseMouseMoving = ImportedConfiguration["UseMouseMoving"] or false
 Configuration.AimKey = ImportedConfiguration["AimKey"] or "V"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
@@ -176,6 +177,11 @@ do
     local AimbotToggle = AimbotSection:AddToggle("AimbotToggle", { Title = "Aimbot Toggle", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
     AimbotToggle:OnChanged(function(Value)
         Configuration.Aimbot = Value
+    end)
+
+    local OnePressModeToggle = AimbotSection:AddToggle("OnePressModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressMode })
+    OnePressModeToggle:OnChanged(function(Value)
+        Configuration.OnePressMode = Value
     end)
 
     if getfenv().mousemoverel then
@@ -839,16 +845,21 @@ end
 local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
     if not Fluent then
         InputBegan:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and Input.KeyCode == Configuration.AimKey and not Aiming then
-        Aiming = true
-        Notify("[Aiming Mode]: ON")
+    elseif not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and Input.KeyCode == Configuration.AimKey then
+        if Aiming then
+            ResetFields()
+            Notify("[Aiming Mode]: OFF")
+        else
+            Aiming = true
+            Notify("[Aiming Mode]: ON")
+        end
     end
 end)
 
 local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Input)
     if not Fluent then
         InputEnded:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming then
+    elseif not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming and not Configuration.OnePressMode then
         ResetFields()
         Notify("[Aiming Mode]: OFF")
     end
