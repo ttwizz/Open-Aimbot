@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.6.1
+    Release 1.7
     ttwizz.su/pix
     
     Author: ttwiz_z (ttwizz)
@@ -9,6 +9,16 @@
     GitHub: https://github.com/ttwizz/Open-Aimbot
 ]]
 
+
+--! Debugging
+
+local DEBUG = false
+
+if DEBUG then
+    getfenv().getfenv = function()
+        return setmetatable({}, { __index = function() return function() return true end end })
+    end
+end
 
 
 --! Services
@@ -36,7 +46,7 @@ end
 local ImportedConfiguration = {}
 
 pcall(function()
-    if getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
+    if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
         for Key, Value in next, ImportedConfiguration do
             if Key == "FoVColour" or Key == "ESPColour" then
@@ -54,13 +64,16 @@ local Configuration = {}
 --? Aimbot
 
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
-Configuration.OnePressMode = ImportedConfiguration["OnePressMode"] or false
+Configuration.OnePressAimingMode = ImportedConfiguration["OnePressAimingMode"] or false
 Configuration.UseMouseMoving = ImportedConfiguration["UseMouseMoving"] or false
 Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
 Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
 Configuration.TriggerBot = ImportedConfiguration["TriggerBot"] or false
+Configuration.OnePressTriggeringMode = ImportedConfiguration["OnePressTriggeringMode"] or false
+Configuration.SmartTriggerBot = ImportedConfiguration["SmartTriggerBot"] or false
+Configuration.TriggerKey = ImportedConfiguration["TriggerKey"] or "V"
 Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
 Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
 Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
@@ -126,6 +139,7 @@ end
 local Fluent = nil
 local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 local Aiming = false
+local Triggering = false
 local Target = nil
 local Tween = nil
 
@@ -145,7 +159,7 @@ end
 local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
     if not Fluent then
         SensitivityChanged:Disconnect()
-    elseif not Aiming or getfenv().mousemoverel and Configuration.UseMouseMoving then
+    elseif not Aiming or not DEBUG and getfenv().mousemoverel and Configuration.UseMouseMoving then
         MouseSensitivity = UserInputService.MouseDeltaSensitivity
     end
 end)
@@ -177,9 +191,9 @@ do
         Configuration.Aimbot = Value
     end)
 
-    local OnePressModeToggle = AimbotSection:AddToggle("OnePressModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressMode })
-    OnePressModeToggle:OnChanged(function(Value)
-        Configuration.OnePressMode = Value
+    local OnePressAimingModeToggle = AimbotSection:AddToggle("OnePressAimingModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressAimingMode })
+    OnePressAimingModeToggle:OnChanged(function(Value)
+        Configuration.OnePressAimingMode = Value
     end)
 
     if getfenv().mousemoverel then
@@ -268,10 +282,37 @@ do
     })
 
     if getfenv().mouse1click then
-        local TriggerBotToggle = AimbotSection:AddToggle("TriggerBotToggle", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
+        local TriggerBotSection = Tabs.Aimbot:AddSection("TriggerBot")
+
+        local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBotToggle", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
         TriggerBotToggle:OnChanged(function(Value)
             Configuration.TriggerBot = Value
         end)
+
+        local OnePressTriggeringModeToggle = TriggerBotSection:AddToggle("OnePressTriggeringModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressTriggeringMode })
+        OnePressTriggeringModeToggle:OnChanged(function(Value)
+            Configuration.OnePressTriggeringMode = Value
+        end)
+
+        local SmartTriggerBotToggle = TriggerBotSection:AddToggle("SmartTriggerBotToggle", { Title = "Smart TriggerBot", Description = "Uses the TriggerBot only when Aiming", Default = Configuration.SmartTriggerBot })
+        SmartTriggerBotToggle:OnChanged(function(Value)
+            Configuration.SmartTriggerBot = Value
+        end)
+
+        local TriggerKeybind = TriggerBotSection:AddKeybind("TriggerKeybind", {
+            Title = "Trigger Key",
+            Description = "Changes the Trigger Key",
+            Mode = "Hold",
+            Default = Configuration.TriggerKey,
+            ChangedCallback = function(Value)
+                Configuration.TriggerKey = Value
+            end
+        })
+        if TriggerKeybind.Value == "RMB" then
+            Configuration.TriggerKey = Enum.UserInputType.MouseButton2
+        else
+            Configuration.TriggerKey = Enum.KeyCode[TriggerKeybind.Value]
+        end
     end
 
     local SimpleChecksSection = Tabs.Aimbot:AddSection("Simple Checks")
@@ -831,7 +872,7 @@ Notify("Successfully initialized!")
 
 --! Resetting Fields
 
-local function ResetFields(SaveAiming, SaveTarget)
+local function ResetAimbotFields(SaveAiming, SaveTarget)
     Aiming = SaveAiming and Aiming or false
     Target = SaveTarget and Target or nil
     if Tween then
@@ -847,13 +888,23 @@ end
 local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
     if not Fluent then
         InputBegan:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
-        if Aiming then
-            ResetFields()
-            Notify("[Aiming Mode]: OFF")
-        else
-            Aiming = true
-            Notify("[Aiming Mode]: ON")
+    elseif not UserInputService:GetFocusedTextBox() then
+        if Configuration.Aimbot and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
+            if Aiming then
+                ResetAimbotFields()
+                Notify("[Aiming Mode]: OFF")
+            else
+                Aiming = true
+                Notify("[Aiming Mode]: ON")
+            end
+        elseif Configuration.TriggerBot and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
+            if Triggering then
+                Triggering = false
+                Notify("[Triggering Mode]: OFF")
+            else
+                Triggering = true
+                Notify("[Triggering Mode]: ON")
+            end
         end
     end
 end)
@@ -861,9 +912,14 @@ end)
 local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Input)
     if not Fluent then
         InputEnded:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() and Aiming and not Configuration.OnePressMode and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
-        ResetFields()
-        Notify("[Aiming Mode]: OFF")
+    elseif not UserInputService:GetFocusedTextBox() then
+        if Aiming and not Configuration.OnePressAimingMode and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
+            ResetAimbotFields()
+            Notify("[Aiming Mode]: OFF")
+        elseif Triggering and not Configuration.OnePressTriggeringMode and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
+            Triggering = false
+            Notify("[Triggering Mode]: OFF")
+        end
     end
 end)
 
@@ -916,7 +972,7 @@ end
 --! TriggerBot Handler
 
 local function HandleTriggerBot()
-    if Fluent and getfenv().mouse1click and Configuration.TriggerBot and Mouse.Target and IsReady(Mouse.Target.Parent) then
+    if not DEBUG and Fluent and getfenv().mouse1click and Triggering and (Configuration.SmartTriggerBot and Aiming or not Configuration.SmartTriggerBot) and Mouse.Target and IsReady(Mouse.Target.Parent) then
         getfenv().mouse1click()
     end
 end
@@ -925,7 +981,7 @@ end
 --! Visuals Handler
 
 local function Visualize(Object)
-    if not Fluent or not getfenv().Drawing or not Object then
+    if DEBUG or not Fluent or not getfenv().Drawing or not Object then
         return nil
     elseif string.lower(Object) == "fov" then
         local FoV = getfenv().Drawing.new("Circle")
@@ -1163,7 +1219,8 @@ local function DisconnectConnections()
 end
 
 local function DisconnectAimbot()
-    ResetFields()
+    ResetAimbotFields()
+    Triggering = false
     DisconnectConnections()
     ClearVisuals()
 end
@@ -1186,7 +1243,7 @@ local function CharacterRemoving(_Character)
 end
 
 local function InitializePlayers()
-    if getfenv().Drawing then
+    if not DEBUG and getfenv().Drawing then
         for _, _Player in next, Players:GetPlayers() do
             if _Player ~= Player and _Player.Character then
                 local _Character = _Player.Character
@@ -1203,7 +1260,7 @@ task.spawn(InitializePlayers)
 --! Player Events
 
 local OnTeleport; OnTeleport = Player.OnTeleport:Connect(function()
-    if not Fluent or not getfenv().queue_on_teleport then
+    if DEBUG or not Fluent or not getfenv().queue_on_teleport then
         OnTeleport:Disconnect()
     else
         getfenv().queue_on_teleport("getfenv().loadstring(game:HttpGet(\"https://raw.githubusercontent.com/ttwizz/Open-Aimbot/master/source.lua\", true))()")
@@ -1212,7 +1269,7 @@ local OnTeleport; OnTeleport = Player.OnTeleport:Connect(function()
 end)
 
 local PlayerAdded; PlayerAdded = Players.PlayerAdded:Connect(function(_Player)
-    if not Fluent or not getfenv().Drawing then
+    if DEBUG or not Fluent or not getfenv().Drawing then
         PlayerAdded:Disconnect()
     elseif _Player ~= Player then
         Connections[_Player.UserId] = { _Player.CharacterAdded:Connect(CharacterAdded), _Player.CharacterRemoving:Connect(CharacterRemoving) }
@@ -1246,10 +1303,15 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         if Aiming then
             Notify("[Aiming Mode]: OFF")
         end
-        ResetFields()
+        ResetAimbotFields()
+    elseif not Configuration.TriggerBot then
+        if Triggering then
+            Notify("[Triggering Mode]: OFF")
+        end
+        Triggering = false
     end
     HandleTriggerBot()
-    if getfenv().Drawing then
+    if not DEBUG and getfenv().Drawing then
         VisualizeFoV()
         VisualizeESP()
     end
@@ -1273,14 +1335,14 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             if OldTarget ~= Target then
                 Notify(string.format("[Target]: @%s", _Player.Name))
             end
-            if getfenv().mousemoverel and Configuration.UseMouseMoving then
+            if not DEBUG and getfenv().mousemoverel and Configuration.UseMouseMoving then
                 if PartViewportPosition[2] then
-                    ResetFields(true, true)
+                    ResetAimbotFields(true, true)
                     local MouseLocation = UserInputService:GetMouseLocation()
                     local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 10 or 1
                     getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) * Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) * Sensitivity)
                 else
-                    ResetFields(true)
+                    ResetAimbotFields(true)
                 end
             else
                 UserInputService.MouseDeltaSensitivity = 0
@@ -1292,7 +1354,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 end
             end
         else
-            ResetFields(true)
+            ResetAimbotFields(true)
         end
     end
 end)
