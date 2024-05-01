@@ -763,7 +763,7 @@ do
                 xpcall(function()
                     local ExportedConfiguration = Configuration
                     for Key, Value in next, ExportedConfiguration do
-                        if Key == "AimKey" then
+                        if Key == "AimKey" or Key == "TriggerKey" then
                             ExportedConfiguration[Key] = Value ~= Enum.UserInputType.MouseButton2 and UserInputService:GetStringForKeyCode(Value) or "RMB"
                         elseif Key == "FoVColour" or Key == "ESPColour" then
                             ExportedConfiguration[Key] = PackColour(Value)
