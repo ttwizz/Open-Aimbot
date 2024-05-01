@@ -14,8 +14,8 @@
 --! Services
 
 local HttpService = game:GetService("HttpService")
-local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -39,9 +39,7 @@ pcall(function()
     if getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
         for Key, Value in next, ImportedConfiguration do
-            if Key == "AimKey" then
-                ImportedConfiguration[Key] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
-            elseif Key == "FoVColour" or Key == "ESPColour" then
+            if Key == "FoVColour" or Key == "ESPColour" then
                 ImportedConfiguration[Key] = UnpackColour(Value)
             end
         end
@@ -58,7 +56,7 @@ local Configuration = {}
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
 Configuration.OnePressMode = ImportedConfiguration["OnePressMode"] or false
 Configuration.UseMouseMoving = ImportedConfiguration["UseMouseMoving"] or false
-Configuration.AimKey = ImportedConfiguration["AimKey"] or "V"
+Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
 Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
@@ -200,7 +198,11 @@ do
             Configuration.AimKey = Value
         end
     })
-    Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
+    if AimKeybind.Value == "RMB" then
+        Configuration.AimKey = Enum.UserInputType.MouseButton2
+    else
+        Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
+    end
 
     local AimPartDropdown = AimbotSection:AddDropdown("AimPartDropdown", {
         Title = "Aim Part",
@@ -721,7 +723,7 @@ do
                     local ExportedConfiguration = Configuration
                     for Key, Value in next, ExportedConfiguration do
                         if Key == "AimKey" then
-                            ExportedConfiguration[Key] = #UserInputService:GetStringForKeyCode(Value) > 0 and UserInputService:GetStringForKeyCode(Value) or "V"
+                            ExportedConfiguration[Key] = Value ~= Enum.UserInputType.MouseButton2 and UserInputService:GetStringForKeyCode(Value) or "RMB"
                         elseif Key == "FoVColour" or Key == "ESPColour" then
                             ExportedConfiguration[Key] = PackColour(Value)
                         end
@@ -845,7 +847,7 @@ end
 local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
     if not Fluent then
         InputBegan:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and Input.KeyCode == Configuration.AimKey then
+    elseif not UserInputService:GetFocusedTextBox() and Configuration.Aimbot and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
         if Aiming then
             ResetFields()
             Notify("[Aiming Mode]: OFF")
@@ -859,7 +861,7 @@ end)
 local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Input)
     if not Fluent then
         InputEnded:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() and Input.KeyCode == Configuration.AimKey and Aiming and not Configuration.OnePressMode then
+    elseif not UserInputService:GetFocusedTextBox() and Aiming and not Configuration.OnePressMode and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
         ResetFields()
         Notify("[Aiming Mode]: OFF")
     end
