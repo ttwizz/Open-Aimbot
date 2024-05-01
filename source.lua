@@ -80,7 +80,7 @@ Configuration.IgnoredPlayers = ImportedConfiguration["IgnoredPlayers"] or {}
 Configuration.TargetPlayersDropdownValues = ImportedConfiguration["TargetPlayersDropdownValues"] or {}
 Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
-Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 0.1
+Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 10
 Configuration.ShowNotifications = ImportedConfiguration["ShowNotifications"] or true
 
 --? Visuals
@@ -489,8 +489,8 @@ do
         Title = "Sensitivity",
         Description = "Smoothes out the Mouse / Camera Movements when Aiming",
         Default = Configuration.Sensitivity,
-        Min = 0.1,
-        Max = 0.9,
+        Min = 10,
+        Max = 99,
         Rounding = 1,
         Callback = function(Value)
             Configuration.Sensitivity = Value
@@ -1275,7 +1275,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 if PartViewportPosition[2] then
                     ResetFields(true, true)
                     local MouseLocation = UserInputService:GetMouseLocation()
-                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity * 10 or 1
+                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 10 or 1
                     getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) * Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) * Sensitivity)
                 else
                     ResetFields(true)
@@ -1283,7 +1283,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
             else
                 UserInputService.MouseDeltaSensitivity = 0
                 if Configuration.UseSensitivity then
-                    Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
+                    Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
                     Tween:Play()
                 else
                     workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition)
