@@ -1,9 +1,10 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7
+    Release 1.7.1
     ttwizz.su/pix
-    
+    ttwizz.su/OpenAimbotV3rm
+
     Author: ttwiz_z (ttwizz)
     License: MIT
     GitHub: https://github.com/ttwizz/Open-Aimbot
@@ -90,6 +91,8 @@ Configuration.IgnoredPlayersDropdownValues = ImportedConfiguration["IgnoredPlaye
 Configuration.IgnoredPlayers = ImportedConfiguration["IgnoredPlayers"] or {}
 Configuration.TargetPlayersDropdownValues = ImportedConfiguration["TargetPlayersDropdownValues"] or {}
 Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
+Configuration.MoveDirectionOffset = ImportedConfiguration["MoveDirectionOffset"] or false
+Configuration.OffsetIncrement = ImportedConfiguration["OffsetIncrement"] or 10
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 10
 Configuration.ShowNotifications = ImportedConfiguration["ShowNotifications"] or true
@@ -347,7 +350,7 @@ do
         Max = 1000,
         Rounding = 1,
         Callback = function(Value)
-            Configuration.FoVRadius = math.round(Value)
+            Configuration.FoVRadius = Value
         end
     })
 
@@ -364,7 +367,7 @@ do
         Max = 1000,
         Rounding = 1,
         Callback = function(Value)
-            Configuration.TriggerMagnitude = math.round(Value)
+            Configuration.TriggerMagnitude = Value
         end
     })
 
@@ -518,6 +521,25 @@ do
                 table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
                 TargetPlayersDropdown:BuildDropdownList()
             end
+        end
+    })
+
+    local MoveDirectionOffsetSection = Tabs.Aimbot:AddSection("Move Direction Offset")
+
+    local MoveDirectionOffsetToggle = MoveDirectionOffsetSection:AddToggle("MoveDirectionOffsetToggle", { Title = "Move Direction Offset", Description = "Toggles the Move Direction Offset", Default = Configuration.MoveDirectionOffset })
+    MoveDirectionOffsetToggle:OnChanged(function(Value)
+        Configuration.MoveDirectionOffset = Value
+    end)
+
+    MoveDirectionOffsetSection:AddSlider("OffsetIncrementSlider", {
+        Title = "Offset Increment",
+        Description = "Changes the Offset Increment",
+        Default = Configuration.OffsetIncrement,
+        Min = 1,
+        Max = 30,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.OffsetIncrement = Value
         end
     })
 
@@ -851,6 +873,18 @@ do
     end
 
     Window:SelectTab(1)
+
+    if DEBUG then
+        Window:Dialog({
+            Title = "Warning",
+            Content = "Running in Debugging Mode. Some Features may not work properly.",
+            Buttons = {
+                {
+                    Title = "Confirm"
+                }
+            }
+        })
+    end
 end
 
 
@@ -962,7 +996,8 @@ local function IsReady(Target)
         elseif Configuration.PlayerCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) and not table.find(Configuration.TargetPlayers, _Player.Name) then
             return false
         end
-        return true, Target, _Player, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position) }, TargetPart.Position
+        local OffsetIncrement = Configuration.MoveDirectionOffset and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * (Configuration.OffsetIncrement / 10) or Vector3.zero
+        return true, Target, _Player, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement) }, TargetPart.Position, TargetPart.Position + OffsetIncrement
     else
         return false
     end
@@ -1330,7 +1365,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 end
             end
         end
-        local IsTargetReady, _, _Player, PartViewportPosition, PartWorldPosition = IsReady(Target)
+        local IsTargetReady, _, _Player, PartViewportPosition, PartWorldPosition, IncrementedPartWorldPosition = IsReady(Target)
         if IsTargetReady then
             if OldTarget ~= Target then
                 Notify(string.format("[Target]: @%s", _Player.Name))
@@ -1350,7 +1385,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
                     Tween:Play()
                 else
-                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition)
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, IncrementedPartWorldPosition)
                 end
             end
         else
