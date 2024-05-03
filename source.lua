@@ -1,13 +1,17 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.1
+    Release 1.7.2
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
     Author: ttwiz_z (ttwizz)
     License: MIT
     GitHub: https://github.com/ttwizz/Open-Aimbot
+
+    Issues: https://github.com/ttwizz/Open-Aimbot/issues
+    Pull requests: https://github.com/ttwizz/Open-Aimbot/pulls
+    Discussions: https://github.com/ttwizz/Open-Aimbot/discussions
 ]]
 
 
@@ -95,7 +99,6 @@ Configuration.MoveDirectionOffset = ImportedConfiguration["MoveDirectionOffset"]
 Configuration.OffsetIncrement = ImportedConfiguration["OffsetIncrement"] or 10
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 10
-Configuration.ShowNotifications = ImportedConfiguration["ShowNotifications"] or true
 
 --? Visuals
 
@@ -770,9 +773,9 @@ do
 
     local NotificationsSection = Tabs.Settings:AddSection("Notifications")
 
-    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = Configuration.ShowNotifications })
+    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = Fluent.ShowNotifications })
     NotificationsToggle:OnChanged(function(Value)
-        Configuration.ShowNotifications = Value
+        Fluent.ShowNotifications = Value
     end)
 
     if getfenv().isfile and getfenv().readfile and getfenv().writefile and getfenv().delfile then
@@ -783,15 +786,17 @@ do
             Description = "Overwrites the Game Configuration File",
             Callback = function()
                 xpcall(function()
-                    local ExportedConfiguration = Configuration
-                    for Key, Value in next, ExportedConfiguration do
+                    local ExportedConfiguration = {}
+                    for Key, Value in next, Configuration do
                         if Key == "AimKey" or Key == "TriggerKey" then
                             ExportedConfiguration[Key] = Value ~= Enum.UserInputType.MouseButton2 and UserInputService:GetStringForKeyCode(Value) or "RMB"
                         elseif Key == "FoVColour" or Key == "ESPColour" then
                             ExportedConfiguration[Key] = PackColour(Value)
+                        else
+                            ExportedConfiguration[Key] = Value
                         end
                     end
-                    ExportedConfiguration = tostring(HttpService:JSONEncode(ExportedConfiguration))
+                    ExportedConfiguration = HttpService:JSONEncode(ExportedConfiguration)
                     getfenv().writefile(string.format("%s.ttwizz", game.GameId), ExportedConfiguration)
                     Window:Dialog({
                         Title = "Configuration Manager",
@@ -891,7 +896,7 @@ end
 --! Notification Handler
 
 local function Notify(Message)
-    if Fluent and Configuration.ShowNotifications and Message then
+    if Fluent and Fluent.ShowNotifications and Message then
         Fluent:Notify({
             Title = "Open Aimbot",
             Content = Message,
