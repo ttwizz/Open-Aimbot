@@ -149,7 +149,7 @@ local Triggering = false
 local Target = nil
 local Tween = nil
 
-if RunService:IsStudio() then
+if RunService:IsStudio() or not getfenv().getgenv then
     Fluent = require(script:WaitForChild("Fluent", math.huge))
 else
     local Success, Result = pcall(function()
