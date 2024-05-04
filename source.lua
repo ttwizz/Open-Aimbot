@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.3
+    Release 1.7.4
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
@@ -149,7 +149,7 @@ local Triggering = false
 local Target = nil
 local Tween = nil
 
-if not getfenv().getgenv then
+if DEBUG or not getfenv().getgenv then
     Fluent = require(script:WaitForChild("Fluent", math.huge))
 else
     local Success, Result = pcall(function()
