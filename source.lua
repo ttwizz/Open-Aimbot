@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.2
+    Release 1.7.3
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
@@ -149,7 +149,7 @@ local Triggering = false
 local Target = nil
 local Tween = nil
 
-if RunService:IsStudio() or not getfenv().getgenv then
+if not getfenv().getgenv then
     Fluent = require(script:WaitForChild("Fluent", math.huge))
 else
     local Success, Result = pcall(function()
@@ -896,7 +896,7 @@ end
 --! Notification Handler
 
 local function Notify(Message)
-    if Fluent and Fluent.ShowNotifications and Message then
+    if Fluent and Message then
         Fluent:Notify({
             Title = "Open Aimbot",
             Content = Message,
