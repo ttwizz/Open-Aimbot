@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.4
+    Release 1.7.5
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
@@ -38,11 +38,11 @@ local TweenService = game:GetService("TweenService")
 --! Colour Handler
 
 local function PackColour(Colour)
-    return Colour and typeof(Colour) == "Color3" and { R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255 } or typeof(Colour) == "table" and Colour or { R = 255, G = 255, B = 255 }
+    return typeof(Colour) == "Color3" and { R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255 } or typeof(Colour) == "table" and Colour or { R = 255, G = 255, B = 255 }
 end
 
 local function UnpackColour(Colour)
-    return Colour and Color3.fromRGB(Colour.R, Colour.G, Colour.B) or Color3.fromRGB(255, 255, 255)
+    return typeof(Colour) == "table" and Color3.fromRGB(Colour.R, Colour.G, Colour.B) or typeof(Colour) == "Color3" and Colour or Color3.fromRGB(255, 255, 255)
 end
 
 
@@ -98,7 +98,7 @@ Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
 Configuration.MoveDirectionOffset = ImportedConfiguration["MoveDirectionOffset"] or false
 Configuration.OffsetIncrement = ImportedConfiguration["OffsetIncrement"] or 10
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
-Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 10
+Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
 
 --? Visuals
 
@@ -149,8 +149,8 @@ local Triggering = false
 local Target = nil
 local Tween = nil
 
-if DEBUG or not getfenv().getgenv then
-    Fluent = require(script:WaitForChild("Fluent", math.huge))
+if typeof(script) == "Instance" and script:FindFirstChild("Fluent") then
+    Fluent = require(script:FindFirstChild("Fluent"))
 else
     local Success, Result = pcall(function()
         return game:HttpGet("https://ttwizz.su/Fluent.txt", true)
@@ -171,16 +171,52 @@ local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChang
 end)
 
 
+--! Interface Manager
+
+local UISettings = {
+    TabWidth = 160,
+    Size = { 580, 460 },
+    Theme = "Rose",
+    Acrylic = false,
+    Transparency = true,
+    MinimizeKey = "RightShift",
+    ShowNotifications = true
+}
+
+local InterfaceManager = {}
+
+function InterfaceManager:ImportSettings()
+    pcall(function()
+        if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().isfile("UISettings.ttwizz") and getfenv().readfile("UISettings.ttwizz") then
+            for Key, Value in next, HttpService:JSONDecode(getfenv().readfile("UISettings.ttwizz")) do
+                UISettings[Key] = Value
+            end
+        end
+    end)
+end
+
+function InterfaceManager:ExportSettings()
+    pcall(function()
+        if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().writefile then
+            getfenv().writefile("UISettings.ttwizz", HttpService:JSONEncode(UISettings))
+        end
+    end)
+end
+
+InterfaceManager:ImportSettings()
+
+
 --! Initializing UI
 
 do
     local Window = Fluent:CreateWindow({
         Title = "Open Aimbot",
         SubTitle = "By @ttwiz_z",
-        TabWidth = 160,
-        Size = UDim2.fromOffset(580, 460),
-        Acrylic = false,
-        Theme = "Rose"
+        TabWidth = UISettings.TabWidth,
+        Size = UDim2.fromOffset(table.unpack(UISettings.Size)),
+        Theme = UISettings.Theme,
+        Acrylic = UISettings.Acrylic,
+        MinimizeKey = UISettings.MinimizeKey
     })
 
     local Tabs = { Aimbot = Window:AddTab({ Title = "Aimbot", Icon = "bot" }) }
@@ -539,7 +575,7 @@ do
         Description = "Changes the Offset Increment",
         Default = Configuration.OffsetIncrement,
         Min = 1,
-        Max = 30,
+        Max = 50,
         Rounding = 1,
         Callback = function(Value)
             Configuration.OffsetIncrement = Value
@@ -557,8 +593,8 @@ do
         Title = "Sensitivity",
         Description = "Smoothes out the Mouse / Camera Movements when Aiming",
         Default = Configuration.Sensitivity,
-        Min = 10,
-        Max = 99,
+        Min = 1,
+        Max = 100,
         Rounding = 1,
         Callback = function(Value)
             Configuration.Sensitivity = Value
@@ -724,6 +760,8 @@ do
         Default = Fluent.Theme,
         Callback = function(Value)
             Fluent:SetTheme(Value)
+            UISettings.Theme = Value
+            InterfaceManager:ExportSettings()
         end
     })
 
@@ -762,20 +800,32 @@ do
     UISection:AddToggle("TransparentToggle", {
         Title = "Transparency",
         Description = "Makes the UI Transparent",
-        Default = Fluent.Transparency,
+        Default = UISettings.Transparency,
         Callback = function(Value)
             Fluent:ToggleTransparency(Value)
+            UISettings.Transparency = Value
+            InterfaceManager:ExportSettings()
         end
     })
 
-    UISection:AddKeybind("MinimizeKeybind", { Title = "Minimize Key", Description = "Changes the Minimize Key", Default = "RightShift" })
+    UISection:AddKeybind("MinimizeKeybind", {
+        Title = "Minimize Key",
+        Description = "Changes the Minimize Key",
+        Default = Fluent.MinimizeKey,
+        ChangedCallback = function(Value)
+            UISettings.MinimizeKey = Value ~= Enum.UserInputType.MouseButton2 and UserInputService:GetStringForKeyCode(Value) or "RMB"
+            InterfaceManager:ExportSettings()
+        end
+    })
     Fluent.MinimizeKeybind = Fluent.Options.MinimizeKeybind
 
     local NotificationsSection = Tabs.Settings:AddSection("Notifications")
 
-    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = Fluent.ShowNotifications })
+    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = UISettings.ShowNotifications })
     NotificationsToggle:OnChanged(function(Value)
         Fluent.ShowNotifications = Value
+        UISettings.ShowNotifications = Value
+        InterfaceManager:ExportSettings()
     end)
 
     if getfenv().isfile and getfenv().readfile and getfenv().writefile and getfenv().delfile then
@@ -1379,15 +1429,15 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 if PartViewportPosition[2] then
                     ResetAimbotFields(true, true)
                     local MouseLocation = UserInputService:GetMouseLocation()
-                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 10 or 1
-                    getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) * Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) * Sensitivity)
+                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 10 or 10
+                    getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) / Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) / Sensitivity)
                 else
                     ResetAimbotFields(true)
                 end
             else
                 UserInputService.MouseDeltaSensitivity = 0
                 if Configuration.UseSensitivity then
-                    Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(Configuration.Sensitivity / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
+                    Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(math.clamp(Configuration.Sensitivity, 9, 99) / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
                     Tween:Play()
                 else
                     workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, IncrementedPartWorldPosition)
