@@ -155,7 +155,7 @@ else
     local Success, Result = pcall(function()
         return game:HttpGet("https://ttwizz.su/Fluent.txt", true)
     end)
-    if Success and string.find(Result, "dawid") then
+    if Success and typeof(Result) == "string" and string.find(Result, "dawid") then
         Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.su/Fluent.txt", true))()
     else
         Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
