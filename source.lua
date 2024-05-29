@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.5
+    Release 1.7.6
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
@@ -180,7 +180,8 @@ local UISettings = {
     Acrylic = false,
     Transparency = true,
     MinimizeKey = "RightShift",
-    ShowNotifications = true
+    ShowNotifications = true,
+    ShowWarnings = true
 }
 
 local InterfaceManager = {}
@@ -204,6 +205,9 @@ function InterfaceManager:ExportSettings()
 end
 
 InterfaceManager:ImportSettings()
+
+UISettings.__LAST_RUN__ = os.date()
+InterfaceManager:ExportSettings()
 
 
 --! Initializing UI
@@ -737,7 +741,7 @@ do
                 end
             end
         end)
-    else
+    elseif UISettings.ShowWarnings then
         Window:Dialog({
             Title = "Warning",
             Content = "Your Software does not support the Drawing Library! Access to the Visuals Tab is restricted.",
@@ -771,9 +775,9 @@ do
             Description = "Blurred Background requires Graphic Quality >= 8",
             Default = Fluent.Acrylic,
             Callback = function(Value)
-                if not Value then
+                if not Value or not UISettings.ShowWarnings then
                     Fluent:ToggleAcrylic(Value)
-                else
+                elseif UISettings.ShowWarnings then
                     Window:Dialog({
                         Title = "Warning",
                         Content = "This Option can be detected! Activate it anyway?",
@@ -828,6 +832,12 @@ do
         InterfaceManager:ExportSettings()
     end)
 
+    local WarningsToggle = NotificationsSection:AddToggle("WarningsToggle", { Title = "Show Warnings", Description = "Toggles the Security Warnings Show", Default = UISettings.ShowWarnings })
+    WarningsToggle:OnChanged(function(Value)
+        UISettings.ShowWarnings = Value
+        InterfaceManager:ExportSettings()
+    end)
+
     if getfenv().isfile and getfenv().readfile and getfenv().writefile and getfenv().delfile then
         local ConfigurationManager = Tabs.Settings:AddSection("Configuration Manager")
 
@@ -836,7 +846,7 @@ do
             Description = "Overwrites the Game Configuration File",
             Callback = function()
                 xpcall(function()
-                    local ExportedConfiguration = {}
+                    local ExportedConfiguration = { __LAST_UPDATED__ = os.date() }
                     for Key, Value in next, Configuration do
                         if Key == "AimKey" or Key == "TriggerKey" then
                             ExportedConfiguration[Key] = Value ~= Enum.UserInputType.MouseButton2 and UserInputService:GetStringForKeyCode(Value) or "RMB"
@@ -929,7 +939,7 @@ do
 
     Window:SelectTab(1)
 
-    if DEBUG then
+    if DEBUG and UISettings.ShowWarnings then
         Window:Dialog({
             Title = "Warning",
             Content = "Running in Debugging Mode. Some Features may not work properly.",
