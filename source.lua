@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.6
+    Release 1.7.7
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
@@ -95,8 +95,10 @@ Configuration.IgnoredPlayersDropdownValues = ImportedConfiguration["IgnoredPlaye
 Configuration.IgnoredPlayers = ImportedConfiguration["IgnoredPlayers"] or {}
 Configuration.TargetPlayersDropdownValues = ImportedConfiguration["TargetPlayersDropdownValues"] or {}
 Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
-Configuration.MoveDirectionOffset = ImportedConfiguration["MoveDirectionOffset"] or false
-Configuration.OffsetIncrement = ImportedConfiguration["OffsetIncrement"] or 10
+Configuration.UseOffset = ImportedConfiguration["UseOffset"] or false
+Configuration.OffsetType = ImportedConfiguration["OffsetType"] or "Static"
+Configuration.StaticOffsetIncrement = ImportedConfiguration["StaticOffsetIncrement"] or 10
+Configuration.DynamicOffsetIncrement = ImportedConfiguration["DynamicOffsetIncrement"] or 10
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
 
@@ -567,22 +569,44 @@ do
         end
     })
 
-    local MoveDirectionOffsetSection = Tabs.Aimbot:AddSection("Move Direction Offset")
+    local AimOffsetSection = Tabs.Aimbot:AddSection("Aim Offset")
 
-    local MoveDirectionOffsetToggle = MoveDirectionOffsetSection:AddToggle("MoveDirectionOffsetToggle", { Title = "Move Direction Offset", Description = "Toggles the Move Direction Offset", Default = Configuration.MoveDirectionOffset })
-    MoveDirectionOffsetToggle:OnChanged(function(Value)
-        Configuration.MoveDirectionOffset = Value
+    local UseOffsetToggle = AimOffsetSection:AddToggle("UseOffsetToggle", { Title = "Use Offset", Description = "Toggles the Offset", Default = Configuration.UseOffset })
+    UseOffsetToggle:OnChanged(function(Value)
+        Configuration.UseOffset = Value
     end)
 
-    MoveDirectionOffsetSection:AddSlider("OffsetIncrementSlider", {
-        Title = "Offset Increment",
-        Description = "Changes the Offset Increment",
-        Default = Configuration.OffsetIncrement,
+    AimOffsetSection:AddDropdown("OffsetTypeDropdown", {
+        Title = "Offset Type",
+        Description = "Changes the Offset Type",
+        Values = { "Static", "Dynamic", "Static & Dynamic" },
+        Default = Configuration.OffsetType,
+        Callback = function(Value)
+            Configuration.OffsetType = Value
+        end
+    })
+
+    AimOffsetSection:AddSlider("StaticOffsetIncrementSlider", {
+        Title = "Static Offset Increment",
+        Description = "Changes the Static Offset Increment",
+        Default = Configuration.StaticOffsetIncrement,
         Min = 1,
         Max = 50,
         Rounding = 1,
         Callback = function(Value)
-            Configuration.OffsetIncrement = Value
+            Configuration.StaticOffsetIncrement = Value
+        end
+    })
+
+    AimOffsetSection:AddSlider("DynamicOffsetIncrementSlider", {
+        Title = "Dynamic Offset Increment",
+        Description = "Changes the Dynamic Offset Increment",
+        Default = Configuration.DynamicOffsetIncrement,
+        Min = 1,
+        Max = 50,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.DynamicOffsetIncrement = Value
         end
     })
 
@@ -757,7 +781,7 @@ do
 
     local UISection = Tabs.Settings:AddSection("UI")
 
-    UISection:AddDropdown("InterfaceTheme", {
+    UISection:AddDropdown("ThemeDropdown", {
         Title = "Theme",
         Description = "Changes the UI Theme",
         Values = Fluent.Themes,
@@ -801,7 +825,7 @@ do
         })
     end
 
-    UISection:AddToggle("TransparentToggle", {
+    UISection:AddToggle("TransparencyToggle", {
         Title = "Transparency",
         Description = "Makes the UI Transparent",
         Default = UISettings.Transparency,
@@ -1061,8 +1085,8 @@ local function IsReady(Target)
         elseif Configuration.PlayerCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) and not table.find(Configuration.TargetPlayers, _Player.Name) then
             return false
         end
-        local OffsetIncrement = Configuration.MoveDirectionOffset and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * (Configuration.OffsetIncrement / 10) or Vector3.zero
-        return true, Target, _Player, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement) }, TargetPart.Position, TargetPart.Position + OffsetIncrement
+        local OffsetIncrement = Configuration.UseOffset and (Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
+        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement) }, TargetPart.Position, TargetPart.Position + OffsetIncrement
     else
         return false
     end
@@ -1400,14 +1424,8 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         DisconnectAimbot()
         AimbotLoop:Disconnect()
     elseif not Configuration.Aimbot then
-        if Aiming then
-            Notify("[Aiming Mode]: OFF")
-        end
         ResetAimbotFields()
     elseif not Configuration.TriggerBot then
-        if Triggering then
-            Notify("[Triggering Mode]: OFF")
-        end
         Triggering = false
     end
     HandleTriggerBot()
@@ -1420,7 +1438,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         local Closest = math.huge
         if not IsReady(OldTarget) then
             for _, _Player in next, Players:GetPlayers() do
-                local IsCharacterReady, Character, _, PartViewportPosition = IsReady(_Player.Character)
+                local IsCharacterReady, Character, PartViewportPosition = IsReady(_Player.Character)
                 if IsCharacterReady and PartViewportPosition[2] then
                     local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PartViewportPosition[1].X, PartViewportPosition[1].Y)).Magnitude
                     if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
@@ -1430,11 +1448,8 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 end
             end
         end
-        local IsTargetReady, _, _Player, PartViewportPosition, PartWorldPosition, IncrementedPartWorldPosition = IsReady(Target)
+        local IsTargetReady, _, PartViewportPosition, PartWorldPosition, IncrementedPartWorldPosition = IsReady(Target)
         if IsTargetReady then
-            if OldTarget ~= Target then
-                Notify(string.format("[Target]: @%s", _Player.Name))
-            end
             if not DEBUG and getfenv().mousemoverel and Configuration.UseMouseMoving then
                 if PartViewportPosition[2] then
                     ResetAimbotFields(true, true)
