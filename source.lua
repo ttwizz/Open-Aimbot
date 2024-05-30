@@ -1400,14 +1400,8 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         DisconnectAimbot()
         AimbotLoop:Disconnect()
     elseif not Configuration.Aimbot then
-        if Aiming then
-            Notify("[Aiming Mode]: OFF")
-        end
         ResetAimbotFields()
     elseif not Configuration.TriggerBot then
-        if Triggering then
-            Notify("[Triggering Mode]: OFF")
-        end
         Triggering = false
     end
     HandleTriggerBot()
@@ -1432,9 +1426,6 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         end
         local IsTargetReady, _, _Player, PartViewportPosition, PartWorldPosition, IncrementedPartWorldPosition = IsReady(Target)
         if IsTargetReady then
-            if OldTarget ~= Target then
-                Notify(string.format("[Target]: @%s", _Player.Name))
-            end
             if not DEBUG and getfenv().mousemoverel and Configuration.UseMouseMoving then
                 if PartViewportPosition[2] then
                     ResetAimbotFields(true, true)
