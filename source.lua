@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.8
+    Release 1.7.9
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
@@ -103,6 +103,7 @@ Configuration.AutoOffset = ImportedConfiguration["AutoOffset"] or false
 Configuration.MaxAutoOffset = ImportedConfiguration["MaxAutoOffset"] or 50
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
+Configuration.UseNoise = ImportedConfiguration["UseNoise"] or false
 
 --? Visuals
 
@@ -648,6 +649,11 @@ do
         end
     })
 
+    local UseNoiseToggle = SensitivitySection:AddToggle("UseNoiseToggle", { Title = "Use Noise", Description = "Toggles the Camera Shaking", Default = Configuration.UseNoise })
+    UseNoiseToggle:OnChanged(function(Value)
+        Configuration.UseNoise = Value
+    end)
+
     if getfenv().Drawing then
         Tabs.Visuals = Window:AddTab({ Title = "Visuals", Icon = "box" })
 
@@ -1099,7 +1105,8 @@ local function IsReady(Target)
             return false
         end
         local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
-        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement) }, TargetPart.Position + OffsetIncrement
+        local NoiseFrequency = Configuration.UseNoise and Vector3.new(math.random(0.5, 1), math.random(0.5, 1), math.random(0.5, 1)) or Vector3.zero
+        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency
     else
         return false
     end
