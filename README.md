@@ -34,11 +34,11 @@ Welcome to the **pix**! We develop various utilities for Roblox, security system
 ___
 
 ### Open Aimbot
-Open Aimbot is a **universal** open source utility. It offers a wide selection of extensive functionality, including:
-- ***Over 45 Features***
+Open Aimbot is a **universal** open source framework. It offers a wide selection of extensive functionality, including:
+- ***Over 50 Features***
 - ***Detection Bypasses***
 - *Team*, *Friend*, *Wall*, *FoV*, *Magnitude*, *Transparency*, *Group*, *Player* Checks
-- Ability to set *Sensitivity*, *Mouse & Camera Methods*, *Move Direction Prediction*, *Static & Dynamic Offset*, *Activation Keys*, *One-Press Mode*, *Target Objects*, *Ignored & Target Players*, *Display Notification Log*, *TriggerBot*, *ESP*, *FoV*, *Tracers* and other more subtle options
+- Ability to set *Sensitivity*, *Camera Shaking*, *Mouse & Camera Methods*, *Move Direction Prediction*, *Static, Dynamic & Auto Offset*, *Activation Keys*, *One-Press Mode*, *Target Objects*, *Ignored & Target Players*, *Display Notification Log*, *TriggerBot*, *ESP*, *FoV*, *Tracers* and other more subtle options
 - Availability of *Security Warnings*, *Maximum User-Friendliness* and ***Configuration Manager***
 - A *Beautiful* and *Unique Interface* that supports *Minimization*, *Maximization* and even ***Resizing***
 - ***Support For Absolutely All Exploits***
