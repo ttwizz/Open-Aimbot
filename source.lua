@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.7
+    Release 1.7.8
     ttwizz.su/pix
     ttwizz.su/OpenAimbotV3rm
 
@@ -99,6 +99,8 @@ Configuration.UseOffset = ImportedConfiguration["UseOffset"] or false
 Configuration.OffsetType = ImportedConfiguration["OffsetType"] or "Static"
 Configuration.StaticOffsetIncrement = ImportedConfiguration["StaticOffsetIncrement"] or 10
 Configuration.DynamicOffsetIncrement = ImportedConfiguration["DynamicOffsetIncrement"] or 10
+Configuration.AutoOffset = ImportedConfiguration["AutoOffset"] or false
+Configuration.MaxAutoOffset = ImportedConfiguration["MaxAutoOffset"] or 50
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
 
@@ -610,6 +612,23 @@ do
         end
     })
 
+    local AutoOffsetToggle = AimOffsetSection:AddToggle("AutoOffsetToggle", { Title = "Auto Offset", Description = "Toggles the Auto Offset", Default = Configuration.AutoOffset })
+    AutoOffsetToggle:OnChanged(function(Value)
+        Configuration.AutoOffset = Value
+    end)
+
+    AimOffsetSection:AddSlider("MaxAutoOffsetSlider", {
+        Title = "Max Auto Offset",
+        Description = "Changes the Max Auto Offset",
+        Default = Configuration.MaxAutoOffset,
+        Min = 1,
+        Max = 50,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.MaxAutoOffset = Value
+        end
+    })
+
     local SensitivitySection = Tabs.Aimbot:AddSection("Sensitivity")
 
     local UseSensitivityToggle = SensitivitySection:AddToggle("UseSensitivityToggle", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
@@ -1050,21 +1069,18 @@ end)
 --! Checking Target
 
 local function IsReady(Target)
-    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
+    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") and Player.Character and Player.Character:FindFirstChildWhichIsA("Humanoid") and Player.Character:FindFirstChildWhichIsA("Humanoid").Health > 0 and Player.Character:FindFirstChild(Configuration.AimPart) and Player.Character:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
         local _Player = Players:GetPlayerFromCharacter(Target)
         if _Player == Player then
             return false
         end
         local TargetPart = Target:FindFirstChild(Configuration.AimPart)
-        local NativePart = nil
-        if (Configuration.WallCheck or Configuration.MagnitudeCheck) and Player.Character and Player.Character:FindFirstChild(Configuration.AimPart) and Player.Character:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
-            NativePart = Player.Character:FindFirstChild(Configuration.AimPart)
-        end
+        local NativePart = Player.Character:FindFirstChild(Configuration.AimPart)
         if Configuration.TeamCheck and _Player.TeamColor == Player.TeamColor then
             return false
         elseif Configuration.FriendCheck and _Player:IsFriendsWith(Player.UserId) then
             return false
-        elseif Configuration.WallCheck and NativePart then
+        elseif Configuration.WallCheck then
             local RayDirection = (TargetPart.Position - NativePart.Position).Unit * (TargetPart.Position - NativePart.Position).Magnitude
             local RaycastParameters = RaycastParams.new()
             RaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
@@ -1073,11 +1089,8 @@ local function IsReady(Target)
             if not RaycastResult or not RaycastResult.Instance or not RaycastResult.Instance:FindFirstAncestor(_Player.Name) then
                 return false
             end
-        elseif Configuration.MagnitudeCheck and NativePart then
-            local Magnitude = (TargetPart.Position - NativePart.Position).Magnitude
-            if Magnitude > Configuration.TriggerMagnitude then
-                return false
-            end
+        elseif Configuration.MagnitudeCheck and (TargetPart.Position - NativePart.Position).Magnitude > Configuration.TriggerMagnitude then
+            return false
         elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
             return false
         elseif Configuration.GroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) then
@@ -1085,8 +1098,8 @@ local function IsReady(Target)
         elseif Configuration.PlayerCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) and not table.find(Configuration.TargetPlayers, _Player.Name) then
             return false
         end
-        local OffsetIncrement = Configuration.UseOffset and (Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
-        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement) }, TargetPart.Position, TargetPart.Position + OffsetIncrement
+        local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
+        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement) }, TargetPart.Position + OffsetIncrement
     else
         return false
     end
@@ -1448,7 +1461,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 end
             end
         end
-        local IsTargetReady, _, PartViewportPosition, PartWorldPosition, IncrementedPartWorldPosition = IsReady(Target)
+        local IsTargetReady, _, PartViewportPosition, PartWorldPosition = IsReady(Target)
         if IsTargetReady then
             if not DEBUG and getfenv().mousemoverel and Configuration.UseMouseMoving then
                 if PartViewportPosition[2] then
@@ -1465,7 +1478,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(math.clamp(Configuration.Sensitivity, 9, 99) / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
                     Tween:Play()
                 else
-                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, IncrementedPartWorldPosition)
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition)
                 end
             end
         else
