@@ -6,7 +6,7 @@
             <img src="icons/github-icon.svg" alt="GitHub Releases" />
         </a>
         <!-- Discord Server -->
-        <a href="https://ttwizz.su/pix">
+        <a href="https://twix.cyou/pix">
             <img src="icons/discord-icon.svg" alt="Discord Server" />
         </a>
     </p>
