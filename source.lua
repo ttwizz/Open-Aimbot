@@ -2,8 +2,8 @@
     Open Aimbot
     Universal Open Source Aimbot
     Release 1.7.9
-    ttwizz.su/pix
-    ttwizz.su/OpenAimbotV3rm
+    twix.cyou/pix
+    twix.cyou/OpenAimbotV3rm
 
     Author: ttwiz_z (ttwizz)
     License: MIT
@@ -158,10 +158,10 @@ if typeof(script) == "Instance" and script:FindFirstChild("Fluent") then
     Fluent = require(script:FindFirstChild("Fluent"))
 else
     local Success, Result = pcall(function()
-        return game:HttpGet("https://ttwizz.su/Fluent.txt", true)
+        return game:HttpGet("https://twix.cyou/Fluent.txt", true)
     end)
     if Success and typeof(Result) == "string" and string.find(Result, "dawid") then
-        Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.su/Fluent.txt", true))()
+        Fluent = getfenv().loadstring(game:HttpGet("https://twix.cyou/Fluent.txt", true))()
     else
         Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
     end
@@ -967,7 +967,7 @@ do
             Title = "Copy Invite Link",
             Description = "Paste it into the Browser Tab",
             Callback = function()
-                getfenv().setclipboard("https://ttwizz.su/pix")
+                getfenv().setclipboard("https://twix.cyou/pix")
                 Window:Dialog({
                     Title = "Discord",
                     Content = "Invite Link has been copied to the Clipboard!",
@@ -981,7 +981,7 @@ do
         })
     else
         Discord:AddParagraph({
-            Title = "https://ttwizz.su/pix",
+            Title = "https://twix.cyou/pix",
             Content = "Paste it into the Browser Tab"
         })
     end
