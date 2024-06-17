@@ -2,6 +2,7 @@
     Open Aimbot
     Universal Open Source Aimbot
     Release 1.7.10
+
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
 
@@ -12,6 +13,8 @@
     Issues: https://github.com/ttwizz/Open-Aimbot/issues
     Pull requests: https://github.com/ttwizz/Open-Aimbot/pulls
     Discussions: https://github.com/ttwizz/Open-Aimbot/discussions
+
+    Wiki: https://moderka.org/Open-Aimbot
 ]]
 
 
