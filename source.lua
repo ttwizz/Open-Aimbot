@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.9
+    Release 1.7.10
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
 
@@ -82,6 +82,7 @@ Configuration.TriggerKey = ImportedConfiguration["TriggerKey"] or "V"
 Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
 Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
 Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
+Configuration.WaterCheck = ImportedConfiguration["WaterCheck"] or false
 Configuration.FoVCheck = ImportedConfiguration["FoVCheck"] or false
 Configuration.FoVRadius = ImportedConfiguration["FoVRadius"] or 100
 Configuration.MagnitudeCheck = ImportedConfiguration["MagnitudeCheck"] or false
@@ -381,6 +382,11 @@ do
     local WallCheckToggle = SimpleChecksSection:AddToggle("WallCheckToggle", { Title = "Wall Check", Description = "Toggles the Wall Check", Default = Configuration.WallCheck })
     WallCheckToggle:OnChanged(function(Value)
         Configuration.WallCheck = Value
+    end)
+
+    local WaterCheckToggle = SimpleChecksSection:AddToggle("WaterCheckToggle", { Title = "Water Check", Description = "Toggles the Water Check if Wall Check is enabled", Default = Configuration.WaterCheck })
+    WaterCheckToggle:OnChanged(function(Value)
+        Configuration.WaterCheck = Value
     end)
 
     local AdvancedChecksSection = Tabs.Aimbot:AddSection("Advanced Checks")
@@ -1091,6 +1097,7 @@ local function IsReady(Target)
             local RaycastParameters = RaycastParams.new()
             RaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
             RaycastParameters.FilterDescendantsInstances = { Player.Character }
+            RaycastParameters.IgnoreWater = not Configuration.WaterCheck
             local RaycastResult = workspace:Raycast(NativePart.Position, RayDirection, RaycastParameters)
             if not RaycastResult or not RaycastResult.Instance or not RaycastResult.Instance:FindFirstAncestor(_Player.Name) then
                 return false
