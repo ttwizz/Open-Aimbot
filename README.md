@@ -28,7 +28,7 @@
         <img src="https://img.shields.io/github/last-commit/ttwizz/Open-Aimbot?label=Last%20Modified" alt="Last Modified" />
     </a>
 
-Welcome to the **pix**! We develop various utilities for Roblox, security systems, protection and scripts for specific games, general scenarios. You can find more of our projects on our [Discord Server](https://ttwizz.su/pix).
+Welcome to the **pix**! We develop various utilities for Roblox, security systems, protection and scripts for specific games, general scenarios. You can find more of our projects on our [Discord Server](https://twix.cyou/pix).
 </div>
 
 ___
@@ -51,6 +51,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/ttwizz/Open-Aimbot/ma
 ```
 
 <p align="center">
-    <img src="https://i.gyazo.com/0c0a8a6f1e284b066cf5ea1168c62b98.gif" alt="Open Aimbot" />
+    <img src="https://i.gyazo.com/a5a42667bdab05bb0a74a5a6e637541a.gif" alt="Open Aimbot" />
     Copyright (c) 2024 ttwiz_z
 </p>
