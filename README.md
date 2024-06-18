@@ -51,6 +51,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/ttwizz/Open-Aimbot/ma
 ```
 
 <p align="center">
-    <img src="https://i.gyazo.com/21ca885a2344813e4ed79bc45a39a37e.gif" alt="Open Aimbot" />
+    <img src="https://i.gyazo.com/0c0a8a6f1e284b066cf5ea1168c62b98.gif" alt="Open Aimbot" />
     Copyright (c) 2024 ttwiz_z
 </p>

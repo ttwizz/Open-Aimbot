@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.7.10
+    Release 1.8
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -78,6 +78,15 @@ Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
 Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
+Configuration.UseOffset = ImportedConfiguration["UseOffset"] or false
+Configuration.OffsetType = ImportedConfiguration["OffsetType"] or "Static"
+Configuration.StaticOffsetIncrement = ImportedConfiguration["StaticOffsetIncrement"] or 10
+Configuration.DynamicOffsetIncrement = ImportedConfiguration["DynamicOffsetIncrement"] or 10
+Configuration.AutoOffset = ImportedConfiguration["AutoOffset"] or false
+Configuration.MaxAutoOffset = ImportedConfiguration["MaxAutoOffset"] or 50
+Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
+Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
+Configuration.UseNoise = ImportedConfiguration["UseNoise"] or false
 Configuration.TriggerBot = ImportedConfiguration["TriggerBot"] or false
 Configuration.OnePressTriggeringMode = ImportedConfiguration["OnePressTriggeringMode"] or false
 Configuration.SmartTriggerBot = ImportedConfiguration["SmartTriggerBot"] or false
@@ -92,22 +101,16 @@ Configuration.MagnitudeCheck = ImportedConfiguration["MagnitudeCheck"] or false
 Configuration.TriggerMagnitude = ImportedConfiguration["TriggerMagnitude"] or 500
 Configuration.TransparencyCheck = ImportedConfiguration["TransparencyCheck"] or false
 Configuration.IgnoredTransparency = ImportedConfiguration["IgnoredTransparency"] or 0.5
-Configuration.GroupCheck = ImportedConfiguration["GroupCheck"] or false
+Configuration.WhitelistedGroupCheck = ImportedConfiguration["WhitelistedGroupCheck"] or false
 Configuration.WhitelistedGroup = ImportedConfiguration["WhitelistedGroup"] or 0
-Configuration.PlayerCheck = ImportedConfiguration["PlayerCheck"] or false
+Configuration.BlacklistedGroupCheck = ImportedConfiguration["BlacklistedGroupCheck"] or false
+Configuration.BlacklistedGroup = ImportedConfiguration["BlacklistedGroup"] or 0
+Configuration.IgnoredPlayersCheck = ImportedConfiguration["IgnoredPlayersCheck"] or false
 Configuration.IgnoredPlayersDropdownValues = ImportedConfiguration["IgnoredPlayersDropdownValues"] or {}
 Configuration.IgnoredPlayers = ImportedConfiguration["IgnoredPlayers"] or {}
+Configuration.TargetPlayersCheck = ImportedConfiguration["TargetPlayersCheck"] or false
 Configuration.TargetPlayersDropdownValues = ImportedConfiguration["TargetPlayersDropdownValues"] or {}
 Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
-Configuration.UseOffset = ImportedConfiguration["UseOffset"] or false
-Configuration.OffsetType = ImportedConfiguration["OffsetType"] or "Static"
-Configuration.StaticOffsetIncrement = ImportedConfiguration["StaticOffsetIncrement"] or 10
-Configuration.DynamicOffsetIncrement = ImportedConfiguration["DynamicOffsetIncrement"] or 10
-Configuration.AutoOffset = ImportedConfiguration["AutoOffset"] or false
-Configuration.MaxAutoOffset = ImportedConfiguration["MaxAutoOffset"] or 50
-Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
-Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
-Configuration.UseNoise = ImportedConfiguration["UseNoise"] or false
 
 --? Visuals
 
@@ -152,6 +155,7 @@ end
 --! Fields
 
 local Fluent = nil
+local ShowWarning = false
 local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 local Aiming = false
 local Triggering = false
@@ -185,7 +189,7 @@ end)
 local UISettings = {
     TabWidth = 160,
     Size = { 580, 460 },
-    Theme = "Rose",
+    Theme = "Amethyst",
     Acrylic = false,
     Transparency = true,
     MinimizeKey = "RightShift",
@@ -232,7 +236,9 @@ do
         MinimizeKey = UISettings.MinimizeKey
     })
 
-    local Tabs = { Aimbot = Window:AddTab({ Title = "Aimbot", Icon = "bot" }) }
+    local Tabs = { Aimbot = Window:AddTab({ Title = "Aimbot", Icon = "crosshair" }) }
+
+    Window:SelectTab(1)
 
     Tabs.Aimbot:AddParagraph({
         Title = "Open Aimbot",
@@ -256,6 +262,8 @@ do
         UseMouseMovingToggle:OnChanged(function(Value)
             Configuration.UseMouseMoving = Value
         end)
+    else
+        ShowWarning = true
     end
 
     local AimKeybind = AimbotSection:AddKeybind("AimKeybind", {
@@ -332,251 +340,6 @@ do
                 else
                     AimPartDropdown:BuildDropdownList()
                 end
-            end
-        end
-    })
-
-    if getfenv().mouse1click then
-        local TriggerBotSection = Tabs.Aimbot:AddSection("TriggerBot")
-
-        local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBotToggle", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
-        TriggerBotToggle:OnChanged(function(Value)
-            Configuration.TriggerBot = Value
-        end)
-
-        local OnePressTriggeringModeToggle = TriggerBotSection:AddToggle("OnePressTriggeringModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressTriggeringMode })
-        OnePressTriggeringModeToggle:OnChanged(function(Value)
-            Configuration.OnePressTriggeringMode = Value
-        end)
-
-        local SmartTriggerBotToggle = TriggerBotSection:AddToggle("SmartTriggerBotToggle", { Title = "Smart TriggerBot", Description = "Uses the TriggerBot only when Aiming", Default = Configuration.SmartTriggerBot })
-        SmartTriggerBotToggle:OnChanged(function(Value)
-            Configuration.SmartTriggerBot = Value
-        end)
-
-        local TriggerKeybind = TriggerBotSection:AddKeybind("TriggerKeybind", {
-            Title = "Trigger Key",
-            Description = "Changes the Trigger Key",
-            Mode = "Hold",
-            Default = Configuration.TriggerKey,
-            ChangedCallback = function(Value)
-                Configuration.TriggerKey = Value
-            end
-        })
-        if TriggerKeybind.Value == "RMB" then
-            Configuration.TriggerKey = Enum.UserInputType.MouseButton2
-        else
-            Configuration.TriggerKey = Enum.KeyCode[TriggerKeybind.Value]
-        end
-    end
-
-    local SimpleChecksSection = Tabs.Aimbot:AddSection("Simple Checks")
-
-    local TeamCheckToggle = SimpleChecksSection:AddToggle("TeamCheckToggle", { Title = "Team Check", Description = "Toggles the Team Check", Default = Configuration.TeamCheck })
-    TeamCheckToggle:OnChanged(function(Value)
-        Configuration.TeamCheck = Value
-    end)
-
-    local FriendCheckToggle = SimpleChecksSection:AddToggle("FriendCheckToggle", { Title = "Friend Check", Description = "Toggles the Friend Check", Default = Configuration.FriendCheck })
-    FriendCheckToggle:OnChanged(function(Value)
-        Configuration.FriendCheck = Value
-    end)
-
-    local WallCheckToggle = SimpleChecksSection:AddToggle("WallCheckToggle", { Title = "Wall Check", Description = "Toggles the Wall Check", Default = Configuration.WallCheck })
-    WallCheckToggle:OnChanged(function(Value)
-        Configuration.WallCheck = Value
-    end)
-
-    local WaterCheckToggle = SimpleChecksSection:AddToggle("WaterCheckToggle", { Title = "Water Check", Description = "Toggles the Water Check if Wall Check is enabled", Default = Configuration.WaterCheck })
-    WaterCheckToggle:OnChanged(function(Value)
-        Configuration.WaterCheck = Value
-    end)
-
-    local AdvancedChecksSection = Tabs.Aimbot:AddSection("Advanced Checks")
-
-    local FoVCheckToggle = AdvancedChecksSection:AddToggle("FoVCheckToggle", { Title = "FoV Check", Description = "Toggles the FoV Check", Default = Configuration.FoVCheck })
-    FoVCheckToggle:OnChanged(function(Value)
-        Configuration.FoVCheck = Value
-    end)
-
-    AdvancedChecksSection:AddSlider("FoVRadiusSlider", {
-        Title = "FoV Radius",
-        Description = "Changes the FoV Radius",
-        Default = Configuration.FoVRadius,
-        Min = 10,
-        Max = 1000,
-        Rounding = 1,
-        Callback = function(Value)
-            Configuration.FoVRadius = Value
-        end
-    })
-
-    local MagnitudeCheckToggle = AdvancedChecksSection:AddToggle("MagnitudeCheckToggle", { Title = "Magnitude Check", Description = "Toggles the Magnitude Check", Default = Configuration.MagnitudeCheck })
-    MagnitudeCheckToggle:OnChanged(function(Value)
-        Configuration.MagnitudeCheck = Value
-    end)
-
-    AdvancedChecksSection:AddSlider("TriggerMagnitudeSlider", {
-        Title = "Trigger Magnitude",
-        Description = "Distance between the Native and the Target Character",
-        Default = Configuration.TriggerMagnitude,
-        Min = 10,
-        Max = 1000,
-        Rounding = 1,
-        Callback = function(Value)
-            Configuration.TriggerMagnitude = Value
-        end
-    })
-
-    local TransparencyCheckToggle = AdvancedChecksSection:AddToggle("TransparencyCheckToggle", { Title = "Transparency Check", Description = "Toggles the Transparency Check", Default = Configuration.TransparencyCheck })
-    TransparencyCheckToggle:OnChanged(function(Value)
-        Configuration.TransparencyCheck = Value
-    end)
-
-    AdvancedChecksSection:AddSlider("IgnoredTransparencySlider", {
-        Title = "Ignored Transparency",
-        Description = "Target is ignored if its Transparency is > than / = to the set one",
-        Default = Configuration.IgnoredTransparency,
-        Min = 0.1,
-        Max = 1,
-        Rounding = 1,
-        Callback = function(Value)
-            Configuration.IgnoredTransparency = Value
-        end
-    })
-
-    local GroupCheckToggle = AdvancedChecksSection:AddToggle("GroupCheckToggle", { Title = "Group Check", Description = "Toggles the Group Check", Default = Configuration.GroupCheck })
-    GroupCheckToggle:OnChanged(function(Value)
-        Configuration.GroupCheck = Value
-    end)
-
-    AdvancedChecksSection:AddInput("WhitelistedGroupInput", {
-        Title = "Whitelisted Group",
-        Description = "After typing, press Enter",
-        Default = Configuration.WhitelistedGroup,
-        Numeric = true,
-        Finished = true,
-        Placeholder = "Group Id",
-        Callback = function(Value)
-            Configuration.WhitelistedGroup = #Value > 0 and Value or 0
-        end
-    })
-
-    local ExpertChecksSection = Tabs.Aimbot:AddSection("Expert Checks")
-
-    local PlayerCheckToggle = ExpertChecksSection:AddToggle("PlayerCheckToggle", { Title = "Player Check", Description = "Toggles the Player Check", Default = Configuration.PlayerCheck })
-    PlayerCheckToggle:OnChanged(function(Value)
-        Configuration.PlayerCheck = Value
-    end)
-
-    local IgnoredPlayersDropdown = ExpertChecksSection:AddDropdown("IgnoredPlayersDropdown", {
-        Title = "Ignored Players",
-        Description = "Sets the Ignored Players",
-        Values = Configuration.IgnoredPlayersDropdownValues,
-        Multi = true,
-        Default = Configuration.IgnoredPlayers
-    })
-    IgnoredPlayersDropdown:OnChanged(function(Value)
-        Configuration.IgnoredPlayers = {}
-        for Key, _ in next, Value do
-            table.insert(Configuration.IgnoredPlayers, Key)
-        end
-    end)
-
-    ExpertChecksSection:AddInput("AddIgnoredPlayerInput", {
-        Title = "Add Ignored Player",
-        Description = "After typing, press Enter",
-        Numeric = false,
-        Finished = true,
-        Placeholder = "Player Name",
-        Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
-                table.insert(Configuration.IgnoredPlayersDropdownValues, Value)
-                if not table.find(Configuration.IgnoredPlayers, Value) then
-                    IgnoredPlayersDropdown.Value[Value] = true
-                    table.insert(Configuration.IgnoredPlayers, Value)
-                end
-                IgnoredPlayersDropdown:BuildDropdownList()
-            end
-        end
-    })
-
-    ExpertChecksSection:AddInput("RemoveIgnoredPlayerInput", {
-        Title = "Remove Ignored Player",
-        Description = "After typing, press Enter",
-        Numeric = false,
-        Finished = true,
-        Placeholder = "Player Name",
-        Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
-                if table.find(Configuration.IgnoredPlayers, Value) then
-                    IgnoredPlayersDropdown.Value[Value] = nil
-                    table.remove(Configuration.IgnoredPlayers, table.find(Configuration.IgnoredPlayers, Value))
-                end
-                if #Configuration.IgnoredPlayersDropdownValues == 1 then
-                    Configuration.IgnoredPlayersDropdownValues[1] = "--"
-                    IgnoredPlayersDropdown:SetValue({ "--" })
-                end
-                table.remove(Configuration.IgnoredPlayersDropdownValues, table.find(Configuration.IgnoredPlayersDropdownValues, Value))
-                IgnoredPlayersDropdown:BuildDropdownList()
-            end
-        end
-    })
-
-    local TargetPlayersDropdown = ExpertChecksSection:AddDropdown("TargetPlayersDropdown", {
-        Title = "Target Players",
-        Description = "Sets the Target Players",
-        Values = Configuration.TargetPlayersDropdownValues,
-        Multi = true,
-        Default = Configuration.TargetPlayers
-    })
-    TargetPlayersDropdown:OnChanged(function(Value)
-        Configuration.TargetPlayers = {}
-        for Key, _ in next, Value do
-            table.insert(Configuration.TargetPlayers, Key)
-        end
-    end)
-
-    ExpertChecksSection:AddInput("AddTargetPlayerInput", {
-        Title = "Add Target Player",
-        Description = "After typing, press Enter",
-        Numeric = false,
-        Finished = true,
-        Placeholder = "Player Name",
-        Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
-                table.insert(Configuration.TargetPlayersDropdownValues, Value)
-                if not table.find(Configuration.TargetPlayers, Value) then
-                    TargetPlayersDropdown.Value[Value] = true
-                    table.insert(Configuration.TargetPlayers, Value)
-                end
-                TargetPlayersDropdown:BuildDropdownList()
-            end
-        end
-    })
-
-    ExpertChecksSection:AddInput("RemoveTargetPlayerInput", {
-        Title = "Remove Target Player",
-        Description = "After typing, press Enter",
-        Numeric = false,
-        Finished = true,
-        Placeholder = "Player Name",
-        Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
-                if table.find(Configuration.TargetPlayers, Value) then
-                    TargetPlayersDropdown.Value[Value] = nil
-                    table.remove(Configuration.TargetPlayers, table.find(Configuration.TargetPlayers, Value))
-                end
-                if #Configuration.TargetPlayersDropdownValues == 1 then
-                    Configuration.TargetPlayersDropdownValues[1] = "--"
-                    TargetPlayersDropdown:SetValue({ "--" })
-                end
-                table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
-                TargetPlayersDropdown:BuildDropdownList()
             end
         end
     })
@@ -658,13 +421,301 @@ do
         end
     })
 
-    local UseNoiseToggle = SensitivitySection:AddToggle("UseNoiseToggle", { Title = "Use Noise", Description = "Toggles the Camera Shaking", Default = Configuration.UseNoise })
+    local UseNoiseToggle = SensitivitySection:AddToggle("UseNoiseToggle", { Title = "Use Noise", Description = "Toggles the Camera Shaking when Aiming", Default = Configuration.UseNoise })
     UseNoiseToggle:OnChanged(function(Value)
         Configuration.UseNoise = Value
     end)
 
+    if getfenv().mouse1click then
+        Tabs.TriggerBot = Window:AddTab({ Title = "TriggerBot", Icon = "target" })
+
+        Tabs.TriggerBot:AddParagraph({
+            Title = "Open Aimbot",
+            Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+        })
+
+        local TriggerBotSection = Tabs.TriggerBot:AddSection("TriggerBot")
+
+        local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBotToggle", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
+        TriggerBotToggle:OnChanged(function(Value)
+            Configuration.TriggerBot = Value
+        end)
+
+        local OnePressTriggeringModeToggle = TriggerBotSection:AddToggle("OnePressTriggeringModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressTriggeringMode })
+        OnePressTriggeringModeToggle:OnChanged(function(Value)
+            Configuration.OnePressTriggeringMode = Value
+        end)
+
+        local SmartTriggerBotToggle = TriggerBotSection:AddToggle("SmartTriggerBotToggle", { Title = "Smart TriggerBot", Description = "Uses the TriggerBot only when Aiming", Default = Configuration.SmartTriggerBot })
+        SmartTriggerBotToggle:OnChanged(function(Value)
+            Configuration.SmartTriggerBot = Value
+        end)
+
+        local TriggerKeybind = TriggerBotSection:AddKeybind("TriggerKeybind", {
+            Title = "Trigger Key",
+            Description = "Changes the Trigger Key",
+            Mode = "Hold",
+            Default = Configuration.TriggerKey,
+            ChangedCallback = function(Value)
+                Configuration.TriggerKey = Value
+            end
+        })
+        if TriggerKeybind.Value == "RMB" then
+            Configuration.TriggerKey = Enum.UserInputType.MouseButton2
+        else
+            Configuration.TriggerKey = Enum.KeyCode[TriggerKeybind.Value]
+        end
+    else
+        ShowWarning = true
+    end
+
+    Tabs.Checks = Window:AddTab({ Title = "Checks", Icon = "list-checks" })
+
+    Tabs.Checks:AddParagraph({
+        Title = "Open Aimbot",
+        Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+    })
+
+    local SimpleChecksSection = Tabs.Checks:AddSection("Simple Checks")
+
+    local TeamCheckToggle = SimpleChecksSection:AddToggle("TeamCheckToggle", { Title = "Team Check", Description = "Toggles the Team Check", Default = Configuration.TeamCheck })
+    TeamCheckToggle:OnChanged(function(Value)
+        Configuration.TeamCheck = Value
+    end)
+
+    local FriendCheckToggle = SimpleChecksSection:AddToggle("FriendCheckToggle", { Title = "Friend Check", Description = "Toggles the Friend Check", Default = Configuration.FriendCheck })
+    FriendCheckToggle:OnChanged(function(Value)
+        Configuration.FriendCheck = Value
+    end)
+
+    local WallCheckToggle = SimpleChecksSection:AddToggle("WallCheckToggle", { Title = "Wall Check", Description = "Toggles the Wall Check", Default = Configuration.WallCheck })
+    WallCheckToggle:OnChanged(function(Value)
+        Configuration.WallCheck = Value
+    end)
+
+    local WaterCheckToggle = SimpleChecksSection:AddToggle("WaterCheckToggle", { Title = "Water Check", Description = "Toggles the Water Check if Wall Check is enabled", Default = Configuration.WaterCheck })
+    WaterCheckToggle:OnChanged(function(Value)
+        Configuration.WaterCheck = Value
+    end)
+
+    local AdvancedChecksSection = Tabs.Checks:AddSection("Advanced Checks")
+
+    local FoVCheckToggle = AdvancedChecksSection:AddToggle("FoVCheckToggle", { Title = "FoV Check", Description = "Toggles the FoV Check", Default = Configuration.FoVCheck })
+    FoVCheckToggle:OnChanged(function(Value)
+        Configuration.FoVCheck = Value
+    end)
+
+    AdvancedChecksSection:AddSlider("FoVRadiusSlider", {
+        Title = "FoV Radius",
+        Description = "Changes the FoV Radius",
+        Default = Configuration.FoVRadius,
+        Min = 10,
+        Max = 1000,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.FoVRadius = Value
+        end
+    })
+
+    local MagnitudeCheckToggle = AdvancedChecksSection:AddToggle("MagnitudeCheckToggle", { Title = "Magnitude Check", Description = "Toggles the Magnitude Check", Default = Configuration.MagnitudeCheck })
+    MagnitudeCheckToggle:OnChanged(function(Value)
+        Configuration.MagnitudeCheck = Value
+    end)
+
+    AdvancedChecksSection:AddSlider("TriggerMagnitudeSlider", {
+        Title = "Trigger Magnitude",
+        Description = "Distance between the Native and the Target Character",
+        Default = Configuration.TriggerMagnitude,
+        Min = 10,
+        Max = 1000,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.TriggerMagnitude = Value
+        end
+    })
+
+    local TransparencyCheckToggle = AdvancedChecksSection:AddToggle("TransparencyCheckToggle", { Title = "Transparency Check", Description = "Toggles the Transparency Check", Default = Configuration.TransparencyCheck })
+    TransparencyCheckToggle:OnChanged(function(Value)
+        Configuration.TransparencyCheck = Value
+    end)
+
+    AdvancedChecksSection:AddSlider("IgnoredTransparencySlider", {
+        Title = "Ignored Transparency",
+        Description = "Target is ignored if its Transparency is > than / = to the set one",
+        Default = Configuration.IgnoredTransparency,
+        Min = 0.1,
+        Max = 1,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.IgnoredTransparency = Value
+        end
+    })
+
+    local WhitelistedGroupCheckToggle = AdvancedChecksSection:AddToggle("WhitelistedGroupCheckToggle", { Title = "Whitelisted Group Check", Description = "Toggles the Whitelisted Group Check", Default = Configuration.WhitelistedGroupCheck })
+    WhitelistedGroupCheckToggle:OnChanged(function(Value)
+        Configuration.WhitelistedGroupCheck = Value
+    end)
+
+    AdvancedChecksSection:AddInput("WhitelistedGroupInput", {
+        Title = "Whitelisted Group",
+        Description = "After typing, press Enter",
+        Default = Configuration.WhitelistedGroup,
+        Numeric = true,
+        Finished = true,
+        Placeholder = "Group Id",
+        Callback = function(Value)
+            Configuration.WhitelistedGroup = #Value > 0 and Value or 0
+        end
+    })
+
+    local BlacklistedGroupCheckToggle = AdvancedChecksSection:AddToggle("BlacklistedGroupCheckToggle", { Title = "Blacklisted Group Check", Description = "Toggles the Blacklisted Group Check", Default = Configuration.BlacklistedGroupCheck })
+    BlacklistedGroupCheckToggle:OnChanged(function(Value)
+        Configuration.BlacklistedGroupCheck = Value
+    end)
+
+    AdvancedChecksSection:AddInput("BlacklistedGroupInput", {
+        Title = "Blacklisted Group",
+        Description = "After typing, press Enter",
+        Default = Configuration.BlacklistedGroup,
+        Numeric = true,
+        Finished = true,
+        Placeholder = "Group Id",
+        Callback = function(Value)
+            Configuration.BlacklistedGroup = #Value > 0 and Value or 0
+        end
+    })
+
+    local ExpertChecksSection = Tabs.Checks:AddSection("Expert Checks")
+
+    local IgnoredPlayersCheckToggle = ExpertChecksSection:AddToggle("IgnoredPlayersCheckToggle", { Title = "Ignored Players Check", Description = "Toggles the Ignored Players Check", Default = Configuration.IgnoredPlayersCheck })
+    IgnoredPlayersCheckToggle:OnChanged(function(Value)
+        Configuration.IgnoredPlayersCheck = Value
+    end)
+
+    local IgnoredPlayersDropdown = ExpertChecksSection:AddDropdown("IgnoredPlayersDropdown", {
+        Title = "Ignored Players",
+        Description = "Sets the Ignored Players",
+        Values = Configuration.IgnoredPlayersDropdownValues,
+        Multi = true,
+        Default = Configuration.IgnoredPlayers
+    })
+    IgnoredPlayersDropdown:OnChanged(function(Value)
+        Configuration.IgnoredPlayers = {}
+        for Key, _ in next, Value do
+            table.insert(Configuration.IgnoredPlayers, Key)
+        end
+    end)
+
+    ExpertChecksSection:AddInput("AddIgnoredPlayerInput", {
+        Title = "Add Ignored Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
+                table.insert(Configuration.IgnoredPlayersDropdownValues, Value)
+                if not table.find(Configuration.IgnoredPlayers, Value) then
+                    IgnoredPlayersDropdown.Value[Value] = true
+                    table.insert(Configuration.IgnoredPlayers, Value)
+                end
+                IgnoredPlayersDropdown:BuildDropdownList()
+            end
+        end
+    })
+
+    ExpertChecksSection:AddInput("RemoveIgnoredPlayerInput", {
+        Title = "Remove Ignored Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
+                if table.find(Configuration.IgnoredPlayers, Value) then
+                    IgnoredPlayersDropdown.Value[Value] = nil
+                    table.remove(Configuration.IgnoredPlayers, table.find(Configuration.IgnoredPlayers, Value))
+                end
+                if #Configuration.IgnoredPlayersDropdownValues == 1 then
+                    Configuration.IgnoredPlayersDropdownValues[1] = "--"
+                    IgnoredPlayersDropdown:SetValue({ "--" })
+                end
+                table.remove(Configuration.IgnoredPlayersDropdownValues, table.find(Configuration.IgnoredPlayersDropdownValues, Value))
+                IgnoredPlayersDropdown:BuildDropdownList()
+            end
+        end
+    })
+
+    local TargetPlayersCheckToggle = ExpertChecksSection:AddToggle("TargetPlayersCheckToggle", { Title = "Target Players Check", Description = "Toggles the Target Players Check", Default = Configuration.TargetPlayersCheck })
+    TargetPlayersCheckToggle:OnChanged(function(Value)
+        Configuration.TargetPlayersCheck = Value
+    end)
+
+    local TargetPlayersDropdown = ExpertChecksSection:AddDropdown("TargetPlayersDropdown", {
+        Title = "Target Players",
+        Description = "Sets the Target Players",
+        Values = Configuration.TargetPlayersDropdownValues,
+        Multi = true,
+        Default = Configuration.TargetPlayers
+    })
+    TargetPlayersDropdown:OnChanged(function(Value)
+        Configuration.TargetPlayers = {}
+        for Key, _ in next, Value do
+            table.insert(Configuration.TargetPlayers, Key)
+        end
+    end)
+
+    ExpertChecksSection:AddInput("AddTargetPlayerInput", {
+        Title = "Add Target Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
+                table.insert(Configuration.TargetPlayersDropdownValues, Value)
+                if not table.find(Configuration.TargetPlayers, Value) then
+                    TargetPlayersDropdown.Value[Value] = true
+                    table.insert(Configuration.TargetPlayers, Value)
+                end
+                TargetPlayersDropdown:BuildDropdownList()
+            end
+        end
+    })
+
+    ExpertChecksSection:AddInput("RemoveTargetPlayerInput", {
+        Title = "Remove Target Player",
+        Description = "After typing, press Enter",
+        Numeric = false,
+        Finished = true,
+        Placeholder = "Player Name",
+        Callback = function(Value)
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
+            if #Value >= 3 and #Value <= 20 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
+                if table.find(Configuration.TargetPlayers, Value) then
+                    TargetPlayersDropdown.Value[Value] = nil
+                    table.remove(Configuration.TargetPlayers, table.find(Configuration.TargetPlayers, Value))
+                end
+                if #Configuration.TargetPlayersDropdownValues == 1 then
+                    Configuration.TargetPlayersDropdownValues[1] = "--"
+                    TargetPlayersDropdown:SetValue({ "--" })
+                end
+                table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
+                TargetPlayersDropdown:BuildDropdownList()
+            end
+        end
+    })
+
     if getfenv().Drawing then
         Tabs.Visuals = Window:AddTab({ Title = "Visuals", Icon = "box" })
+
+        Tabs.Visuals:AddParagraph({
+            Title = "Open Aimbot",
+            Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+        })
 
         local FoVSection = Tabs.Visuals:AddSection("FoV")
 
@@ -799,19 +850,16 @@ do
                 end
             end
         end)
-    elseif UISettings.ShowWarnings then
-        Window:Dialog({
-            Title = "Warning",
-            Content = "Your Software does not support the Drawing Library! Access to the Visuals Tab is restricted.",
-            Buttons = {
-                {
-                    Title = "Confirm"
-                }
-            }
-        })
+    else
+        ShowWarning = true
     end
 
     Tabs.Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+
+    Tabs.Settings:AddParagraph({
+        Title = "Open Aimbot",
+        Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+    })
 
     local UISection = Tabs.Settings:AddSection("UI")
 
@@ -967,18 +1015,20 @@ do
                 end
             end
         })
+    else
+        ShowWarning = true
     end
 
-    local Discord = Tabs.Settings:AddSection("Discord")
+    local DiscordWikiSection = Tabs.Settings:AddSection("Discord & Wiki")
 
     if getfenv().setclipboard then
-        Discord:AddButton({
+        DiscordWikiSection:AddButton({
             Title = "Copy Invite Link",
             Description = "Paste it into the Browser Tab",
             Callback = function()
                 getfenv().setclipboard("https://twix.cyou/pix")
                 Window:Dialog({
-                    Title = "Discord",
+                    Title = "Open Aimbot",
                     Content = "Invite Link has been copied to the Clipboard!",
                     Buttons = {
                         {
@@ -988,25 +1038,55 @@ do
                 })
             end
         })
+        DiscordWikiSection:AddButton({
+            Title = "Copy Wiki Link",
+            Description = "Paste it into the Browser Tab",
+            Callback = function()
+                getfenv().setclipboard("https://moderka.org/Open-Aimbot")
+                Window:Dialog({
+                    Title = "Open Aimbot",
+                    Content = "Wiki Link has been copied to the Clipboard!",
+                    Buttons = {
+                        {
+                            Title = "Confirm"
+                        }
+                    }
+                })
+            end
+        })
     else
-        Discord:AddParagraph({
+        DiscordWikiSection:AddParagraph({
             Title = "https://twix.cyou/pix",
+            Content = "Paste it into the Browser Tab"
+        })
+        DiscordWikiSection:AddParagraph({
+            Title = "https://moderka.org/Open-Aimbot",
             Content = "Paste it into the Browser Tab"
         })
     end
 
-    Window:SelectTab(1)
-
-    if DEBUG and UISettings.ShowWarnings then
-        Window:Dialog({
-            Title = "Warning",
-            Content = "Running in Debugging Mode. Some Features may not work properly.",
-            Buttons = {
-                {
-                    Title = "Confirm"
+    if UISettings.ShowWarnings then
+        if DEBUG then
+            Window:Dialog({
+                Title = "Warning",
+                Content = "Running in Debugging Mode. Some Features may not work properly.",
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
                 }
-            }
-        })
+            })
+        elseif ShowWarning then
+            Window:Dialog({
+                Title = "Warning",
+                Content = "Your Software does not support all the Features of Open Aimbot!",
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
+        end
     end
 end
 
@@ -1109,9 +1189,9 @@ local function IsReady(Target)
             return false
         elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
             return false
-        elseif Configuration.GroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) then
+        elseif Configuration.WhitelistedGroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) or Configuration.BlacklistedGroupCheck and not _Player:IsInGroup(Configuration.BlacklistedGroup) then
             return false
-        elseif Configuration.PlayerCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) and not table.find(Configuration.TargetPlayers, _Player.Name) then
+        elseif Configuration.IgnoredPlayersCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) or Configuration.TargetPlayersCheck and not table.find(Configuration.TargetPlayers, _Player.Name) then
             return false
         end
         local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
