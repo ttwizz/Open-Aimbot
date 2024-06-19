@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8
+    Release 1.8.1
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -141,7 +141,7 @@ local Mouse = Player:GetMouse()
 local function GetFullName(String)
     if String and #String >= 3 and #String <= 20 then
         for _, _Player in next, Players:GetPlayers() do
-            if _Player ~= Player and string.sub(string.lower(_Player.Name), 1, #string.lower(String)) == string.lower(String) then
+            if string.sub(string.lower(_Player.Name), 1, #string.lower(String)) == string.lower(String) then
                 return _Player.Name
             end
         end
@@ -648,6 +648,30 @@ do
         end
     })
 
+    ExpertChecksSection:AddButton({
+        Title = "Clear Unselected Items",
+        Description = "Removes Unselected Players",
+        Callback = function()
+            local Items = 0
+            for Index, Value in next, Configuration.IgnoredPlayersDropdownValues do
+                if not IgnoredPlayersDropdown.Value[Value] then
+                    Configuration.IgnoredPlayersDropdownValues[Index] = nil
+                    Items = Items + 1
+                end
+            end
+            IgnoredPlayersDropdown:BuildDropdownList()
+            Window:Dialog({
+                Title = "Open Aimbot",
+                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 item has been cleared!" or string.format("%s items have been cleared!", Items),
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
+        end
+    })
+
     local TargetPlayersCheckToggle = ExpertChecksSection:AddToggle("TargetPlayersCheckToggle", { Title = "Target Players Check", Description = "Toggles the Target Players Check", Default = Configuration.TargetPlayersCheck })
     TargetPlayersCheckToggle:OnChanged(function(Value)
         Configuration.TargetPlayersCheck = Value
@@ -706,6 +730,30 @@ do
                 table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
                 TargetPlayersDropdown:BuildDropdownList()
             end
+        end
+    })
+
+    ExpertChecksSection:AddButton({
+        Title = "Clear Unselected Items",
+        Description = "Removes Unselected Players",
+        Callback = function()
+            local Items = 0
+            for Index, Value in next, Configuration.TargetPlayersDropdownValues do
+                if not TargetPlayersDropdown.Value[Value] then
+                    Configuration.TargetPlayersDropdownValues[Index] = nil
+                    Items = Items + 1
+                end
+            end
+            TargetPlayersDropdown:BuildDropdownList()
+            Window:Dialog({
+                Title = "Open Aimbot",
+                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 item has been cleared!" or string.format("%s items have been cleared!", Items),
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
         end
     })
 
