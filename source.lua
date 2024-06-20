@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.1
+    Release 1.8.2
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -655,7 +655,7 @@ do
             local Items = 0
             for Index, Value in next, Configuration.IgnoredPlayersDropdownValues do
                 if not IgnoredPlayersDropdown.Value[Value] then
-                    Configuration.IgnoredPlayersDropdownValues[Index] = nil
+                    table.remove(Configuration.IgnoredPlayersDropdownValues, Index)
                     Items = Items + 1
                 end
             end
@@ -740,7 +740,7 @@ do
             local Items = 0
             for Index, Value in next, Configuration.TargetPlayersDropdownValues do
                 if not TargetPlayersDropdown.Value[Value] then
-                    Configuration.TargetPlayersDropdownValues[Index] = nil
+                    table.remove(Configuration.TargetPlayersDropdownValues, Index)
                     Items = Items + 1
                 end
             end
@@ -1376,7 +1376,8 @@ function ESPLibrary:Initialize(Target)
     table.insert(Visuals, self.TracerESP)
     local Head = self.Character:FindFirstChild("Head")
     local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
-    if Head and HumanoidRootPart then
+    local Humanoid = self.Character:FindFirstChildWhichIsA("Humanoid")
+    if Head and Head:IsA("BasePart") and HumanoidRootPart and HumanoidRootPart:IsA("BasePart") and Humanoid then
         local IsCharacterReady = true
         if Configuration.SmartESP then
             IsCharacterReady = IsReady(self.Character)
@@ -1387,7 +1388,7 @@ function ESPLibrary:Initialize(Target)
         if IsInViewport then
             self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.NameESP.Text = string.format("@%s", self.Player.Name)
+            self.NameESP.Text = string.format("@%s | %s HP | %s studs", self.Player.Name, tostring(math.round(Humanoid.Health)), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and tostring(math.round((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude)) or "N/A")
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
@@ -1413,7 +1414,8 @@ function ESPLibrary:Visualize()
     end
     local Head = self.Character:FindFirstChild("Head")
     local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
-    if Head and HumanoidRootPart then
+    local Humanoid = self.Character:FindFirstChildWhichIsA("Humanoid")
+    if Head and Head:IsA("BasePart") and HumanoidRootPart and HumanoidRootPart:IsA("BasePart") and Humanoid then
         local IsCharacterReady = true
         if Configuration.SmartESP then
             IsCharacterReady = IsReady(self.Character)
@@ -1426,7 +1428,7 @@ function ESPLibrary:Visualize()
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.ESPBox.Thickness = Configuration.ESPThickness
             self.ESPBox.Transparency = Configuration.ESPTransparency
-            self.NameESP.Text = string.format("@%s", self.Player.Name)
+            self.NameESP.Text = string.format("@%s | %s HP | %s studs", self.Player.Name, tostring(math.round(Humanoid.Health)), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and tostring(math.round((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude)) or "N/A")
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPTransparency
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
