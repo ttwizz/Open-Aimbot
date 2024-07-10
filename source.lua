@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.2
+    Release 1.8.3
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -74,6 +74,7 @@ local Configuration = {}
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
 Configuration.OnePressAimingMode = ImportedConfiguration["OnePressAimingMode"] or false
 Configuration.UseMouseMoving = ImportedConfiguration["UseMouseMoving"] or false
+Configuration.OffAfterKill = ImportedConfiguration["OffAfterKill"] or false
 Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
@@ -265,6 +266,11 @@ do
     else
         ShowWarning = true
     end
+
+    local OffAfterKillToggle = AimbotSection:AddToggle("OffAfterKillToggle", { Title = "Off After Kill", Description = "Disables the Aiming Mode after killing a Target", Default = Configuration.OffAfterKill })
+    OffAfterKillToggle:OnChanged(function(Value)
+        Configuration.OffAfterKill = Value
+    end)
 
     local AimKeybind = AimbotSection:AddKeybind("AimKeybind", {
         Title = "Aim Key",
@@ -1597,15 +1603,19 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         local OldTarget = Target
         local Closest = math.huge
         if not IsReady(OldTarget) then
-            for _, _Player in next, Players:GetPlayers() do
-                local IsCharacterReady, Character, PartViewportPosition = IsReady(_Player.Character)
-                if IsCharacterReady and PartViewportPosition[2] then
-                    local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PartViewportPosition[1].X, PartViewportPosition[1].Y)).Magnitude
-                    if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
-                        Target = Character
-                        Closest = Magnitude
+            if OldTarget and not Configuration.OffAfterKill or not OldTarget then
+                for _, _Player in next, Players:GetPlayers() do
+                    local IsCharacterReady, Character, PartViewportPosition = IsReady(_Player.Character)
+                    if IsCharacterReady and PartViewportPosition[2] then
+                        local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PartViewportPosition[1].X, PartViewportPosition[1].Y)).Magnitude
+                        if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
+                            Target = Character
+                            Closest = Magnitude
+                        end
                     end
                 end
+            else
+                ResetAimbotFields()
             end
         end
         local IsTargetReady, _, PartViewportPosition, PartWorldPosition = IsReady(Target)
