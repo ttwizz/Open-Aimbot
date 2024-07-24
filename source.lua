@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.5
+    Release 1.8.6
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -1356,17 +1356,17 @@ end
 do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
                 if Index == "Hit" or Index == "hit" then
                     return select(5, IsReady(Target))
                 elseif Index == "Target" or Index == "target" then
                     return select(6, IsReady(Target))
                 elseif Index == "X" or Index == "x" then
-                    return self.X
+                    return select(3, IsReady(Target))[1].X
                 elseif Index == "Y" or Index == "y" then
-                    return self.Y
+                    return select(3, IsReady(Target))[1].Y
                 elseif Index == "UnitRay" or Index == "unitRay" then
-                    return Ray.new(self.Origin, (self.Hit - self.Origin).Unit)
+                    return Ray.new(self.Origin, (select(5, IsReady(Target)) - self.Origin).Unit)
                 end
             end
             return OldIndex(self, Index)
@@ -1376,7 +1376,7 @@ do
             local Method = getfenv().getnamecallmethod()
             local Arguments = { ... }
             local self = Arguments[1]
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and CalculateChance(Configuration.SilentAimChance) and self == workspace then
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == workspace then
                 if Configuration.SilentAimMethod == "Raycast" and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
                     Arguments[3] = CalculateDirection(Arguments[2], select(4, IsReady(Target)))
                     return OldNameCall(table.unpack(Arguments))
