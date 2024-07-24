@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.3
+    Release 1.8.4
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -73,7 +73,9 @@ local Configuration = {}
 
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
 Configuration.OnePressAimingMode = ImportedConfiguration["OnePressAimingMode"] or false
-Configuration.UseMouseMoving = ImportedConfiguration["UseMouseMoving"] or false
+Configuration.AimMode = ImportedConfiguration["AimMode"] or "Camera"
+Configuration.SilentAimMethod = ImportedConfiguration["SilentAimMethod"] or "Mouse.Hit / Mouse.Target"
+Configuration.SilentAimChance = ImportedConfiguration["SilentAimChance"] or 100
 Configuration.OffAfterKill = ImportedConfiguration["OffAfterKill"] or false
 Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
@@ -140,16 +142,14 @@ local Mouse = Player:GetMouse()
 --! Name Handler
 
 local function GetFullName(String)
-    if String and #String >= 3 and #String <= 20 then
+    if typeof(String) == "string" and #String >= 3 and #String <= 20 then
         for _, _Player in next, Players:GetPlayers() do
             if string.sub(string.lower(_Player.Name), 1, #string.lower(String)) == string.lower(String) then
                 return _Player.Name
             end
         end
-        return ""
-    else
-        return ""
     end
+    return ""
 end
 
 
@@ -179,7 +179,7 @@ end
 local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
     if not Fluent then
         SensitivityChanged:Disconnect()
-    elseif not Aiming or not DEBUG and getfenv().mousemoverel and Configuration.UseMouseMoving then
+    elseif not Aiming or not DEBUG and (getfenv().mousemoverel and Configuration.AimMode == "Mouse" or getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller and Configuration.AimMode == "Silent") then
         MouseSensitivity = UserInputService.MouseDeltaSensitivity
     end
 end)
@@ -258,11 +258,44 @@ do
         Configuration.OnePressAimingMode = Value
     end)
 
+    local AimModeDropdown = AimbotSection:AddDropdown("AimModeDropdown", {
+        Title = "Aim Mode",
+        Description = "Changes the Aim Mode",
+        Values = { "Camera" },
+        Default = Configuration.AimMode,
+        Callback = function(Value)
+            Configuration.AimMode = Value
+        end
+    })
     if getfenv().mousemoverel then
-        local UseMouseMovingToggle = AimbotSection:AddToggle("UseMouseMovingToggle", { Title = "Use Mouse Moving", Description = "Uses the Mouse Moving instead of the Camera Moving", Default = Configuration.UseMouseMoving })
-        UseMouseMovingToggle:OnChanged(function(Value)
-            Configuration.UseMouseMoving = Value
-        end)
+        table.insert(AimModeDropdown.Values, "Mouse")
+        AimModeDropdown:BuildDropdownList()
+    else
+        ShowWarning = true
+    end
+    if getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
+        table.insert(AimModeDropdown.Values, "Silent")
+        AimModeDropdown:BuildDropdownList()
+        AimbotSection:AddDropdown("SilentAimMethodDropdown", {
+            Title = "Silent Aim Method",
+            Description = "Changes the Silent Aim Method",
+            Values = { "Mouse.Hit / Mouse.Target", "Raycast", "FindPartOnRay", "FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist" },
+            Default = Configuration.SilentAimMethod,
+            Callback = function(Value)
+                Configuration.SilentAimMethod = Value
+            end
+        })
+        AimbotSection:AddSlider("SilentAimChanceSlider", {
+            Title = "Silent Aim Chance",
+            Description = "Changes the Hit Chance for Silent Aim",
+            Default = Configuration.SilentAimChance,
+            Min = 1,
+            Max = 100,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.SilentAimChance = Value
+            end
+        })
     else
         ShowWarning = true
     end
@@ -275,7 +308,6 @@ do
     local AimKeybind = AimbotSection:AddKeybind("AimKeybind", {
         Title = "Aim Key",
         Description = "Changes the Aim Key",
-        Mode = "Hold",
         Default = Configuration.AimKey,
         ChangedCallback = function(Value)
             Configuration.AimKey = Value
@@ -291,7 +323,6 @@ do
         Title = "Aim Part",
         Description = "Changes the Aim Part",
         Values = Configuration.AimPartDropdownValues,
-        Multi = false,
         Default = Configuration.AimPart,
         Callback = function(Value)
             Configuration.AimPart = Value
@@ -303,7 +334,7 @@ do
                 break
             end
             if Configuration.RandomAimPart and #Configuration.AimPartDropdownValues > 0 then
-                AimPartDropdown:SetValue(Configuration.AimPartDropdownValues[math.random(1, #Configuration.AimPartDropdownValues)])
+                AimPartDropdown:SetValue(Configuration.AimPartDropdownValues[Random.new():NextInteger(1, #Configuration.AimPartDropdownValues)])
             end
         end
     end)
@@ -316,7 +347,6 @@ do
     AimbotSection:AddInput("AddAimPartInput", {
         Title = "Add Aim Part",
         Description = "After typing, press Enter",
-        Numeric = false,
         Finished = true,
         Placeholder = "Part Name",
         Callback = function(Value)
@@ -330,7 +360,6 @@ do
     AimbotSection:AddInput("RemoveAimPartInput", {
         Title = "Remove Aim Part",
         Description = "After typing, press Enter",
-        Numeric = false,
         Finished = true,
         Placeholder = "Part Name",
         Callback = function(Value)
@@ -460,7 +489,6 @@ do
         local TriggerKeybind = TriggerBotSection:AddKeybind("TriggerKeybind", {
             Title = "Trigger Key",
             Description = "Changes the Trigger Key",
-            Mode = "Hold",
             Default = Configuration.TriggerKey,
             ChangedCallback = function(Value)
                 Configuration.TriggerKey = Value
@@ -615,7 +643,6 @@ do
     ExpertChecksSection:AddInput("AddIgnoredPlayerInput", {
         Title = "Add Ignored Player",
         Description = "After typing, press Enter",
-        Numeric = false,
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
@@ -634,7 +661,6 @@ do
     ExpertChecksSection:AddInput("RemoveIgnoredPlayerInput", {
         Title = "Remove Ignored Player",
         Description = "After typing, press Enter",
-        Numeric = false,
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
@@ -700,7 +726,6 @@ do
     ExpertChecksSection:AddInput("AddTargetPlayerInput", {
         Title = "Add Target Player",
         Description = "After typing, press Enter",
-        Numeric = false,
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
@@ -719,7 +744,6 @@ do
     ExpertChecksSection:AddInput("RemoveTargetPlayerInput", {
         Title = "Remove Target Player",
         Description = "After typing, press Enter",
-        Numeric = false,
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
@@ -805,7 +829,6 @@ do
         local FoVColourPicker = FoVSection:AddColorpicker("FoVColourPicker", {
             Title = "FoV Colour",
             Description = "Changes the FoV Colour",
-            Transparency = 0,
             Default = Configuration.FoVColour,
             Callback = function(Value)
                 Configuration.FoVColour = Value
@@ -873,7 +896,6 @@ do
         local ESPColourPicker = ESPSection:AddColorpicker("ESPColourPicker", {
             Title = "ESP Colour",
             Description = "Changes the ESP Colour",
-            Transparency = 0,
             Default = Configuration.ESPColour,
             Callback = function(Value)
                 Configuration.ESPColour = Value
@@ -1148,7 +1170,7 @@ end
 --! Notification Handler
 
 local function Notify(Message)
-    if Fluent and Message then
+    if Fluent and typeof(Message) == "string" then
         Fluent:Notify({
             Title = "Open Aimbot",
             Content = Message,
@@ -1249,10 +1271,134 @@ local function IsReady(Target)
             return false
         end
         local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
-        local NoiseFrequency = Configuration.UseNoise and Vector3.new(math.random(0.5, 1), math.random(0.5, 1), math.random(0.5, 1)) or Vector3.zero
-        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency
-    else
+        local NoiseFrequency = Configuration.UseNoise and Vector3.new(Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1)) or Vector3.zero
+        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency, CFrame.new(TargetPart.Position + OffsetIncrement + NoiseFrequency) * CFrame.fromEulerAnglesYXZ(math.rad(TargetPart.Orientation.X), math.rad(TargetPart.Orientation.Y), math.rad(TargetPart.Orientation.Z)), TargetPart
+    end
+    return false
+end
+
+
+--! Math Handler
+
+local function CalculateChance(Percentage)
+    return typeof(Percentage) == "number" and math.round(math.clamp(Percentage, 1, 100)) / 100 >= math.round(Random.new():NextNumber() * 100) / 100 or false
+end
+
+local function CalculateDirection(Position, Origin)
+    return typeof(Position) == "Vector3" and typeof(Origin) == "Vector3" and (Position - Origin).Unit * 1000 or Vector3.zero
+end
+
+local function Abbreviate(Number)
+    if typeof(Number) == "number" then
+        local Abbreviations = {
+            N = 10 ^ 30,
+            O = 10 ^ 27,
+            Sp = 10 ^ 24,
+            Sx = 10 ^ 21,
+            Qn = 10 ^ 18,
+            Qd = 10 ^ 15,
+            T = 10 ^ 12,
+            B = 10 ^ 9,
+            M = 10 ^ 6,
+            K = 10 ^ 3
+        }
+        local Selected = 0
+        local Result = tostring(math.round(Number))
+        for Key, Value in next, Abbreviations do
+            if math.abs(Number) >= Value and Value > Selected then
+                Selected = Value
+                Result = string.format("%s%s", tostring(math.round(Number / Value)), Key)
+            end
+        end
+        return Result
+    end
+    return Number
+end
+
+
+--! Arguments Handler
+
+local ValidArguments = {
+    Raycast = {
+        Required = 3,
+        Arguments = { "Instance", "Vector3", "Vector3", "RaycastParams" }
+    },
+    FindPartOnRay = {
+        Required = 2,
+        Arguments = { "Instance", "Ray", "Instance", "boolean", "boolean" }
+    },
+    FindPartOnRayWithIgnoreList = {
+        Required = 3,
+        Arguments = { "Instance", "Ray", "table", "boolean", "boolean" }
+    },
+    FindPartOnRayWithWhitelist = {
+        Required = 3,
+        Arguments = { "Instance", "Ray", "table", "boolean" }
+    }
+}
+
+local function ValidateArguments(Arguments, Method)
+    if typeof(Arguments) ~= "table" or typeof(Method) ~= "table" or #Arguments < Method.Required then
         return false
+    end
+    local Matches = 0
+    for Index, Argument in next, Arguments do
+        if typeof(Argument) == Method.Arguments[Index] then
+            Matches = Matches + 1
+        end
+    end
+    return Matches >= Method.Required
+end
+
+
+--! Silent Aim
+
+do
+    if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
+        local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and self == Mouse then
+                if Index == "Hit" or Index == "hit" then
+                    return select(5, IsReady(Target))
+                elseif Index == "Target" or Index == "target" then
+                    return select(6, IsReady(Target))
+                elseif Index == "X" or Index == "x" then
+                    return self.X
+                elseif Index == "Y" or Index == "y" then
+                    return self.Y
+                elseif Index == "UnitRay" or Index == "unitRay" then
+                    return Ray.new(self.Origin, (self.Hit - self.Origin).Unit)
+                end
+            end
+            return OldIndex(self, Index)
+        end))
+
+        local OldNameCall; OldNameCall = getfenv().hookmetamethod(game, "__namecall", getfenv().newcclosure(function(...)
+            local Method = getfenv().getnamecallmethod()
+            local Arguments = { ... }
+            local self = Arguments[1]
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and CalculateChance(Configuration.SilentAimChance) and self == workspace then
+                if Configuration.SilentAimMethod == "Raycast" and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
+                    Arguments[3] = CalculateDirection(Arguments[2], select(4, IsReady(Target)))
+                    return OldNameCall(table.unpack(Arguments))
+                elseif Configuration.SilentAimMethod == "FindPartOnRay" and (Method == "FindPartOnRay" or Method == "findPartOnRay") and ValidateArguments(Arguments, ValidArguments.FindPartOnRay) then
+                    local Origin = Arguments[2].Origin
+                    local Direction = CalculateDirection(Origin, select(4, IsReady(Target)))
+                    Arguments[2] = Ray.new(Origin, Direction)
+                    return OldNameCall(table.unpack(Arguments))
+                elseif Configuration.SilentAimMethod == "FindPartOnRayWithIgnoreList" and (Method == "FindPartOnRayWithIgnoreList" or Method == "findPartOnRayWithIgnoreList") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithIgnoreList) then
+                    local Origin = Arguments[2].Origin
+                    local Direction = CalculateDirection(Origin, select(4, IsReady(Target)))
+                    Arguments[2] = Ray.new(Origin, Direction)
+                    return OldNameCall(table.unpack(Arguments))
+                elseif Configuration.SilentAimMethod == "FindPartOnRayWithWhitelist" and (Method == "FindPartOnRayWithWhitelist" or Method == "findPartOnRayWithWhitelist") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithWhitelist) then
+                    local Origin = Arguments[2].Origin
+                    local Direction = CalculateDirection(Origin, select(4, IsReady(Target)))
+                    Arguments[2] = Ray.new(Origin, Direction)
+                    return OldNameCall(table.unpack(Arguments))
+                end
+            end
+            return OldNameCall(...)
+        end))
     end
 end
 
@@ -1269,64 +1415,63 @@ end
 --! Visuals Handler
 
 local function Visualize(Object)
-    if DEBUG or not Fluent or not getfenv().Drawing or not Object then
-        return nil
-    elseif string.lower(Object) == "fov" then
-        local FoV = getfenv().Drawing.new("Circle")
-        FoV.Visible = false
-        if FoV.ZIndex then
-            FoV.ZIndex = 2
+    if not DEBUG and Fluent and getfenv().Drawing and typeof(Object) == "string" then
+        if string.lower(Object) == "fov" then
+            local FoV = getfenv().Drawing.new("Circle")
+            FoV.Visible = false
+            if FoV.ZIndex then
+                FoV.ZIndex = 2
+            end
+            FoV.Filled = false
+            FoV.NumSides = 1000
+            FoV.Radius = Configuration.FoVRadius
+            FoV.Thickness = Configuration.FoVThickness
+            FoV.Transparency = Configuration.FoVTransparency
+            FoV.Color = Configuration.FoVColour
+            return FoV
+        elseif string.lower(Object) == "espbox" then
+            local ESPBox = getfenv().Drawing.new("Square")
+            ESPBox.Visible = false
+            if ESPBox.ZIndex then
+                ESPBox.ZIndex = 1
+            end
+            ESPBox.Filled = false
+            ESPBox.Thickness = Configuration.ESPThickness
+            ESPBox.Transparency = Configuration.ESPTransparency
+            ESPBox.Color = Configuration.ESPColour
+            return ESPBox
+        elseif string.lower(Object) == "nameesp" then
+            local NameESP = getfenv().Drawing.new("Text")
+            NameESP.Visible = false
+            if NameESP.ZIndex then
+                NameESP.ZIndex = 1
+            end
+            NameESP.Center = true
+            NameESP.Outline = true
+            NameESP.Size = Configuration.NameESPSize
+            NameESP.Transparency = Configuration.ESPTransparency
+            NameESP.Color = Configuration.ESPColour
+            return NameESP
+        elseif string.lower(Object) == "traceresp" then
+            local TracerESP = getfenv().Drawing.new("Line")
+            TracerESP.Visible = false
+            if TracerESP.ZIndex then
+                TracerESP.ZIndex = 1
+            end
+            TracerESP.Thickness = Configuration.ESPThickness
+            TracerESP.Transparency = Configuration.ESPTransparency
+            TracerESP.Color = Configuration.ESPColour
+            return TracerESP
         end
-        FoV.Filled = false
-        FoV.NumSides = 1000
-        FoV.Radius = Configuration.FoVRadius
-        FoV.Thickness = Configuration.FoVThickness
-        FoV.Transparency = Configuration.FoVTransparency
-        FoV.Color = Configuration.FoVColour
-        return FoV
-    elseif string.lower(Object) == "espbox" then
-        local ESPBox = getfenv().Drawing.new("Square")
-        ESPBox.Visible = false
-        if ESPBox.ZIndex then
-            ESPBox.ZIndex = 1
-        end
-        ESPBox.Filled = false
-        ESPBox.Thickness = Configuration.ESPThickness
-        ESPBox.Transparency = Configuration.ESPTransparency
-        ESPBox.Color = Configuration.ESPColour
-        return ESPBox
-    elseif string.lower(Object) == "nameesp" then
-        local NameESP = getfenv().Drawing.new("Text")
-        NameESP.Visible = false
-        if NameESP.ZIndex then
-            NameESP.ZIndex = 1
-        end
-        NameESP.Center = true
-        NameESP.Outline = true
-        NameESP.Size = Configuration.NameESPSize
-        NameESP.Transparency = Configuration.ESPTransparency
-        NameESP.Color = Configuration.ESPColour
-        return NameESP
-    elseif string.lower(Object) == "traceresp" then
-        local TracerESP = getfenv().Drawing.new("Line")
-        TracerESP.Visible = false
-        if TracerESP.ZIndex then
-            TracerESP.ZIndex = 1
-        end
-        TracerESP.Thickness = Configuration.ESPThickness
-        TracerESP.Transparency = Configuration.ESPTransparency
-        TracerESP.Color = Configuration.ESPColour
-        return TracerESP
-    else
-        return nil
     end
+    return nil
 end
 
 local Visuals = { FoV = Visualize("FoV") }
 
 local function ClearVisual(Visual, Key)
     local FoundVisual = table.find(Visuals, Visual)
-    if Visual and (FoundVisual or Key and Key == "FoV") then
+    if Visual and (FoundVisual or Key == "FoV") then
         if Visual.Destroy then
             Visual:Destroy()
         elseif Visual.Remove then
@@ -1334,7 +1479,7 @@ local function ClearVisual(Visual, Key)
         end
         if FoundVisual then
             table.remove(Visuals, FoundVisual)
-        elseif Key and Key == "FoV" then
+        elseif Key == "FoV" then
             Visuals["FoV"] = nil
         end
     end
@@ -1368,7 +1513,7 @@ function ESPLibrary:Initialize(Target)
     if not Fluent then
         ClearVisuals()
         return nil
-    elseif not Target then
+    elseif typeof(Target) ~= "Instance" then
         return nil
     end
     local self = setmetatable({}, { __index = ESPLibrary })
@@ -1394,7 +1539,7 @@ function ESPLibrary:Initialize(Target)
         if IsInViewport then
             self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.NameESP.Text = string.format("@%s | %s HP | %s studs", self.Player.Name, tostring(math.round(Humanoid.Health)), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and tostring(math.round((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude)) or "N/A")
+            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "N/A")
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
@@ -1434,7 +1579,7 @@ function ESPLibrary:Visualize()
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.ESPBox.Thickness = Configuration.ESPThickness
             self.ESPBox.Transparency = Configuration.ESPTransparency
-            self.NameESP.Text = string.format("@%s | %s HP | %s studs", self.Player.Name, tostring(math.round(Humanoid.Health)), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and tostring(math.round((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude)) or "N/A")
+            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "N/A")
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPTransparency
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
@@ -1516,14 +1661,14 @@ local function DisconnectAimbot()
 end
 
 local function CharacterAdded(_Character)
-    if _Character then
+    if typeof(_Character) == "Instance" then
         local _Player = Players:GetPlayerFromCharacter(_Character)
         Tracking[_Player.UserId] = ESPLibrary:Initialize(_Character)
     end
 end
 
 local function CharacterRemoving(_Character)
-    if _Character then
+    if typeof(_Character) == "Instance" then
         for Key, Tracked in next, Tracking do
             if Tracked.Character == _Character then
                 DisconnectTracking(Key)
@@ -1620,7 +1765,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         end
         local IsTargetReady, _, PartViewportPosition, PartWorldPosition = IsReady(Target)
         if IsTargetReady then
-            if not DEBUG and getfenv().mousemoverel and Configuration.UseMouseMoving then
+            if not DEBUG and getfenv().mousemoverel and Configuration.AimMode == "Mouse" then
                 if PartViewportPosition[2] then
                     ResetAimbotFields(true, true)
                     local MouseLocation = UserInputService:GetMouseLocation()
@@ -1629,7 +1774,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 else
                     ResetAimbotFields(true)
                 end
-            else
+            elseif Configuration.AimMode == "Camera" then
                 UserInputService.MouseDeltaSensitivity = 0
                 if Configuration.UseSensitivity then
                     Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(math.clamp(Configuration.Sensitivity, 9, 99) / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
