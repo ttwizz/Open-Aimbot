@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.4
+    Release 1.8.5
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -1356,7 +1356,7 @@ end
 do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and self == Mouse then
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
                 if Index == "Hit" or Index == "hit" then
                     return select(5, IsReady(Target))
                 elseif Index == "Target" or Index == "target" then
