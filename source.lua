@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.7
+    Release 1.8.8
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -18,7 +18,7 @@
 ]]
 
 
---! Debugging
+--! Debugger
 
 local DEBUG = false
 
@@ -42,7 +42,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 
---! Colour Handler
+--! Colors Handler
 
 local function PackColour(Colour)
     return typeof(Colour) == "Color3" and { R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255 } or typeof(Colour) == "table" and Colour or { R = 255, G = 255, B = 255 }
@@ -53,7 +53,7 @@ local function UnpackColour(Colour)
 end
 
 
---! Importing Configuration
+--! Configuration Importer
 
 local ImportedConfiguration = {}
 
@@ -69,7 +69,7 @@ pcall(function()
 end)
 
 
---! Initializing Configuration
+--! Configuration Initializer
 
 local Configuration = {}
 
@@ -155,7 +155,7 @@ local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
 
---! Name Handler
+--! Names Handler
 
 local function GetFullName(String)
     if typeof(String) == "string" and #String >= 3 and #String <= 20 then
@@ -240,7 +240,7 @@ UISettings.__LAST_RUN__ = os.date()
 InterfaceManager:ExportSettings()
 
 
---! Initializing UI
+--! UI Initializer
 
 do
     local Window = Fluent:CreateWindow({
@@ -1183,7 +1183,7 @@ do
 end
 
 
---! Notification Handler
+--! Notifications Handler
 
 local function Notify(Message)
     if Fluent and typeof(Message) == "string" then
@@ -1199,7 +1199,7 @@ end
 Notify("Successfully initialized!")
 
 
---! Resetting Fields
+--! Fields Handler
 
 local function ResetAimbotFields(SaveAiming, SaveTarget)
     Aiming = SaveAiming and Aiming or false
@@ -1212,7 +1212,7 @@ local function ResetAimbotFields(SaveAiming, SaveTarget)
 end
 
 
---! Binding Key
+--! Input Handler
 
 local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
     if not Fluent then
@@ -1253,55 +1253,14 @@ local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Inpu
 end)
 
 
---! Checking Target
-
-local function IsReady(Target)
-    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") and Player.Character and Player.Character:FindFirstChildWhichIsA("Humanoid") and Player.Character:FindFirstChildWhichIsA("Humanoid").Health > 0 and Player.Character:FindFirstChild(Configuration.AimPart) and Player.Character:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
-        local _Player = Players:GetPlayerFromCharacter(Target)
-        if _Player == Player then
-            return false
-        end
-        local TargetPart = Target:FindFirstChild(Configuration.AimPart)
-        local NativePart = Player.Character:FindFirstChild(Configuration.AimPart)
-        if Configuration.TeamCheck and _Player.TeamColor == Player.TeamColor then
-            return false
-        elseif Configuration.FriendCheck and _Player:IsFriendsWith(Player.UserId) then
-            return false
-        elseif Configuration.WallCheck then
-            local RayDirection = (TargetPart.Position - NativePart.Position).Unit * (TargetPart.Position - NativePart.Position).Magnitude
-            local RaycastParameters = RaycastParams.new()
-            RaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
-            RaycastParameters.FilterDescendantsInstances = { Player.Character }
-            RaycastParameters.IgnoreWater = not Configuration.WaterCheck
-            local RaycastResult = workspace:Raycast(NativePart.Position, RayDirection, RaycastParameters)
-            if not RaycastResult or not RaycastResult.Instance or not RaycastResult.Instance:FindFirstAncestor(_Player.Name) then
-                return false
-            end
-        elseif Configuration.MagnitudeCheck and (TargetPart.Position - NativePart.Position).Magnitude > Configuration.TriggerMagnitude then
-            return false
-        elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
-            return false
-        elseif Configuration.WhitelistedGroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) or Configuration.BlacklistedGroupCheck and not _Player:IsInGroup(Configuration.BlacklistedGroup) then
-            return false
-        elseif Configuration.IgnoredPlayersCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) or Configuration.TargetPlayersCheck and not table.find(Configuration.TargetPlayers, _Player.Name) then
-            return false
-        end
-        local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
-        local NoiseFrequency = Configuration.UseNoise and Vector3.new(Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1)) or Vector3.zero
-        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency, (TargetPart.Position + OffsetIncrement + NoiseFrequency - NativePart.Position).Magnitude, CFrame.new(TargetPart.Position + OffsetIncrement + NoiseFrequency) * CFrame.fromEulerAnglesYXZ(math.rad(TargetPart.Orientation.X), math.rad(TargetPart.Orientation.Y), math.rad(TargetPart.Orientation.Z)), TargetPart
-    end
-    return false
-end
-
-
 --! Math Handler
-
-local function CalculateChance(Percentage)
-    return typeof(Percentage) == "number" and math.round(math.clamp(Percentage, 1, 100)) / 100 >= math.round(Random.new():NextNumber() * 100) / 100 or false
-end
 
 local function CalculateDirection(Origin, Position, Magnitude)
     return typeof(Origin) == "Vector3" and typeof(Position) == "Vector3" and typeof(Magnitude) == "number" and (Position - Origin).Unit * Magnitude or Vector3.zero
+end
+
+local function CalculateChance(Percentage)
+    return typeof(Percentage) == "number" and math.round(math.clamp(Percentage, 1, 100)) / 100 >= math.round(Random.new():NextNumber() * 100) / 100 or false
 end
 
 local function Abbreviate(Number)
@@ -1329,6 +1288,47 @@ local function Abbreviate(Number)
         return Result
     end
     return Number
+end
+
+
+--! Targets Handler
+
+local function IsReady(Target)
+    if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") and Player.Character and Player.Character:FindFirstChildWhichIsA("Humanoid") and Player.Character:FindFirstChildWhichIsA("Humanoid").Health > 0 and Player.Character:FindFirstChild(Configuration.AimPart) and Player.Character:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
+        local _Player = Players:GetPlayerFromCharacter(Target)
+        if _Player == Player then
+            return false
+        end
+        local TargetPart = Target:FindFirstChild(Configuration.AimPart)
+        local NativePart = Player.Character:FindFirstChild(Configuration.AimPart)
+        if Configuration.TeamCheck and _Player.TeamColor == Player.TeamColor then
+            return false
+        elseif Configuration.FriendCheck and _Player:IsFriendsWith(Player.UserId) then
+            return false
+        elseif Configuration.WallCheck then
+            local RayDirection = CalculateDirection(NativePart.Position, TargetPart.Position, (TargetPart.Position - NativePart.Position).Magnitude)
+            local RaycastParameters = RaycastParams.new()
+            RaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
+            RaycastParameters.FilterDescendantsInstances = { Player.Character }
+            RaycastParameters.IgnoreWater = not Configuration.WaterCheck
+            local RaycastResult = workspace:Raycast(NativePart.Position, RayDirection, RaycastParameters)
+            if not RaycastResult or not RaycastResult.Instance or not RaycastResult.Instance:FindFirstAncestor(_Player.Name) then
+                return false
+            end
+        elseif Configuration.MagnitudeCheck and (TargetPart.Position - NativePart.Position).Magnitude > Configuration.TriggerMagnitude then
+            return false
+        elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
+            return false
+        elseif Configuration.WhitelistedGroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) or Configuration.BlacklistedGroupCheck and not _Player:IsInGroup(Configuration.BlacklistedGroup) then
+            return false
+        elseif Configuration.IgnoredPlayersCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) or Configuration.TargetPlayersCheck and not table.find(Configuration.TargetPlayers, _Player.Name) then
+            return false
+        end
+        local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
+        local NoiseFrequency = Configuration.UseNoise and Vector3.new(Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1)) or Vector3.zero
+        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency, (TargetPart.Position + OffsetIncrement + NoiseFrequency - NativePart.Position).Magnitude, CFrame.new(TargetPart.Position + OffsetIncrement + NoiseFrequency) * CFrame.fromEulerAnglesYXZ(math.rad(TargetPart.Orientation.X), math.rad(TargetPart.Orientation.Y), math.rad(TargetPart.Orientation.Z)), TargetPart
+    end
+    return false
 end
 
 
@@ -1367,7 +1367,7 @@ local function ValidateArguments(Arguments, Method)
 end
 
 
---! Silent Aim
+--! Silent Aim Handler
 
 do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
@@ -1394,7 +1394,7 @@ do
             local self = Arguments[1]
             if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == workspace then
                 if Configuration.SilentAimMethod == "Raycast" and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
-                    Arguments[3] = CalculateDirection(Arguments[2], select(4, IsReady(Target)))
+                    Arguments[3] = CalculateDirection(Arguments[2], select(4, IsReady(Target)), select(5, IsReady(Target)))
                     return OldNameCall(table.unpack(Arguments))
                 elseif Configuration.SilentAimMethod == "FindPartOnRay" and (Method == "FindPartOnRay" or Method == "findPartOnRay") and ValidateArguments(Arguments, ValidArguments.FindPartOnRay) then
                     Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
@@ -1702,7 +1702,7 @@ end
 task.spawn(InitializePlayers)
 
 
---! Player Events
+--! Player Events Handler
 
 local OnTeleport; OnTeleport = Player.OnTeleport:Connect(function()
     if DEBUG or not Fluent or not getfenv().queue_on_teleport then
@@ -1737,7 +1737,7 @@ local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_
 end)
 
 
---! Aimbot Loop
+--! Aimbot Handler
 
 local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
     if Fluent.Unloaded then
