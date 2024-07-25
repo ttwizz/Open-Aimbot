@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.6
+    Release 1.8.7
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -24,7 +24,11 @@ local DEBUG = false
 
 if DEBUG then
     getfenv().getfenv = function()
-        return setmetatable({}, { __index = function() return function() return true end end })
+        return setmetatable({}, {
+            __index = function()
+                return function() return true end
+            end
+        })
     end
 end
 
@@ -81,23 +85,32 @@ Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
 Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
+
 Configuration.UseOffset = ImportedConfiguration["UseOffset"] or false
 Configuration.OffsetType = ImportedConfiguration["OffsetType"] or "Static"
 Configuration.StaticOffsetIncrement = ImportedConfiguration["StaticOffsetIncrement"] or 10
 Configuration.DynamicOffsetIncrement = ImportedConfiguration["DynamicOffsetIncrement"] or 10
 Configuration.AutoOffset = ImportedConfiguration["AutoOffset"] or false
 Configuration.MaxAutoOffset = ImportedConfiguration["MaxAutoOffset"] or 50
+
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
 Configuration.UseNoise = ImportedConfiguration["UseNoise"] or false
+
+--? TriggerBot
+
 Configuration.TriggerBot = ImportedConfiguration["TriggerBot"] or false
 Configuration.OnePressTriggeringMode = ImportedConfiguration["OnePressTriggeringMode"] or false
 Configuration.SmartTriggerBot = ImportedConfiguration["SmartTriggerBot"] or false
 Configuration.TriggerKey = ImportedConfiguration["TriggerKey"] or "V"
+
+--? Checks
+
 Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
 Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
 Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
 Configuration.WaterCheck = ImportedConfiguration["WaterCheck"] or false
+
 Configuration.FoVCheck = ImportedConfiguration["FoVCheck"] or false
 Configuration.FoVRadius = ImportedConfiguration["FoVRadius"] or 100
 Configuration.MagnitudeCheck = ImportedConfiguration["MagnitudeCheck"] or false
@@ -108,6 +121,7 @@ Configuration.WhitelistedGroupCheck = ImportedConfiguration["WhitelistedGroupChe
 Configuration.WhitelistedGroup = ImportedConfiguration["WhitelistedGroup"] or 0
 Configuration.BlacklistedGroupCheck = ImportedConfiguration["BlacklistedGroupCheck"] or false
 Configuration.BlacklistedGroup = ImportedConfiguration["BlacklistedGroup"] or 0
+
 Configuration.IgnoredPlayersCheck = ImportedConfiguration["IgnoredPlayersCheck"] or false
 Configuration.IgnoredPlayersDropdownValues = ImportedConfiguration["IgnoredPlayersDropdownValues"] or {}
 Configuration.IgnoredPlayers = ImportedConfiguration["IgnoredPlayers"] or {}
@@ -121,6 +135,7 @@ Configuration.ShowFoV = ImportedConfiguration["ShowFoV"] or false
 Configuration.FoVThickness = ImportedConfiguration["FoVThickness"] or 2
 Configuration.FoVTransparency = ImportedConfiguration["FoVTransparency"] or 0.8
 Configuration.FoVColour = ImportedConfiguration["FoVColour"] or Color3.fromRGB(255, 255, 255)
+
 Configuration.SmartESP = ImportedConfiguration["SmartESP"] or false
 Configuration.ESPBox = ImportedConfiguration["ESPBox"] or false
 Configuration.NameESP = ImportedConfiguration["NameESP"] or false
@@ -130,6 +145,7 @@ Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
 Configuration.ESPTransparency = ImportedConfiguration["ESPTransparency"] or 0.8
 Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(255, 255, 255)
 Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
+
 Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
 
 
@@ -1272,7 +1288,7 @@ local function IsReady(Target)
         end
         local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
         local NoiseFrequency = Configuration.UseNoise and Vector3.new(Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1)) or Vector3.zero
-        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency, CFrame.new(TargetPart.Position + OffsetIncrement + NoiseFrequency) * CFrame.fromEulerAnglesYXZ(math.rad(TargetPart.Orientation.X), math.rad(TargetPart.Orientation.Y), math.rad(TargetPart.Orientation.Z)), TargetPart
+        return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency, (TargetPart.Position + OffsetIncrement + NoiseFrequency - NativePart.Position).Magnitude, CFrame.new(TargetPart.Position + OffsetIncrement + NoiseFrequency) * CFrame.fromEulerAnglesYXZ(math.rad(TargetPart.Orientation.X), math.rad(TargetPart.Orientation.Y), math.rad(TargetPart.Orientation.Z)), TargetPart
     end
     return false
 end
@@ -1284,8 +1300,8 @@ local function CalculateChance(Percentage)
     return typeof(Percentage) == "number" and math.round(math.clamp(Percentage, 1, 100)) / 100 >= math.round(Random.new():NextNumber() * 100) / 100 or false
 end
 
-local function CalculateDirection(Position, Origin)
-    return typeof(Position) == "Vector3" and typeof(Origin) == "Vector3" and (Position - Origin).Unit * 1000 or Vector3.zero
+local function CalculateDirection(Origin, Position, Magnitude)
+    return typeof(Origin) == "Vector3" and typeof(Position) == "Vector3" and typeof(Magnitude) == "number" and (Position - Origin).Unit * Magnitude or Vector3.zero
 end
 
 local function Abbreviate(Number)
@@ -1356,17 +1372,17 @@ end
 do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
+            if Fluent and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
                 if Index == "Hit" or Index == "hit" then
-                    return select(5, IsReady(Target))
-                elseif Index == "Target" or Index == "target" then
                     return select(6, IsReady(Target))
+                elseif Index == "Target" or Index == "target" then
+                    return select(7, IsReady(Target))
                 elseif Index == "X" or Index == "x" then
                     return select(3, IsReady(Target))[1].X
                 elseif Index == "Y" or Index == "y" then
                     return select(3, IsReady(Target))[1].Y
                 elseif Index == "UnitRay" or Index == "unitRay" then
-                    return Ray.new(self.Origin, (select(5, IsReady(Target)) - self.Origin).Unit)
+                    return Ray.new(self.Origin, (select(6, IsReady(Target)) - self.Origin).Unit)
                 end
             end
             return OldIndex(self, Index)
@@ -1381,19 +1397,13 @@ do
                     Arguments[3] = CalculateDirection(Arguments[2], select(4, IsReady(Target)))
                     return OldNameCall(table.unpack(Arguments))
                 elseif Configuration.SilentAimMethod == "FindPartOnRay" and (Method == "FindPartOnRay" or Method == "findPartOnRay") and ValidateArguments(Arguments, ValidArguments.FindPartOnRay) then
-                    local Origin = Arguments[2].Origin
-                    local Direction = CalculateDirection(Origin, select(4, IsReady(Target)))
-                    Arguments[2] = Ray.new(Origin, Direction)
+                    Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
                 elseif Configuration.SilentAimMethod == "FindPartOnRayWithIgnoreList" and (Method == "FindPartOnRayWithIgnoreList" or Method == "findPartOnRayWithIgnoreList") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithIgnoreList) then
-                    local Origin = Arguments[2].Origin
-                    local Direction = CalculateDirection(Origin, select(4, IsReady(Target)))
-                    Arguments[2] = Ray.new(Origin, Direction)
+                    Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
                 elseif Configuration.SilentAimMethod == "FindPartOnRayWithWhitelist" and (Method == "FindPartOnRayWithWhitelist" or Method == "findPartOnRayWithWhitelist") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithWhitelist) then
-                    local Origin = Arguments[2].Origin
-                    local Direction = CalculateDirection(Origin, select(4, IsReady(Target)))
-                    Arguments[2] = Ray.new(Origin, Direction)
+                    Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
                 end
             end
