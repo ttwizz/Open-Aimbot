@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.8
+    Release 1.8.9
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -195,7 +195,7 @@ end
 local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
     if not Fluent then
         SensitivityChanged:Disconnect()
-    elseif not Aiming or not DEBUG and (getfenv().mousemoverel and Configuration.AimMode == "Mouse" or getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller and Configuration.AimMode == "Silent") then
+    elseif not Aiming or not DEBUG and (getfenv().mousemoverel and Configuration.AimMode == "Mouse" or getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod and Configuration.AimMode == "Silent") then
         MouseSensitivity = UserInputService.MouseDeltaSensitivity
     end
 end)
@@ -289,7 +289,7 @@ do
     else
         ShowWarning = true
     end
-    if getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
+    if getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         table.insert(AimModeDropdown.Values, "Silent")
         AimModeDropdown:BuildDropdownList()
         AimbotSection:AddDropdown("SilentAimMethodDropdown", {
@@ -1370,9 +1370,9 @@ end
 --! Silent Aim Handler
 
 do
-    if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().getnamecallmethod and getfenv().checkcaller then
+    if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
-            if Fluent and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
                 if Index == "Hit" or Index == "hit" then
                     return select(6, IsReady(Target))
                 elseif Index == "Target" or Index == "target" then
@@ -1549,7 +1549,7 @@ function ESPLibrary:Initialize(Target)
         if IsInViewport then
             self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "N/A")
+            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
@@ -1589,7 +1589,7 @@ function ESPLibrary:Visualize()
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.ESPBox.Thickness = Configuration.ESPThickness
             self.ESPBox.Transparency = Configuration.ESPTransparency
-            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "N/A")
+            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPTransparency
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
