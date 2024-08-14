@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.9
+    Release 1.8.10
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -1416,7 +1416,7 @@ end
 --! TriggerBot Handler
 
 local function HandleTriggerBot()
-    if not DEBUG and Fluent and getfenv().mouse1click and Triggering and (Configuration.SmartTriggerBot and Aiming or not Configuration.SmartTriggerBot) and Mouse.Target and IsReady(Mouse.Target.Parent) then
+    if not DEBUG and Fluent and getfenv().mouse1click and Triggering and (Configuration.SmartTriggerBot and Aiming or not Configuration.SmartTriggerBot) and Mouse.Target and IsReady(Mouse.Target:FindFirstAncestorWhichIsA("Model")) then
         getfenv().mouse1click()
     end
 end
