@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.10
+    Release 1.8.11
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -179,14 +179,14 @@ local Triggering = false
 local Target = nil
 local Tween = nil
 
-if typeof(script) == "Instance" and script:FindFirstChild("Fluent") then
+if typeof(script) == "Instance" and script:FindFirstChild("Fluent") and script:FindFirstChild("Fluent"):IsA("ModuleScript") then
     Fluent = require(script:FindFirstChild("Fluent"))
 else
     local Success, Result = pcall(function()
         return game:HttpGet("https://twix.cyou/Fluent.txt", true)
     end)
     if Success and typeof(Result) == "string" and string.find(Result, "dawid") then
-        Fluent = getfenv().loadstring(game:HttpGet("https://twix.cyou/Fluent.txt", true))()
+        Fluent = getfenv().loadstring(Result)()
     else
         Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
     end
