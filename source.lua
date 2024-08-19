@@ -17,6 +17,13 @@
     Wiki: https://moderka.org/Open-Aimbot
 ]]
 
+--! Anti-Spam execution
+
+if OpenAimbot or _OpenAimbot then
+    return
+end
+
+OpenAimbot = true
 
 --! Debugger
 
