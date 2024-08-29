@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.11
+    Release 1.8.12
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -1296,7 +1296,7 @@ end
 local function IsReady(Target)
     if Target and Target:FindFirstChildWhichIsA("Humanoid") and Target:FindFirstChildWhichIsA("Humanoid").Health > 0 and not Target:FindFirstChildWhichIsA("ForceField") and Configuration.AimPart and Target:FindFirstChild(Configuration.AimPart) and Target:FindFirstChild(Configuration.AimPart):IsA("BasePart") and Player.Character and Player.Character:FindFirstChildWhichIsA("Humanoid") and Player.Character:FindFirstChildWhichIsA("Humanoid").Health > 0 and Player.Character:FindFirstChild(Configuration.AimPart) and Player.Character:FindFirstChild(Configuration.AimPart):IsA("BasePart") then
         local _Player = Players:GetPlayerFromCharacter(Target)
-        if _Player == Player then
+        if not _Player or _Player == Player then
             return false
         end
         local TargetPart = Target:FindFirstChild(Configuration.AimPart)
