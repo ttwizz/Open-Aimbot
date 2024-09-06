@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.12
+    Release 1.8.13
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -26,7 +26,9 @@ if DEBUG then
     getfenv().getfenv = function()
         return setmetatable({}, {
             __index = function()
-                return function() return true end
+                return function()
+                    return true
+                end
             end
         })
     end
@@ -96,6 +98,7 @@ Configuration.MaxAutoOffset = ImportedConfiguration["MaxAutoOffset"] or 50
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
 Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
 Configuration.UseNoise = ImportedConfiguration["UseNoise"] or false
+Configuration.NoiseFrequency = ImportedConfiguration["NoiseFrequency"] or 100
 
 --? TriggerBot
 
@@ -476,6 +479,18 @@ do
     UseNoiseToggle:OnChanged(function(Value)
         Configuration.UseNoise = Value
     end)
+
+    SensitivitySection:AddSlider("NoiseFrequencySlider", {
+        Title = "Noise Frequency",
+        Description = "Changes the Noise Frequency",
+        Default = Configuration.NoiseFrequency,
+        Min = 1,
+        Max = 100,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.NoiseFrequency = Value
+        end
+    })
 
     if getfenv().mouse1click then
         Tabs.TriggerBot = Window:AddTab({ Title = "TriggerBot", Icon = "target" })
@@ -1325,7 +1340,7 @@ local function IsReady(Target)
             return false
         end
         local OffsetIncrement = Configuration.UseOffset and (Configuration.AutoOffset and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 <= Configuration.MaxAutoOffset and TargetPart.Position.Y * Configuration.StaticOffsetIncrement * (TargetPart.Position - NativePart.Position).Magnitude / 1000 or Configuration.MaxAutoOffset, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Configuration.OffsetType == "Static" and Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) or Configuration.OffsetType == "Dynamic" and Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10 or Vector3.new(0, TargetPart.Position.Y * Configuration.StaticOffsetIncrement / 10, 0) + Target:FindFirstChildWhichIsA("Humanoid").MoveDirection * Configuration.DynamicOffsetIncrement / 10) or Vector3.zero
-        local NoiseFrequency = Configuration.UseNoise and Vector3.new(Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1), Random.new():NextNumber(0.5, 1)) or Vector3.zero
+        local NoiseFrequency = Configuration.UseNoise and Vector3.new(Random.new():NextNumber(-Configuration.NoiseFrequency / 100, Configuration.NoiseFrequency / 100), Random.new():NextNumber(-Configuration.NoiseFrequency / 100, Configuration.NoiseFrequency / 100), Random.new():NextNumber(-Configuration.NoiseFrequency / 100, Configuration.NoiseFrequency / 100)) or Vector3.zero
         return true, Target, { workspace.CurrentCamera:WorldToViewportPoint(TargetPart.Position + OffsetIncrement + NoiseFrequency) }, TargetPart.Position + OffsetIncrement + NoiseFrequency, (TargetPart.Position + OffsetIncrement + NoiseFrequency - NativePart.Position).Magnitude, CFrame.new(TargetPart.Position + OffsetIncrement + NoiseFrequency) * CFrame.fromEulerAnglesYXZ(math.rad(TargetPart.Orientation.X), math.rad(TargetPart.Orientation.Y), math.rad(TargetPart.Orientation.Z)), TargetPart
     end
     return false
