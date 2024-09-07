@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.13
+    Release 1.8.14
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -113,6 +113,7 @@ Configuration.TeamCheck = ImportedConfiguration["TeamCheck"] or false
 Configuration.FriendCheck = ImportedConfiguration["FriendCheck"] or false
 Configuration.WallCheck = ImportedConfiguration["WallCheck"] or false
 Configuration.WaterCheck = ImportedConfiguration["WaterCheck"] or false
+Configuration.VerifiedBadgeCheck = ImportedConfiguration["VerifiedBadgeCheck"] or false
 
 Configuration.FoVCheck = ImportedConfiguration["FoVCheck"] or false
 Configuration.FoVRadius = ImportedConfiguration["FoVRadius"] or 100
@@ -561,6 +562,11 @@ do
     local WaterCheckToggle = SimpleChecksSection:AddToggle("WaterCheckToggle", { Title = "Water Check", Description = "Toggles the Water Check if Wall Check is enabled", Default = Configuration.WaterCheck })
     WaterCheckToggle:OnChanged(function(Value)
         Configuration.WaterCheck = Value
+    end)
+
+    local VerifiedBadgeCheckToggle = SimpleChecksSection:AddToggle("VerifiedBadgeCheckToggle", { Title = "Verified Badge Check", Description = "Toggles the Verified Badge Check", Default = Configuration.VerifiedBadgeCheck })
+    VerifiedBadgeCheckToggle:OnChanged(function(Value)
+        Configuration.VerifiedBadgeCheck = Value
     end)
 
     local AdvancedChecksSection = Tabs.Checks:AddSection("Advanced Checks")
@@ -1330,6 +1336,8 @@ local function IsReady(Target)
             if not RaycastResult or not RaycastResult.Instance or not RaycastResult.Instance:FindFirstAncestor(_Player.Name) then
                 return false
             end
+        elseif Configuration.VerifiedBadgeCheck and _Player.HasVerifiedBadge then
+            return false
         elseif Configuration.MagnitudeCheck and (TargetPart.Position - NativePart.Position).Magnitude > Configuration.TriggerMagnitude then
             return false
         elseif Configuration.TransparencyCheck and Target:FindFirstChild("Head") and Target:FindFirstChild("Head"):IsA("BasePart") and Target:FindFirstChild("Head").Transparency >= Configuration.IgnoredTransparency then
@@ -1444,9 +1452,7 @@ local function Visualize(Object)
         if string.lower(Object) == "fov" then
             local FoV = getfenv().Drawing.new("Circle")
             FoV.Visible = false
-            if FoV.ZIndex then
-                FoV.ZIndex = 2
-            end
+            FoV.ZIndex = 2
             FoV.Filled = false
             FoV.NumSides = 1000
             FoV.Radius = Configuration.FoVRadius
@@ -1457,9 +1463,7 @@ local function Visualize(Object)
         elseif string.lower(Object) == "espbox" then
             local ESPBox = getfenv().Drawing.new("Square")
             ESPBox.Visible = false
-            if ESPBox.ZIndex then
-                ESPBox.ZIndex = 1
-            end
+            ESPBox.ZIndex = 1
             ESPBox.Filled = false
             ESPBox.Thickness = Configuration.ESPThickness
             ESPBox.Transparency = Configuration.ESPTransparency
@@ -1468,9 +1472,7 @@ local function Visualize(Object)
         elseif string.lower(Object) == "nameesp" then
             local NameESP = getfenv().Drawing.new("Text")
             NameESP.Visible = false
-            if NameESP.ZIndex then
-                NameESP.ZIndex = 1
-            end
+            NameESP.ZIndex = 1
             NameESP.Center = true
             NameESP.Outline = true
             NameESP.Size = Configuration.NameESPSize
@@ -1480,9 +1482,7 @@ local function Visualize(Object)
         elseif string.lower(Object) == "traceresp" then
             local TracerESP = getfenv().Drawing.new("Line")
             TracerESP.Visible = false
-            if TracerESP.ZIndex then
-                TracerESP.ZIndex = 1
-            end
+            TracerESP.ZIndex = 1
             TracerESP.Thickness = Configuration.ESPThickness
             TracerESP.Transparency = Configuration.ESPTransparency
             TracerESP.Color = Configuration.ESPColour
