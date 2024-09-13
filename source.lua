@@ -1,7 +1,21 @@
 --[[
-    Open Aimbot
+  ______                                   ______  __              __                  __     
+ /      \                                 /      \|  \            |  \                |  \    
+|  ▓▓▓▓▓▓\ ______   ______  _______      |  ▓▓▓▓▓▓\\▓▓______ ____ | ▓▓____   ______  _| ▓▓_   
+| ▓▓  | ▓▓/      \ /      \|       \     | ▓▓__| ▓▓  \      \    \| ▓▓    \ /      \|   ▓▓ \  
+| ▓▓  | ▓▓  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\ ▓▓▓▓▓▓▓\    | ▓▓    ▓▓ ▓▓ ▓▓▓▓▓▓\▓▓▓▓\ ▓▓▓▓▓▓▓\  ▓▓▓▓▓▓\\▓▓▓▓▓▓  
+| ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓    ▓▓ ▓▓  | ▓▓    | ▓▓▓▓▓▓▓▓ ▓▓ ▓▓ | ▓▓ | ▓▓ ▓▓  | ▓▓ ▓▓  | ▓▓ | ▓▓ __ 
+| ▓▓__/ ▓▓ ▓▓__/ ▓▓ ▓▓▓▓▓▓▓▓ ▓▓  | ▓▓    | ▓▓  | ▓▓ ▓▓ ▓▓ | ▓▓ | ▓▓ ▓▓__/ ▓▓ ▓▓__/ ▓▓ | ▓▓|  \
+ \▓▓    ▓▓ ▓▓    ▓▓\▓▓     \ ▓▓  | ▓▓    | ▓▓  | ▓▓ ▓▓ ▓▓ | ▓▓ | ▓▓ ▓▓    ▓▓\▓▓    ▓▓  \▓▓  ▓▓
+  \▓▓▓▓▓▓| ▓▓▓▓▓▓▓  \▓▓▓▓▓▓▓\▓▓   \▓▓     \▓▓   \▓▓\▓▓\▓▓  \▓▓  \▓▓\▓▓▓▓▓▓▓  \▓▓▓▓▓▓    \▓▓▓▓ 
+         | ▓▓                                                                                 
+         | ▓▓                                                                                 
+          \▓▓                                                                                 
+
+⊹˚₊‧───────────────‧₊˚⊹·͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⊹˚₊‧───────────────‧₊˚⊹
+
     Universal Open Source Aimbot
-    Release 1.8.15
+    Release 1.8.16
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -307,7 +321,9 @@ do
         SilentAimMethodsDropdown:OnChanged(function(Value)
             Configuration.SilentAimMethods = {}
             for Key, _ in next, Value do
-                table.insert(Configuration.SilentAimMethods, Key)
+                if typeof(Key) == "string" then
+                    table.insert(Configuration.SilentAimMethods, Key)
+                end
             end
         end)
 
@@ -679,7 +695,9 @@ do
     IgnoredPlayersDropdown:OnChanged(function(Value)
         Configuration.IgnoredPlayers = {}
         for Key, _ in next, Value do
-            table.insert(Configuration.IgnoredPlayers, Key)
+            if typeof(Key) == "string" then
+                table.insert(Configuration.IgnoredPlayers, Key)
+            end
         end
     end)
 
@@ -762,7 +780,9 @@ do
     TargetPlayersDropdown:OnChanged(function(Value)
         Configuration.TargetPlayers = {}
         for Key, _ in next, Value do
-            table.insert(Configuration.TargetPlayers, Key)
+            if typeof(Key) == "string" then
+                table.insert(Configuration.TargetPlayers, Key)
+            end
         end
     end)
 
