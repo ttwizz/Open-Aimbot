@@ -1,7 +1,7 @@
 --[[
     Open Aimbot
     Universal Open Source Aimbot
-    Release 1.8.14
+    Release 1.8.15
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -80,7 +80,7 @@ local Configuration = {}
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
 Configuration.OnePressAimingMode = ImportedConfiguration["OnePressAimingMode"] or false
 Configuration.AimMode = ImportedConfiguration["AimMode"] or "Camera"
-Configuration.SilentAimMethod = ImportedConfiguration["SilentAimMethod"] or "Mouse.Hit / Mouse.Target"
+Configuration.SilentAimMethods = ImportedConfiguration["SilentAimMethods"] or { "Mouse.Hit / Mouse.Target", "GetMouseLocation" }
 Configuration.SilentAimChance = ImportedConfiguration["SilentAimChance"] or 100
 Configuration.OffAfterKill = ImportedConfiguration["OffAfterKill"] or false
 Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
@@ -296,15 +296,21 @@ do
     if getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         table.insert(AimModeDropdown.Values, "Silent")
         AimModeDropdown:BuildDropdownList()
-        AimbotSection:AddDropdown("SilentAimMethodDropdown", {
-            Title = "Silent Aim Method",
-            Description = "Changes the Silent Aim Method",
-            Values = { "Mouse.Hit / Mouse.Target", "Raycast", "FindPartOnRay", "FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist" },
-            Default = Configuration.SilentAimMethod,
-            Callback = function(Value)
-                Configuration.SilentAimMethod = Value
-            end
+
+        local SilentAimMethodsDropdown = AimbotSection:AddDropdown("SilentAimMethodsDropdown", {
+            Title = "Silent Aim Methods",
+            Description = "Sets the Silent Aim Methods",
+            Values = { "Mouse.Hit / Mouse.Target", "GetMouseLocation", "Raycast", "FindPartOnRay", "FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist" },
+            Multi = true,
+            Default = Configuration.SilentAimMethods
         })
+        SilentAimMethodsDropdown:OnChanged(function(Value)
+            Configuration.SilentAimMethods = {}
+            for Key, _ in next, Value do
+                table.insert(Configuration.SilentAimMethods, Key)
+            end
+        end)
+
         AimbotSection:AddSlider("SilentAimChanceSlider", {
             Title = "Silent Aim Chance",
             Description = "Changes the Hit Chance for Silent Aim",
@@ -1151,6 +1157,7 @@ do
                 })
             end
         })
+
         DiscordWikiSection:AddButton({
             Title = "Copy Wiki Link",
             Description = "Paste it into the Browser Tab",
@@ -1172,6 +1179,7 @@ do
             Title = "https://twix.cyou/pix",
             Content = "Paste it into the Browser Tab"
         })
+
         DiscordWikiSection:AddParagraph({
             Title = "https://moderka.org/Open-Aimbot",
             Content = "Paste it into the Browser Tab"
@@ -1395,7 +1403,7 @@ end
 do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Configuration.SilentAimMethod == "Mouse.Hit / Mouse.Target" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and table.find(Configuration.SilentAimMethods, "Mouse.Hit / Mouse.Target") and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
                 if Index == "Hit" or Index == "hit" then
                     return select(6, IsReady(Target))
                 elseif Index == "Target" or Index == "target" then
@@ -1415,17 +1423,19 @@ do
             local Method = getfenv().getnamecallmethod()
             local Arguments = { ... }
             local self = Arguments[1]
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == workspace then
-                if Configuration.SilentAimMethod == "Raycast" and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) then
+                if table.find(Configuration.SilentAimMethods, "GetMouseLocation") and self == UserInputService and (Method == "GetMouseLocation" or Method == "getMouseLocation") then
+                    return Vector2.new(select(3, IsReady(Target))[1].X, select(3, IsReady(Target))[1].Y)
+                elseif table.find(Configuration.SilentAimMethods, "Raycast") and self == workspace and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
                     Arguments[3] = CalculateDirection(Arguments[2], select(4, IsReady(Target)), select(5, IsReady(Target)))
                     return OldNameCall(table.unpack(Arguments))
-                elseif Configuration.SilentAimMethod == "FindPartOnRay" and (Method == "FindPartOnRay" or Method == "findPartOnRay") and ValidateArguments(Arguments, ValidArguments.FindPartOnRay) then
+                elseif table.find(Configuration.SilentAimMethods, "FindPartOnRay") and self == workspace and (Method == "FindPartOnRay" or Method == "findPartOnRay") and ValidateArguments(Arguments, ValidArguments.FindPartOnRay) then
                     Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
-                elseif Configuration.SilentAimMethod == "FindPartOnRayWithIgnoreList" and (Method == "FindPartOnRayWithIgnoreList" or Method == "findPartOnRayWithIgnoreList") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithIgnoreList) then
+                elseif table.find(Configuration.SilentAimMethods, "FindPartOnRayWithIgnoreList") and self == workspace and (Method == "FindPartOnRayWithIgnoreList" or Method == "findPartOnRayWithIgnoreList") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithIgnoreList) then
                     Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
-                elseif Configuration.SilentAimMethod == "FindPartOnRayWithWhitelist" and (Method == "FindPartOnRayWithWhitelist" or Method == "findPartOnRayWithWhitelist") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithWhitelist) then
+                elseif table.find(Configuration.SilentAimMethods, "FindPartOnRayWithWhitelist") and self == workspace and (Method == "FindPartOnRayWithWhitelist" or Method == "findPartOnRayWithWhitelist") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithWhitelist) then
                     Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
                 end
