@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     Universal Open Source Aimbot
-    Release 1.8.18
+    Release 1.8.19
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -1098,7 +1098,7 @@ do
 
         ConfigurationManager:AddButton({
             Title = "Import Configuration File",
-            Description = "Imports the Game Configuration File",
+            Description = "Loads the Game Configuration File",
             Callback = function()
                 xpcall(function()
                     if getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
@@ -1149,7 +1149,7 @@ do
                         end
                         Window:Dialog({
                             Title = "Configuration Manager",
-                            Content = string.format("Configuration File %s.ttwizz has been successfully imported!", game.GameId),
+                            Content = string.format("Configuration File %s.ttwizz has been successfully loaded!", game.GameId),
                             Buttons = {
                                 {
                                     Title = "Confirm"
@@ -1170,7 +1170,7 @@ do
                 end, function()
                     Window:Dialog({
                         Title = "Configuration Manager",
-                        Content = string.format("An Error occurred when importing the Configuration File %s.ttwizz", game.GameId),
+                        Content = string.format("An Error occurred when loading the Configuration File %s.ttwizz", game.GameId),
                         Buttons = {
                             {
                                 Title = "Confirm"
@@ -1223,13 +1223,13 @@ do
 
         ConfigurationManager:AddButton({
             Title = "Delete Configuration File",
-            Description = "Deletes the Game Configuration File",
+            Description = "Removes the Game Configuration File",
             Callback = function()
                 if getfenv().isfile(string.format("%s.ttwizz", game.GameId)) then
                     getfenv().delfile(string.format("%s.ttwizz", game.GameId))
                     Window:Dialog({
                         Title = "Configuration Manager",
-                        Content = string.format("Configuration File %s.ttwizz has been successfully deleted!", game.GameId),
+                        Content = string.format("Configuration File %s.ttwizz has been successfully removed!", game.GameId),
                         Buttons = {
                             {
                                 Title = "Confirm"
