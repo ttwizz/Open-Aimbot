@@ -1,4 +1,5 @@
---[[
+--[[⊹˚₊‧───────────────‧₊˚⊹·͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⊹˚₊‧───────────────‧₊˚⊹
+
   ______                                   ______  __              __                  __     
  /      \                                 /      \|  \            |  \                |  \    
 |  ▓▓▓▓▓▓\ ______   ______  _______      |  ▓▓▓▓▓▓\\▓▓______ ____ | ▓▓____   ______  _| ▓▓_   
@@ -12,10 +13,10 @@
          | ▓▓                                                                                 
           \▓▓                                                                                 
 
-⊹˚₊‧───────────────‧₊˚⊹·͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⁺˚*•̩̩͙✩•̩̩͙*˚⁺‧͙⊹˚₊‧───────────────‧₊˚⊹
+༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     Universal Open Source Aimbot
-    Release 1.8.16
+    Release 1.8.17
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -29,7 +30,9 @@
     Discussions: https://github.com/ttwizz/Open-Aimbot/discussions
 
     Wiki: https://moderka.org/Open-Aimbot
-]]
+    Trustpilot: https://www.trustpilot.com/review/moderka.org
+
+•───────•°•❀•°•───────•୧‿̩͙ ˖︵ꕀ ⠀𓏶 ̣̣̥⠀ ꕀ︵˖ ̩͙‿୨•───────•°•❀•°•───────•]]
 
 
 --! Debugger
@@ -58,6 +61,46 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 
+--! Interface Manager
+
+local UISettings = {
+    TabWidth = 160,
+    Size = { 580, 460 },
+    Theme = "Amethyst",
+    Acrylic = false,
+    Transparency = true,
+    MinimizeKey = "RightShift",
+    ShowNotifications = true,
+    ShowWarnings = true,
+    AutoImport = true
+}
+
+local InterfaceManager = {}
+
+function InterfaceManager:ImportSettings()
+    pcall(function()
+        if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().isfile("UISettings.ttwizz") and getfenv().readfile("UISettings.ttwizz") then
+            for Key, Value in next, HttpService:JSONDecode(getfenv().readfile("UISettings.ttwizz")) do
+                UISettings[Key] = Value
+            end
+        end
+    end)
+end
+
+function InterfaceManager:ExportSettings()
+    pcall(function()
+        if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().writefile then
+            getfenv().writefile("UISettings.ttwizz", HttpService:JSONEncode(UISettings))
+        end
+    end)
+end
+
+InterfaceManager:ImportSettings()
+
+UISettings.__LAST_RUN__ = os.date()
+InterfaceManager:ExportSettings()
+
+
 --! Colors Handler
 
 local function PackColour(Colour)
@@ -74,7 +117,7 @@ end
 local ImportedConfiguration = {}
 
 pcall(function()
-    if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
+    if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) and UISettings.AutoImport then
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
         for Key, Value in next, ImportedConfiguration do
             if Key == "FoVColour" or Key == "ESPColour" then
@@ -219,45 +262,6 @@ local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChang
 end)
 
 
---! Interface Manager
-
-local UISettings = {
-    TabWidth = 160,
-    Size = { 580, 460 },
-    Theme = "Amethyst",
-    Acrylic = false,
-    Transparency = true,
-    MinimizeKey = "RightShift",
-    ShowNotifications = true,
-    ShowWarnings = true
-}
-
-local InterfaceManager = {}
-
-function InterfaceManager:ImportSettings()
-    pcall(function()
-        if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().isfile("UISettings.ttwizz") and getfenv().readfile("UISettings.ttwizz") then
-            for Key, Value in next, HttpService:JSONDecode(getfenv().readfile("UISettings.ttwizz")) do
-                UISettings[Key] = Value
-            end
-        end
-    end)
-end
-
-function InterfaceManager:ExportSettings()
-    pcall(function()
-        if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().writefile then
-            getfenv().writefile("UISettings.ttwizz", HttpService:JSONEncode(UISettings))
-        end
-    end)
-end
-
-InterfaceManager:ImportSettings()
-
-UISettings.__LAST_RUN__ = os.date()
-InterfaceManager:ExportSettings()
-
-
 --! UI Initializer
 
 do
@@ -282,17 +286,17 @@ do
 
     local AimbotSection = Tabs.Aimbot:AddSection("Aimbot")
 
-    local AimbotToggle = AimbotSection:AddToggle("AimbotToggle", { Title = "Aimbot Toggle", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
+    local AimbotToggle = AimbotSection:AddToggle("Aimbot", { Title = "Aimbot Toggle", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
     AimbotToggle:OnChanged(function(Value)
         Configuration.Aimbot = Value
     end)
 
-    local OnePressAimingModeToggle = AimbotSection:AddToggle("OnePressAimingModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressAimingMode })
+    local OnePressAimingModeToggle = AimbotSection:AddToggle("OnePressAimingMode", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressAimingMode })
     OnePressAimingModeToggle:OnChanged(function(Value)
         Configuration.OnePressAimingMode = Value
     end)
 
-    local AimModeDropdown = AimbotSection:AddDropdown("AimModeDropdown", {
+    local AimModeDropdown = AimbotSection:AddDropdown("AimMode", {
         Title = "Aim Mode",
         Description = "Changes the Aim Mode",
         Values = { "Camera" },
@@ -311,7 +315,7 @@ do
         table.insert(AimModeDropdown.Values, "Silent")
         AimModeDropdown:BuildDropdownList()
 
-        local SilentAimMethodsDropdown = AimbotSection:AddDropdown("SilentAimMethodsDropdown", {
+        local SilentAimMethodsDropdown = AimbotSection:AddDropdown("SilentAimMethods", {
             Title = "Silent Aim Methods",
             Description = "Sets the Silent Aim Methods",
             Values = { "Mouse.Hit / Mouse.Target", "GetMouseLocation", "Raycast", "FindPartOnRay", "FindPartOnRayWithIgnoreList", "FindPartOnRayWithWhitelist" },
@@ -327,7 +331,7 @@ do
             end
         end)
 
-        AimbotSection:AddSlider("SilentAimChanceSlider", {
+        AimbotSection:AddSlider("SilentAimChance", {
             Title = "Silent Aim Chance",
             Description = "Changes the Hit Chance for Silent Aim",
             Default = Configuration.SilentAimChance,
@@ -342,12 +346,12 @@ do
         ShowWarning = true
     end
 
-    local OffAfterKillToggle = AimbotSection:AddToggle("OffAfterKillToggle", { Title = "Off After Kill", Description = "Disables the Aiming Mode after killing a Target", Default = Configuration.OffAfterKill })
+    local OffAfterKillToggle = AimbotSection:AddToggle("OffAfterKill", { Title = "Off After Kill", Description = "Disables the Aiming Mode after killing a Target", Default = Configuration.OffAfterKill })
     OffAfterKillToggle:OnChanged(function(Value)
         Configuration.OffAfterKill = Value
     end)
 
-    local AimKeybind = AimbotSection:AddKeybind("AimKeybind", {
+    local AimKeybind = AimbotSection:AddKeybind("AimKey", {
         Title = "Aim Key",
         Description = "Changes the Aim Key",
         Default = Configuration.AimKey,
@@ -361,7 +365,7 @@ do
         Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
     end
 
-    local AimPartDropdown = AimbotSection:AddDropdown("AimPartDropdown", {
+    local AimPartDropdown = AimbotSection:AddDropdown("AimPart", {
         Title = "Aim Part",
         Description = "Changes the Aim Part",
         Values = Configuration.AimPartDropdownValues,
@@ -381,12 +385,12 @@ do
         end
     end)
 
-    local RandomAimPartToggle = AimbotSection:AddToggle("RandomAimPartToggle", { Title = "Random Aim Part", Description = "Selects every second a Random Aim Part from Dropdown", Default = Configuration.RandomAimPart })
+    local RandomAimPartToggle = AimbotSection:AddToggle("RandomAimPart", { Title = "Random Aim Part", Description = "Selects every second a Random Aim Part from Dropdown", Default = Configuration.RandomAimPart })
     RandomAimPartToggle:OnChanged(function(Value)
         Configuration.RandomAimPart = Value
     end)
 
-    AimbotSection:AddInput("AddAimPartInput", {
+    AimbotSection:AddInput("AddAimPart", {
         Title = "Add Aim Part",
         Description = "After typing, press Enter",
         Finished = true,
@@ -399,7 +403,7 @@ do
         end
     })
 
-    AimbotSection:AddInput("RemoveAimPartInput", {
+    AimbotSection:AddInput("RemoveAimPart", {
         Title = "Remove Aim Part",
         Description = "After typing, press Enter",
         Finished = true,
@@ -423,12 +427,12 @@ do
 
     local AimOffsetSection = Tabs.Aimbot:AddSection("Aim Offset")
 
-    local UseOffsetToggle = AimOffsetSection:AddToggle("UseOffsetToggle", { Title = "Use Offset", Description = "Toggles the Offset", Default = Configuration.UseOffset })
+    local UseOffsetToggle = AimOffsetSection:AddToggle("UseOffset", { Title = "Use Offset", Description = "Toggles the Offset", Default = Configuration.UseOffset })
     UseOffsetToggle:OnChanged(function(Value)
         Configuration.UseOffset = Value
     end)
 
-    AimOffsetSection:AddDropdown("OffsetTypeDropdown", {
+    AimOffsetSection:AddDropdown("OffsetType", {
         Title = "Offset Type",
         Description = "Changes the Offset Type",
         Values = { "Static", "Dynamic", "Static & Dynamic" },
@@ -438,7 +442,7 @@ do
         end
     })
 
-    AimOffsetSection:AddSlider("StaticOffsetIncrementSlider", {
+    AimOffsetSection:AddSlider("StaticOffsetIncrement", {
         Title = "Static Offset Increment",
         Description = "Changes the Static Offset Increment",
         Default = Configuration.StaticOffsetIncrement,
@@ -450,7 +454,7 @@ do
         end
     })
 
-    AimOffsetSection:AddSlider("DynamicOffsetIncrementSlider", {
+    AimOffsetSection:AddSlider("DynamicOffsetIncrement", {
         Title = "Dynamic Offset Increment",
         Description = "Changes the Dynamic Offset Increment",
         Default = Configuration.DynamicOffsetIncrement,
@@ -462,12 +466,12 @@ do
         end
     })
 
-    local AutoOffsetToggle = AimOffsetSection:AddToggle("AutoOffsetToggle", { Title = "Auto Offset", Description = "Toggles the Auto Offset", Default = Configuration.AutoOffset })
+    local AutoOffsetToggle = AimOffsetSection:AddToggle("AutoOffset", { Title = "Auto Offset", Description = "Toggles the Auto Offset", Default = Configuration.AutoOffset })
     AutoOffsetToggle:OnChanged(function(Value)
         Configuration.AutoOffset = Value
     end)
 
-    AimOffsetSection:AddSlider("MaxAutoOffsetSlider", {
+    AimOffsetSection:AddSlider("MaxAutoOffset", {
         Title = "Max Auto Offset",
         Description = "Changes the Max Auto Offset",
         Default = Configuration.MaxAutoOffset,
@@ -481,12 +485,12 @@ do
 
     local SensitivitySection = Tabs.Aimbot:AddSection("Sensitivity")
 
-    local UseSensitivityToggle = SensitivitySection:AddToggle("UseSensitivityToggle", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
+    local UseSensitivityToggle = SensitivitySection:AddToggle("UseSensitivity", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
     UseSensitivityToggle:OnChanged(function(Value)
         Configuration.UseSensitivity = Value
     end)
 
-    SensitivitySection:AddSlider("SensitivitySlider", {
+    SensitivitySection:AddSlider("Sensitivity", {
         Title = "Sensitivity",
         Description = "Smoothes out the Mouse / Camera Movements when Aiming",
         Default = Configuration.Sensitivity,
@@ -498,12 +502,12 @@ do
         end
     })
 
-    local UseNoiseToggle = SensitivitySection:AddToggle("UseNoiseToggle", { Title = "Use Noise", Description = "Toggles the Camera Shaking when Aiming", Default = Configuration.UseNoise })
+    local UseNoiseToggle = SensitivitySection:AddToggle("UseNoise", { Title = "Use Noise", Description = "Toggles the Camera Shaking when Aiming", Default = Configuration.UseNoise })
     UseNoiseToggle:OnChanged(function(Value)
         Configuration.UseNoise = Value
     end)
 
-    SensitivitySection:AddSlider("NoiseFrequencySlider", {
+    SensitivitySection:AddSlider("NoiseFrequency", {
         Title = "Noise Frequency",
         Description = "Changes the Noise Frequency",
         Default = Configuration.NoiseFrequency,
@@ -525,22 +529,22 @@ do
 
         local TriggerBotSection = Tabs.TriggerBot:AddSection("TriggerBot")
 
-        local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBotToggle", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
+        local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBot", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
         TriggerBotToggle:OnChanged(function(Value)
             Configuration.TriggerBot = Value
         end)
 
-        local OnePressTriggeringModeToggle = TriggerBotSection:AddToggle("OnePressTriggeringModeToggle", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressTriggeringMode })
+        local OnePressTriggeringModeToggle = TriggerBotSection:AddToggle("OnePressTriggeringMode", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressTriggeringMode })
         OnePressTriggeringModeToggle:OnChanged(function(Value)
             Configuration.OnePressTriggeringMode = Value
         end)
 
-        local SmartTriggerBotToggle = TriggerBotSection:AddToggle("SmartTriggerBotToggle", { Title = "Smart TriggerBot", Description = "Uses the TriggerBot only when Aiming", Default = Configuration.SmartTriggerBot })
+        local SmartTriggerBotToggle = TriggerBotSection:AddToggle("SmartTriggerBot", { Title = "Smart TriggerBot", Description = "Uses the TriggerBot only when Aiming", Default = Configuration.SmartTriggerBot })
         SmartTriggerBotToggle:OnChanged(function(Value)
             Configuration.SmartTriggerBot = Value
         end)
 
-        local TriggerKeybind = TriggerBotSection:AddKeybind("TriggerKeybind", {
+        local TriggerKeybind = TriggerBotSection:AddKeybind("TriggerKey", {
             Title = "Trigger Key",
             Description = "Changes the Trigger Key",
             Default = Configuration.TriggerKey,
@@ -566,39 +570,39 @@ do
 
     local SimpleChecksSection = Tabs.Checks:AddSection("Simple Checks")
 
-    local TeamCheckToggle = SimpleChecksSection:AddToggle("TeamCheckToggle", { Title = "Team Check", Description = "Toggles the Team Check", Default = Configuration.TeamCheck })
+    local TeamCheckToggle = SimpleChecksSection:AddToggle("TeamCheck", { Title = "Team Check", Description = "Toggles the Team Check", Default = Configuration.TeamCheck })
     TeamCheckToggle:OnChanged(function(Value)
         Configuration.TeamCheck = Value
     end)
 
-    local FriendCheckToggle = SimpleChecksSection:AddToggle("FriendCheckToggle", { Title = "Friend Check", Description = "Toggles the Friend Check", Default = Configuration.FriendCheck })
+    local FriendCheckToggle = SimpleChecksSection:AddToggle("FriendCheck", { Title = "Friend Check", Description = "Toggles the Friend Check", Default = Configuration.FriendCheck })
     FriendCheckToggle:OnChanged(function(Value)
         Configuration.FriendCheck = Value
     end)
 
-    local WallCheckToggle = SimpleChecksSection:AddToggle("WallCheckToggle", { Title = "Wall Check", Description = "Toggles the Wall Check", Default = Configuration.WallCheck })
+    local WallCheckToggle = SimpleChecksSection:AddToggle("WallCheck", { Title = "Wall Check", Description = "Toggles the Wall Check", Default = Configuration.WallCheck })
     WallCheckToggle:OnChanged(function(Value)
         Configuration.WallCheck = Value
     end)
 
-    local WaterCheckToggle = SimpleChecksSection:AddToggle("WaterCheckToggle", { Title = "Water Check", Description = "Toggles the Water Check if Wall Check is enabled", Default = Configuration.WaterCheck })
+    local WaterCheckToggle = SimpleChecksSection:AddToggle("WaterCheck", { Title = "Water Check", Description = "Toggles the Water Check if Wall Check is enabled", Default = Configuration.WaterCheck })
     WaterCheckToggle:OnChanged(function(Value)
         Configuration.WaterCheck = Value
     end)
 
-    local VerifiedBadgeCheckToggle = SimpleChecksSection:AddToggle("VerifiedBadgeCheckToggle", { Title = "Verified Badge Check", Description = "Toggles the Verified Badge Check", Default = Configuration.VerifiedBadgeCheck })
+    local VerifiedBadgeCheckToggle = SimpleChecksSection:AddToggle("VerifiedBadgeCheck", { Title = "Verified Badge Check", Description = "Toggles the Verified Badge Check", Default = Configuration.VerifiedBadgeCheck })
     VerifiedBadgeCheckToggle:OnChanged(function(Value)
         Configuration.VerifiedBadgeCheck = Value
     end)
 
     local AdvancedChecksSection = Tabs.Checks:AddSection("Advanced Checks")
 
-    local FoVCheckToggle = AdvancedChecksSection:AddToggle("FoVCheckToggle", { Title = "FoV Check", Description = "Toggles the FoV Check", Default = Configuration.FoVCheck })
+    local FoVCheckToggle = AdvancedChecksSection:AddToggle("FoVCheck", { Title = "FoV Check", Description = "Toggles the FoV Check", Default = Configuration.FoVCheck })
     FoVCheckToggle:OnChanged(function(Value)
         Configuration.FoVCheck = Value
     end)
 
-    AdvancedChecksSection:AddSlider("FoVRadiusSlider", {
+    AdvancedChecksSection:AddSlider("FoVRadius", {
         Title = "FoV Radius",
         Description = "Changes the FoV Radius",
         Default = Configuration.FoVRadius,
@@ -610,12 +614,12 @@ do
         end
     })
 
-    local MagnitudeCheckToggle = AdvancedChecksSection:AddToggle("MagnitudeCheckToggle", { Title = "Magnitude Check", Description = "Toggles the Magnitude Check", Default = Configuration.MagnitudeCheck })
+    local MagnitudeCheckToggle = AdvancedChecksSection:AddToggle("MagnitudeCheck", { Title = "Magnitude Check", Description = "Toggles the Magnitude Check", Default = Configuration.MagnitudeCheck })
     MagnitudeCheckToggle:OnChanged(function(Value)
         Configuration.MagnitudeCheck = Value
     end)
 
-    AdvancedChecksSection:AddSlider("TriggerMagnitudeSlider", {
+    AdvancedChecksSection:AddSlider("TriggerMagnitude", {
         Title = "Trigger Magnitude",
         Description = "Distance between the Native and the Target Character",
         Default = Configuration.TriggerMagnitude,
@@ -627,12 +631,12 @@ do
         end
     })
 
-    local TransparencyCheckToggle = AdvancedChecksSection:AddToggle("TransparencyCheckToggle", { Title = "Transparency Check", Description = "Toggles the Transparency Check", Default = Configuration.TransparencyCheck })
+    local TransparencyCheckToggle = AdvancedChecksSection:AddToggle("TransparencyCheck", { Title = "Transparency Check", Description = "Toggles the Transparency Check", Default = Configuration.TransparencyCheck })
     TransparencyCheckToggle:OnChanged(function(Value)
         Configuration.TransparencyCheck = Value
     end)
 
-    AdvancedChecksSection:AddSlider("IgnoredTransparencySlider", {
+    AdvancedChecksSection:AddSlider("IgnoredTransparency", {
         Title = "Ignored Transparency",
         Description = "Target is ignored if its Transparency is > than / = to the set one",
         Default = Configuration.IgnoredTransparency,
@@ -644,12 +648,12 @@ do
         end
     })
 
-    local WhitelistedGroupCheckToggle = AdvancedChecksSection:AddToggle("WhitelistedGroupCheckToggle", { Title = "Whitelisted Group Check", Description = "Toggles the Whitelisted Group Check", Default = Configuration.WhitelistedGroupCheck })
+    local WhitelistedGroupCheckToggle = AdvancedChecksSection:AddToggle("WhitelistedGroupCheck", { Title = "Whitelisted Group Check", Description = "Toggles the Whitelisted Group Check", Default = Configuration.WhitelistedGroupCheck })
     WhitelistedGroupCheckToggle:OnChanged(function(Value)
         Configuration.WhitelistedGroupCheck = Value
     end)
 
-    AdvancedChecksSection:AddInput("WhitelistedGroupInput", {
+    AdvancedChecksSection:AddInput("WhitelistedGroup", {
         Title = "Whitelisted Group",
         Description = "After typing, press Enter",
         Default = Configuration.WhitelistedGroup,
@@ -657,16 +661,16 @@ do
         Finished = true,
         Placeholder = "Group Id",
         Callback = function(Value)
-            Configuration.WhitelistedGroup = #Value > 0 and Value or 0
+            Configuration.WhitelistedGroup = #tostring(Value) > 0 and tonumber(Value) or 0
         end
     })
 
-    local BlacklistedGroupCheckToggle = AdvancedChecksSection:AddToggle("BlacklistedGroupCheckToggle", { Title = "Blacklisted Group Check", Description = "Toggles the Blacklisted Group Check", Default = Configuration.BlacklistedGroupCheck })
+    local BlacklistedGroupCheckToggle = AdvancedChecksSection:AddToggle("BlacklistedGroupCheck", { Title = "Blacklisted Group Check", Description = "Toggles the Blacklisted Group Check", Default = Configuration.BlacklistedGroupCheck })
     BlacklistedGroupCheckToggle:OnChanged(function(Value)
         Configuration.BlacklistedGroupCheck = Value
     end)
 
-    AdvancedChecksSection:AddInput("BlacklistedGroupInput", {
+    AdvancedChecksSection:AddInput("BlacklistedGroup", {
         Title = "Blacklisted Group",
         Description = "After typing, press Enter",
         Default = Configuration.BlacklistedGroup,
@@ -674,18 +678,18 @@ do
         Finished = true,
         Placeholder = "Group Id",
         Callback = function(Value)
-            Configuration.BlacklistedGroup = #Value > 0 and Value or 0
+            Configuration.BlacklistedGroup = #tostring(Value) > 0 and tonumber(Value) or 0
         end
     })
 
     local ExpertChecksSection = Tabs.Checks:AddSection("Expert Checks")
 
-    local IgnoredPlayersCheckToggle = ExpertChecksSection:AddToggle("IgnoredPlayersCheckToggle", { Title = "Ignored Players Check", Description = "Toggles the Ignored Players Check", Default = Configuration.IgnoredPlayersCheck })
+    local IgnoredPlayersCheckToggle = ExpertChecksSection:AddToggle("IgnoredPlayersCheck", { Title = "Ignored Players Check", Description = "Toggles the Ignored Players Check", Default = Configuration.IgnoredPlayersCheck })
     IgnoredPlayersCheckToggle:OnChanged(function(Value)
         Configuration.IgnoredPlayersCheck = Value
     end)
 
-    local IgnoredPlayersDropdown = ExpertChecksSection:AddDropdown("IgnoredPlayersDropdown", {
+    local IgnoredPlayersDropdown = ExpertChecksSection:AddDropdown("IgnoredPlayers", {
         Title = "Ignored Players",
         Description = "Sets the Ignored Players",
         Values = Configuration.IgnoredPlayersDropdownValues,
@@ -701,7 +705,7 @@ do
         end
     end)
 
-    ExpertChecksSection:AddInput("AddIgnoredPlayerInput", {
+    ExpertChecksSection:AddInput("AddIgnoredPlayer", {
         Title = "Add Ignored Player",
         Description = "After typing, press Enter",
         Finished = true,
@@ -719,7 +723,7 @@ do
         end
     })
 
-    ExpertChecksSection:AddInput("RemoveIgnoredPlayerInput", {
+    ExpertChecksSection:AddInput("RemoveIgnoredPlayer", {
         Title = "Remove Ignored Player",
         Description = "After typing, press Enter",
         Finished = true,
@@ -765,12 +769,12 @@ do
         end
     })
 
-    local TargetPlayersCheckToggle = ExpertChecksSection:AddToggle("TargetPlayersCheckToggle", { Title = "Target Players Check", Description = "Toggles the Target Players Check", Default = Configuration.TargetPlayersCheck })
+    local TargetPlayersCheckToggle = ExpertChecksSection:AddToggle("TargetPlayersCheck", { Title = "Target Players Check", Description = "Toggles the Target Players Check", Default = Configuration.TargetPlayersCheck })
     TargetPlayersCheckToggle:OnChanged(function(Value)
         Configuration.TargetPlayersCheck = Value
     end)
 
-    local TargetPlayersDropdown = ExpertChecksSection:AddDropdown("TargetPlayersDropdown", {
+    local TargetPlayersDropdown = ExpertChecksSection:AddDropdown("TargetPlayers", {
         Title = "Target Players",
         Description = "Sets the Target Players",
         Values = Configuration.TargetPlayersDropdownValues,
@@ -786,7 +790,7 @@ do
         end
     end)
 
-    ExpertChecksSection:AddInput("AddTargetPlayerInput", {
+    ExpertChecksSection:AddInput("AddTargetPlayer", {
         Title = "Add Target Player",
         Description = "After typing, press Enter",
         Finished = true,
@@ -804,7 +808,7 @@ do
         end
     })
 
-    ExpertChecksSection:AddInput("RemoveTargetPlayerInput", {
+    ExpertChecksSection:AddInput("RemoveTargetPlayer", {
         Title = "Remove Target Player",
         Description = "After typing, press Enter",
         Finished = true,
@@ -860,12 +864,12 @@ do
 
         local FoVSection = Tabs.Visuals:AddSection("FoV")
 
-        local ShowFoVToggle = FoVSection:AddToggle("ShowFoVToggle", { Title = "Show FoV", Description = "Toggles the FoV Show", Default = Configuration.ShowFoV })
+        local ShowFoVToggle = FoVSection:AddToggle("ShowFoV", { Title = "Show FoV", Description = "Toggles the FoV Show", Default = Configuration.ShowFoV })
         ShowFoVToggle:OnChanged(function(Value)
             Configuration.ShowFoV = Value
         end)
 
-        FoVSection:AddSlider("FoVThicknessSlider", {
+        FoVSection:AddSlider("FoVThickness", {
             Title = "FoV Thickness",
             Description = "Changes the FoV Thickness",
             Default = Configuration.FoVThickness,
@@ -877,7 +881,7 @@ do
             end
         })
 
-        FoVSection:AddSlider("FoVTransparencySlider", {
+        FoVSection:AddSlider("FoVTransparency", {
             Title = "FoV Transparency",
             Description = "Changes the FoV Transparency",
             Default = Configuration.FoVTransparency,
@@ -889,7 +893,7 @@ do
             end
         })
 
-        local FoVColourPicker = FoVSection:AddColorpicker("FoVColourPicker", {
+        local FoVColourPicker = FoVSection:AddColorpicker("FoVColour", {
             Title = "FoV Colour",
             Description = "Changes the FoV Colour",
             Default = Configuration.FoVColour,
@@ -900,22 +904,22 @@ do
 
         local ESPSection = Tabs.Visuals:AddSection("ESP")
 
-        local SmartESPToggle = ESPSection:AddToggle("SmartESPToggle", { Title = "Smart ESP", Description = "Does not ESP the Whitelisted Players", Default = Configuration.SmartESP })
+        local SmartESPToggle = ESPSection:AddToggle("SmartESP", { Title = "Smart ESP", Description = "Does not ESP the Whitelisted Players", Default = Configuration.SmartESP })
         SmartESPToggle:OnChanged(function(Value)
             Configuration.SmartESP = Value
         end)
 
-        local ESPBoxToggle = ESPSection:AddToggle("ESPBoxToggle", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
+        local ESPBoxToggle = ESPSection:AddToggle("ESPBox", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
         ESPBoxToggle:OnChanged(function(Value)
             Configuration.ESPBox = Value
         end)
 
-        local NameESPToggle = ESPSection:AddToggle("NameESPToggle", { Title = "Name ESP", Description = "Creates the Name ESP above the Players", Default = Configuration.NameESP })
+        local NameESPToggle = ESPSection:AddToggle("NameESP", { Title = "Name ESP", Description = "Creates the Name ESP above the Players", Default = Configuration.NameESP })
         NameESPToggle:OnChanged(function(Value)
             Configuration.NameESP = Value
         end)
 
-        ESPSection:AddSlider("NameESPSizeSlider", {
+        ESPSection:AddSlider("NameESPSize", {
             Title = "Name ESP Size",
             Description = "Changes the Name ESP Size",
             Default = Configuration.NameESPSize,
@@ -927,12 +931,12 @@ do
             end
         })
 
-        local TracerESPToggle = ESPSection:AddToggle("TracerESPToggle", { Title = "Tracer ESP", Description = "Creates the Tracer ESP in the direction of the Players", Default = Configuration.TracerESP })
+        local TracerESPToggle = ESPSection:AddToggle("TracerESP", { Title = "Tracer ESP", Description = "Creates the Tracer ESP in the direction of the Players", Default = Configuration.TracerESP })
         TracerESPToggle:OnChanged(function(Value)
             Configuration.TracerESP = Value
         end)
 
-        ESPSection:AddSlider("ESPThicknessSlider", {
+        ESPSection:AddSlider("ESPThickness", {
             Title = "ESP Thickness",
             Description = "Changes the ESP Thickness",
             Default = Configuration.ESPThickness,
@@ -944,7 +948,7 @@ do
             end
         })
 
-        ESPSection:AddSlider("ESPTransparencySlider", {
+        ESPSection:AddSlider("ESPTransparency", {
             Title = "ESP Transparency",
             Description = "Changes the ESP Transparency",
             Default = Configuration.ESPTransparency,
@@ -956,7 +960,7 @@ do
             end
         })
 
-        local ESPColourPicker = ESPSection:AddColorpicker("ESPColourPicker", {
+        local ESPColourPicker = ESPSection:AddColorpicker("ESPColour", {
             Title = "ESP Colour",
             Description = "Changes the ESP Colour",
             Default = Configuration.ESPColour,
@@ -965,14 +969,14 @@ do
             end
         })
 
-        local ESPUseTeamColourToggle = ESPSection:AddToggle("ESPUseTeamColourToggle", { Title = "Use Team Colour", Description = "Makes the ESP Colour match the Target Player Team", Default = Configuration.ESPUseTeamColour })
+        local ESPUseTeamColourToggle = ESPSection:AddToggle("ESPUseTeamColour", { Title = "Use Team Colour", Description = "Makes the ESP Colour match the Target Player Team", Default = Configuration.ESPUseTeamColour })
         ESPUseTeamColourToggle:OnChanged(function(Value)
             Configuration.ESPUseTeamColour = Value
         end)
 
         local VisualsSection = Tabs.Visuals:AddSection("Visuals")
 
-        local RainbowVisualsToggle = VisualsSection:AddToggle("RainbowVisualsToggle", { Title = "Rainbow Visuals", Description = "Makes the Visuals Rainbow", Default = Configuration.RainbowVisuals })
+        local RainbowVisualsToggle = VisualsSection:AddToggle("RainbowVisuals", { Title = "Rainbow Visuals", Description = "Makes the Visuals Rainbow", Default = Configuration.RainbowVisuals })
         RainbowVisualsToggle:OnChanged(function(Value)
             Configuration.RainbowVisuals = Value
         end)
@@ -982,8 +986,8 @@ do
                     if not Fluent then
                         break
                     elseif Configuration.RainbowVisuals then
-                        FoVColourPicker:SetValue({ Index / 230, 1, 1 }, FoVColourPicker.Transparency)
-                        ESPColourPicker:SetValue({ Index / 230, 1, 1 }, ESPColourPicker.Transparency)
+                        FoVColourPicker:SetValue({ Index / 230, 1, 1 })
+                        ESPColourPicker:SetValue({ Index / 230, 1, 1 })
                     end
                     task.wait()
                 end
@@ -1002,7 +1006,7 @@ do
 
     local UISection = Tabs.Settings:AddSection("UI")
 
-    UISection:AddDropdown("ThemeDropdown", {
+    UISection:AddDropdown("Theme", {
         Title = "Theme",
         Description = "Changes the UI Theme",
         Values = Fluent.Themes,
@@ -1015,7 +1019,7 @@ do
     })
 
     if Fluent.UseAcrylic then
-        UISection:AddToggle("AcrylicToggle", {
+        UISection:AddToggle("Acrylic", {
             Title = "Acrylic",
             Description = "Blurred Background requires Graphic Quality >= 8",
             Default = Fluent.Acrylic,
@@ -1036,7 +1040,7 @@ do
                             {
                                 Title = "Cancel",
                                 Callback = function()
-                                    Fluent.Options.AcrylicToggle:SetValue(false)
+                                    Fluent.Options.Acrylic:SetValue(false)
                                 end
                             }
                         }
@@ -1046,7 +1050,7 @@ do
         })
     end
 
-    UISection:AddToggle("TransparencyToggle", {
+    UISection:AddToggle("Transparency", {
         Title = "Transparency",
         Description = "Makes the UI Transparent",
         Default = UISettings.Transparency,
@@ -1057,7 +1061,7 @@ do
         end
     })
 
-    UISection:AddKeybind("MinimizeKeybind", {
+    UISection:AddKeybind("MinimizeKey", {
         Title = "Minimize Key",
         Description = "Changes the Minimize Key",
         Default = Fluent.MinimizeKey,
@@ -1066,18 +1070,18 @@ do
             InterfaceManager:ExportSettings()
         end
     })
-    Fluent.MinimizeKeybind = Fluent.Options.MinimizeKeybind
+    Fluent.MinimizeKeybind = Fluent.Options.MinimizeKey
 
     local NotificationsSection = Tabs.Settings:AddSection("Notifications")
 
-    local NotificationsToggle = NotificationsSection:AddToggle("NotificationsToggle", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = UISettings.ShowNotifications })
+    local NotificationsToggle = NotificationsSection:AddToggle("ShowNotifications", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = UISettings.ShowNotifications })
     NotificationsToggle:OnChanged(function(Value)
         Fluent.ShowNotifications = Value
         UISettings.ShowNotifications = Value
         InterfaceManager:ExportSettings()
     end)
 
-    local WarningsToggle = NotificationsSection:AddToggle("WarningsToggle", { Title = "Show Warnings", Description = "Toggles the Security Warnings Show", Default = UISettings.ShowWarnings })
+    local WarningsToggle = NotificationsSection:AddToggle("ShowWarnings", { Title = "Show Warnings", Description = "Toggles the Security Warnings Show", Default = UISettings.ShowWarnings })
     WarningsToggle:OnChanged(function(Value)
         UISettings.ShowWarnings = Value
         InterfaceManager:ExportSettings()
@@ -1085,6 +1089,97 @@ do
 
     if getfenv().isfile and getfenv().readfile and getfenv().writefile and getfenv().delfile then
         local ConfigurationManager = Tabs.Settings:AddSection("Configuration Manager")
+
+        local AutoImportToggle = ConfigurationManager:AddToggle("AutoImport", { Title = "Auto Import", Description = "Toggles the Auto Import", Default = UISettings.AutoImport })
+        AutoImportToggle:OnChanged(function(Value)
+            UISettings.AutoImport = Value
+            InterfaceManager:ExportSettings()
+        end)
+
+        ConfigurationManager:AddButton({
+            Title = "Import Configuration",
+            Description = "Imports the Game Configuration File",
+            Callback = function()
+                xpcall(function()
+                    if getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
+                        local ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
+                        for Key, Value in next, ImportedConfiguration do
+                            if Key == "AimKey" or Key == "TriggerKey" then
+                                Fluent.Options[Key]:SetValue(Value)
+                                if Value == "RMB" then
+                                    Configuration[Key] = Enum.UserInputType.MouseButton2
+                                else
+                                    Configuration[Key] = Enum.KeyCode[Value]
+                                end
+                            elseif Key == "AimPart" or typeof(Configuration[Key]) == "table" then
+                                Configuration[Key] = Value
+                            elseif Key == "FoVColour" or Key == "ESPColour" then
+                                Fluent.Options[Key]:SetValueRGB(UnpackColour(Value))
+                            elseif Configuration[Key] ~= nil and Fluent.Options[Key] then
+                                Fluent.Options[Key]:SetValue(Value)
+                            end
+                        end
+                        for Key, Option in next, Fluent.Options do
+                            if Option.Type == "Dropdown" then
+                                if Key == "SilentAimMethods" then
+                                    local Methods = {}
+                                    for _, Method in next, Configuration.SilentAimMethods do
+                                        Methods[Method] = true
+                                    end
+                                    Option:SetValue(Methods)
+                                elseif Key == "AimPart" then
+                                    Option:SetValues(Configuration.AimPartDropdownValues)
+                                    Option:SetValue(Configuration.AimPart)
+                                elseif Key == "IgnoredPlayers" then
+                                    Option:SetValues(Configuration.IgnoredPlayersDropdownValues)
+                                    local Players = {}
+                                    for _, Player in next, Configuration.IgnoredPlayers do
+                                        Players[Player] = true
+                                    end
+                                    Option:SetValue(Players)
+                                elseif Key == "TargetPlayers" then
+                                    Option:SetValues(Configuration.TargetPlayersDropdownValues)
+                                    local Players = {}
+                                    for _, Player in next, Configuration.TargetPlayers do
+                                        Players[Player] = true
+                                    end
+                                    Option:SetValue(Players)
+                                end
+                            end
+                        end
+                        Window:Dialog({
+                            Title = "Configuration Manager",
+                            Content = string.format("Configuration File %s.ttwizz has been successfully imported!", game.GameId),
+                            Buttons = {
+                                {
+                                    Title = "Confirm"
+                                }
+                            }
+                        })
+                    else
+                        Window:Dialog({
+                            Title = "Configuration Manager",
+                            Content = string.format("Configuration File %s.ttwizz could not be found!", game.GameId),
+                            Buttons = {
+                                {
+                                    Title = "Confirm"
+                                }
+                            }
+                        })
+                    end
+                end, function()
+                    Window:Dialog({
+                        Title = "Configuration Manager",
+                        Content = string.format("An Error occurred when importing the Configuration File %s.ttwizz", game.GameId),
+                        Buttons = {
+                            {
+                                Title = "Confirm"
+                            }
+                        }
+                    })
+                end)
+            end
+        })
 
         ConfigurationManager:AddButton({
             Title = "Export Configuration",
