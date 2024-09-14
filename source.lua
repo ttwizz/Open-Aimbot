@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     Universal Open Source Aimbot
-    Release 1.8.17
+    Release 1.8.18
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -1097,7 +1097,7 @@ do
         end)
 
         ConfigurationManager:AddButton({
-            Title = "Import Configuration",
+            Title = "Import Configuration File",
             Description = "Imports the Game Configuration File",
             Callback = function()
                 xpcall(function()
@@ -1182,7 +1182,7 @@ do
         })
 
         ConfigurationManager:AddButton({
-            Title = "Export Configuration",
+            Title = "Export Configuration File",
             Description = "Overwrites the Game Configuration File",
             Callback = function()
                 xpcall(function()
