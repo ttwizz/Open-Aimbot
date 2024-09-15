@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     Universal Open Source Aimbot
-    Release 1.8.19
+    Release 1.8.20
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -1095,6 +1095,11 @@ do
             UISettings.AutoImport = Value
             InterfaceManager:ExportSettings()
         end)
+
+        ConfigurationManager:AddParagraph({
+            Title = string.format("Manager for %s", game.Name),
+            Content = string.format("Universe ID is %s", game.GameId)
+        })
 
         ConfigurationManager:AddButton({
             Title = "Import Configuration File",
