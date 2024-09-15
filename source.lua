@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     Universal Open Source Aimbot
-    Release 1.8.20
+    Release 1.8.21
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -153,9 +153,9 @@ Configuration.AutoOffset = ImportedConfiguration["AutoOffset"] or false
 Configuration.MaxAutoOffset = ImportedConfiguration["MaxAutoOffset"] or 50
 
 Configuration.UseSensitivity = ImportedConfiguration["UseSensitivity"] or false
-Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 100
+Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 50
 Configuration.UseNoise = ImportedConfiguration["UseNoise"] or false
-Configuration.NoiseFrequency = ImportedConfiguration["NoiseFrequency"] or 100
+Configuration.NoiseFrequency = ImportedConfiguration["NoiseFrequency"] or 50
 
 --? TriggerBot
 
@@ -483,14 +483,14 @@ do
         end
     })
 
-    local SensitivitySection = Tabs.Aimbot:AddSection("Sensitivity")
+    local SensitivityNoiseSection = Tabs.Aimbot:AddSection("Sensitivity & Noise")
 
-    local UseSensitivityToggle = SensitivitySection:AddToggle("UseSensitivity", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
+    local UseSensitivityToggle = SensitivityNoiseSection:AddToggle("UseSensitivity", { Title = "Use Sensitivity", Description = "Toggles the Sensitivity", Default = Configuration.UseSensitivity })
     UseSensitivityToggle:OnChanged(function(Value)
         Configuration.UseSensitivity = Value
     end)
 
-    SensitivitySection:AddSlider("Sensitivity", {
+    SensitivityNoiseSection:AddSlider("Sensitivity", {
         Title = "Sensitivity",
         Description = "Smoothes out the Mouse / Camera Movements when Aiming",
         Default = Configuration.Sensitivity,
@@ -502,12 +502,12 @@ do
         end
     })
 
-    local UseNoiseToggle = SensitivitySection:AddToggle("UseNoise", { Title = "Use Noise", Description = "Toggles the Camera Shaking when Aiming", Default = Configuration.UseNoise })
+    local UseNoiseToggle = SensitivityNoiseSection:AddToggle("UseNoise", { Title = "Use Noise", Description = "Toggles the Camera Shaking when Aiming", Default = Configuration.UseNoise })
     UseNoiseToggle:OnChanged(function(Value)
         Configuration.UseNoise = Value
     end)
 
-    SensitivitySection:AddSlider("NoiseFrequency", {
+    SensitivityNoiseSection:AddSlider("NoiseFrequency", {
         Title = "Noise Frequency",
         Description = "Changes the Noise Frequency",
         Default = Configuration.NoiseFrequency,
@@ -1924,7 +1924,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 if PartViewportPosition[2] then
                     ResetAimbotFields(true, true)
                     local MouseLocation = UserInputService:GetMouseLocation()
-                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 10 or 10
+                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 5 or 10
                     getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) / Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) / Sensitivity)
                 else
                     ResetAimbotFields(true)
