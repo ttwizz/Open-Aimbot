@@ -201,6 +201,7 @@ Configuration.FoVColour = ImportedConfiguration["FoVColour"] or Color3.fromRGB(2
 Configuration.SmartESP = ImportedConfiguration["SmartESP"] or false
 Configuration.ESPBox = ImportedConfiguration["ESPBox"] or false
 Configuration.NameESP = ImportedConfiguration["NameESP"] or false
+Configuration.NameESPFont = ImportedConfiguration["NameESPFont"] or "UI"
 Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
 Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
 Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
@@ -931,6 +932,16 @@ do
             Configuration.NameESP = Value
         end)
 
+        ESPSection:AddDropdown("NameESPFont", {
+            Title = "Name ESP Font",
+            Description = "Changes the Name ESP Font",
+            Values = { "UI", "System", "Plex", "Monospace" },
+            Default = Configuration.NameESPFont,
+            Callback = function(Value)
+                Configuration.NameESPFont = Value
+            end
+        })
+
         ESPSection:AddSlider("NameESPSize", {
             Title = "Name ESP Size",
             Description = "Changes the Name ESP Size",
@@ -1617,6 +1628,7 @@ local function Visualize(Object)
             NameESP.ZIndex = 1
             NameESP.Center = true
             NameESP.Outline = true
+            NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             NameESP.Size = Configuration.NameESPSize
             NameESP.Transparency = Configuration.ESPOpacity
             NameESP.Color = Configuration.ESPColour
@@ -1749,6 +1761,7 @@ function ESPLibrary:Visualize()
             self.ESPBox.Transparency = Configuration.ESPOpacity
             self.ESPBox.Filled = Configuration.ESPBoxFilled
             self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
+            self.NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPOpacity
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
