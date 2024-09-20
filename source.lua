@@ -15,8 +15,8 @@
 
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
-    Universal Open Source Aimbot
-    Release 1.8.21
+    ✨Universal Aim Assist Framework✨
+    Release 1.9
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -194,7 +194,8 @@ Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
 
 Configuration.ShowFoV = ImportedConfiguration["ShowFoV"] or false
 Configuration.FoVThickness = ImportedConfiguration["FoVThickness"] or 2
-Configuration.FoVTransparency = ImportedConfiguration["FoVTransparency"] or 0.8
+Configuration.FoVOpacity = ImportedConfiguration["FoVOpacity"] or 0.8
+Configuration.FoVFilled = ImportedConfiguration["FoVFilled"] or false
 Configuration.FoVColour = ImportedConfiguration["FoVColour"] or Color3.fromRGB(255, 255, 255)
 
 Configuration.SmartESP = ImportedConfiguration["SmartESP"] or false
@@ -203,7 +204,8 @@ Configuration.NameESP = ImportedConfiguration["NameESP"] or false
 Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
 Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
 Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
-Configuration.ESPTransparency = ImportedConfiguration["ESPTransparency"] or 0.8
+Configuration.ESPOpacity = ImportedConfiguration["ESPOpacity"] or 0.8
+Configuration.ESPBoxFilled = ImportedConfiguration["ESPBoxFilled"] or false
 Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(255, 255, 255)
 Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
 
@@ -266,7 +268,7 @@ end)
 
 do
     local Window = Fluent:CreateWindow({
-        Title = "Open Aimbot",
+        Title = Fluent.Premium and "Open Aimbot <b><i>💫PREMIUM💫</i></b>" or "Open Aimbot",
         SubTitle = "By @ttwiz_z",
         TabWidth = UISettings.TabWidth,
         Size = UDim2.fromOffset(table.unpack(UISettings.Size)),
@@ -281,7 +283,7 @@ do
 
     Tabs.Aimbot:AddParagraph({
         Title = "Open Aimbot",
-        Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+        Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
     local AimbotSection = Tabs.Aimbot:AddSection("Aimbot")
@@ -524,7 +526,7 @@ do
 
         Tabs.TriggerBot:AddParagraph({
             Title = "Open Aimbot",
-            Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+            Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
         })
 
         local TriggerBotSection = Tabs.TriggerBot:AddSection("TriggerBot")
@@ -565,7 +567,7 @@ do
 
     Tabs.Checks:AddParagraph({
         Title = "Open Aimbot",
-        Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+        Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
     local SimpleChecksSection = Tabs.Checks:AddSection("Simple Checks")
@@ -859,7 +861,7 @@ do
 
         Tabs.Visuals:AddParagraph({
             Title = "Open Aimbot",
-            Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+            Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
         })
 
         local FoVSection = Tabs.Visuals:AddSection("FoV")
@@ -881,17 +883,22 @@ do
             end
         })
 
-        FoVSection:AddSlider("FoVTransparency", {
-            Title = "FoV Transparency",
-            Description = "Changes the FoV Transparency",
-            Default = Configuration.FoVTransparency,
+        FoVSection:AddSlider("FoVOpacity", {
+            Title = "FoV Opacity",
+            Description = "Changes the FoV Opacity",
+            Default = Configuration.FoVOpacity,
             Min = 0.1,
             Max = 1,
             Rounding = 1,
             Callback = function(Value)
-                Configuration.FoVTransparency = Value
+                Configuration.FoVOpacity = Value
             end
         })
+
+        local FoVFilledToggle = FoVSection:AddToggle("FoVFilled", { Title = "FoV Filled", Description = "Makes the FoV Filled", Default = Configuration.FoVFilled })
+        FoVFilledToggle:OnChanged(function(Value)
+            Configuration.FoVFilled = Value
+        end)
 
         local FoVColourPicker = FoVSection:AddColorpicker("FoVColour", {
             Title = "FoV Colour",
@@ -912,6 +919,11 @@ do
         local ESPBoxToggle = ESPSection:AddToggle("ESPBox", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
         ESPBoxToggle:OnChanged(function(Value)
             Configuration.ESPBox = Value
+        end)
+
+        local ESPBoxFilledToggle = ESPSection:AddToggle("ESPBoxFilled", { Title = "ESP Box Filled", Description = "Makes the ESP Box Filled", Default = Configuration.ESPBoxFilled })
+        ESPBoxFilledToggle:OnChanged(function(Value)
+            Configuration.ESPBoxFilled = Value
         end)
 
         local NameESPToggle = ESPSection:AddToggle("NameESP", { Title = "Name ESP", Description = "Creates the Name ESP above the Players", Default = Configuration.NameESP })
@@ -948,15 +960,15 @@ do
             end
         })
 
-        ESPSection:AddSlider("ESPTransparency", {
-            Title = "ESP Transparency",
-            Description = "Changes the ESP Transparency",
-            Default = Configuration.ESPTransparency,
+        ESPSection:AddSlider("ESPOpacity", {
+            Title = "ESP Opacity",
+            Description = "Changes the ESP Opacity",
+            Default = Configuration.ESPOpacity,
             Min = 0.1,
             Max = 1,
             Rounding = 1,
             Callback = function(Value)
-                Configuration.ESPTransparency = Value
+                Configuration.ESPOpacity = Value
             end
         })
 
@@ -1001,7 +1013,7 @@ do
 
     Tabs.Settings:AddParagraph({
         Title = "Open Aimbot",
-        Content = "Universal Open Source Aimbot\nhttps://github.com/ttwizz/Open-Aimbot"
+        Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
     local UISection = Tabs.Settings:AddSection("UI")
@@ -1583,20 +1595,20 @@ local function Visualize(Object)
             local FoV = getfenv().Drawing.new("Circle")
             FoV.Visible = false
             FoV.ZIndex = 2
-            FoV.Filled = false
             FoV.NumSides = 1000
             FoV.Radius = Configuration.FoVRadius
             FoV.Thickness = Configuration.FoVThickness
-            FoV.Transparency = Configuration.FoVTransparency
+            FoV.Transparency = Configuration.FoVOpacity
+            FoV.Filled = Configuration.FoVFilled
             FoV.Color = Configuration.FoVColour
             return FoV
         elseif string.lower(Object) == "espbox" then
             local ESPBox = getfenv().Drawing.new("Square")
             ESPBox.Visible = false
             ESPBox.ZIndex = 1
-            ESPBox.Filled = false
             ESPBox.Thickness = Configuration.ESPThickness
-            ESPBox.Transparency = Configuration.ESPTransparency
+            ESPBox.Transparency = Configuration.ESPOpacity
+            ESPBox.Filled = Configuration.ESPBoxFilled
             ESPBox.Color = Configuration.ESPColour
             return ESPBox
         elseif string.lower(Object) == "nameesp" then
@@ -1606,7 +1618,7 @@ local function Visualize(Object)
             NameESP.Center = true
             NameESP.Outline = true
             NameESP.Size = Configuration.NameESPSize
-            NameESP.Transparency = Configuration.ESPTransparency
+            NameESP.Transparency = Configuration.ESPOpacity
             NameESP.Color = Configuration.ESPColour
             return NameESP
         elseif string.lower(Object) == "traceresp" then
@@ -1614,7 +1626,7 @@ local function Visualize(Object)
             TracerESP.Visible = false
             TracerESP.ZIndex = 1
             TracerESP.Thickness = Configuration.ESPThickness
-            TracerESP.Transparency = Configuration.ESPTransparency
+            TracerESP.Transparency = Configuration.ESPOpacity
             TracerESP.Color = Configuration.ESPColour
             return TracerESP
         end
@@ -1654,7 +1666,8 @@ local function VisualizeFoV()
     Visuals.FoV.Position = Vector2.new(MouseLocation.X, MouseLocation.Y)
     Visuals.FoV.Radius = Configuration.FoVRadius
     Visuals.FoV.Thickness = Configuration.FoVThickness
-    Visuals.FoV.Transparency = Configuration.FoVTransparency
+    Visuals.FoV.Transparency = Configuration.FoVOpacity
+    Visuals.FoV.Filled = Configuration.FoVFilled
     Visuals.FoV.Color = Configuration.FoVColour
     Visuals.FoV.Visible = Configuration.ShowFoV
 end
@@ -1733,13 +1746,14 @@ function ESPLibrary:Visualize()
             self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.ESPBox.Thickness = Configuration.ESPThickness
-            self.ESPBox.Transparency = Configuration.ESPTransparency
+            self.ESPBox.Transparency = Configuration.ESPOpacity
+            self.ESPBox.Filled = Configuration.ESPBoxFilled
             self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.NameESP.Size = Configuration.NameESPSize
-            self.NameESP.Transparency = Configuration.ESPTransparency
+            self.NameESP.Transparency = Configuration.ESPOpacity
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
             self.TracerESP.Thickness = Configuration.ESPThickness
-            self.TracerESP.Transparency = Configuration.ESPTransparency
+            self.TracerESP.Transparency = Configuration.ESPOpacity
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
