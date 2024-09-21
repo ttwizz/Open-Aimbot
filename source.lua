@@ -200,17 +200,18 @@ Configuration.FoVColour = ImportedConfiguration["FoVColour"] or Color3.fromRGB(2
 
 Configuration.SmartESP = ImportedConfiguration["SmartESP"] or false
 Configuration.ESPBox = ImportedConfiguration["ESPBox"] or false
+Configuration.ESPBoxFilled = ImportedConfiguration["ESPBoxFilled"] or false
 Configuration.NameESP = ImportedConfiguration["NameESP"] or false
 Configuration.NameESPFont = ImportedConfiguration["NameESPFont"] or "UI"
 Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
 Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
 Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
 Configuration.ESPOpacity = ImportedConfiguration["ESPOpacity"] or 0.8
-Configuration.ESPBoxFilled = ImportedConfiguration["ESPBoxFilled"] or false
 Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(255, 255, 255)
 Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
 
 Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
+Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 0.2
 
 
 --! Constants
@@ -1012,10 +1013,22 @@ do
                         FoVColourPicker:SetValue({ Index / 230, 1, 1 })
                         ESPColourPicker:SetValue({ Index / 230, 1, 1 })
                     end
-                    task.wait()
+                    task.wait(Configuration.RainbowDelay / 10)
                 end
             end
         end)
+
+        VisualsSection:AddSlider("RainbowDelay", {
+            Title = "Rainbow Delay",
+            Description = "Changes the Rainbow Delay",
+            Default = Configuration.RainbowDelay,
+            Min = 0.1,
+            Max = 1,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.RainbowDelay = Value
+            end
+        })
     else
         ShowWarning = true
     end
