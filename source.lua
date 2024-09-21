@@ -22,6 +22,7 @@
     twix.cyou/OpenAimbotV3rm
 
     Author: ttwiz_z (ttwizz)
+    Email: i@twix.cyou
     License: MIT
     GitHub: https://github.com/ttwizz/Open-Aimbot
 
@@ -66,7 +67,7 @@ local TweenService = game:GetService("TweenService")
 local UISettings = {
     TabWidth = 160,
     Size = { 580, 460 },
-    Theme = "Amethyst",
+    Theme = "Dark Typewriter",
     Acrylic = false,
     Transparency = true,
     MinimizeKey = "RightShift",
@@ -220,6 +221,7 @@ Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 0.2
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
+
 local IsComputer = UserInputService.KeyboardEnabled and UserInputService.MouseEnabled
 
 
@@ -241,13 +243,15 @@ end
 
 local Fluent = nil
 local ShowWarning = false
-local MouseSensitivity = UserInputService.MouseDeltaSensitivity
+
 local Aiming = false
+local Target = nil
+local Tween = nil
+local MouseSensitivity = UserInputService.MouseDeltaSensitivity
+
 local Triggering = false
 local ShowingFoV = false
 local ShowingESP = false
-local Target = nil
-local Tween = nil
 
 if typeof(script) == "Instance" and script:FindFirstChild("Fluent") and script:FindFirstChild("Fluent"):IsA("ModuleScript") then
     Fluent = require(script:FindFirstChild("Fluent"))
@@ -1452,6 +1456,12 @@ local function ResetAimbotFields(SaveAiming, SaveTarget)
     UserInputService.MouseDeltaSensitivity = MouseSensitivity
 end
 
+local function ResetSecondaryFields()
+    Triggering = false
+    ShowingFoV = false
+    ShowingESP = false
+end
+
 
 --! Input Handler
 
@@ -1469,7 +1479,7 @@ do
                         Aiming = true
                         Notify("[Aiming Mode]: ON")
                     end
-                elseif Configuration.TriggerBot and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
+                elseif not DEBUG and getfenv().mouse1click and Configuration.TriggerBot and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
                     if Triggering then
                         Triggering = false
                         Notify("[Triggering Mode]: OFF")
@@ -1477,7 +1487,7 @@ do
                         Triggering = true
                         Notify("[Triggering Mode]: ON")
                     end
-                elseif Input.KeyCode == Configuration.FoVKey or Input.UserInputType == Configuration.FoVKey then
+                elseif not DEBUG and getfenv().Drawing and (Input.KeyCode == Configuration.FoVKey or Input.UserInputType == Configuration.FoVKey) then
                     if ShowingFoV then
                         ShowingFoV = false
                         Notify("[FoV Show]: OFF")
@@ -1485,7 +1495,7 @@ do
                         ShowingFoV = true
                         Notify("[FoV Show]: ON")
                     end
-                elseif Input.KeyCode == Configuration.ESPKey or Input.UserInputType == Configuration.ESPKey then
+                elseif not DEBUG and getfenv().Drawing and (Input.KeyCode == Configuration.ESPKey or Input.UserInputType == Configuration.ESPKey) then
                     if ShowingESP then
                         ShowingESP = false
                         Notify("[ESP Show]: OFF")
@@ -1636,6 +1646,7 @@ do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
             if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and table.find(Configuration.SilentAimMethods, "Mouse.Hit / Mouse.Target") and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
+                ResetAimbotFields(true, true)
                 if Index == "Hit" or Index == "hit" then
                     return select(6, IsReady(Target))
                 elseif Index == "Target" or Index == "target" then
@@ -1656,6 +1667,7 @@ do
             local Arguments = { ... }
             local self = Arguments[1]
             if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) then
+                ResetAimbotFields(true, true)
                 if table.find(Configuration.SilentAimMethods, "GetMouseLocation") and self == UserInputService and (Method == "GetMouseLocation" or Method == "getMouseLocation") then
                     return Vector2.new(select(3, IsReady(Target))[1].X, select(3, IsReady(Target))[1].Y)
                 elseif table.find(Configuration.SilentAimMethods, "Raycast") and self == workspace and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
@@ -1928,9 +1940,7 @@ end
 
 local function DisconnectAimbot()
     ResetAimbotFields()
-    Triggering = false
-    ShowingFoV = false
-    ShowingESP = false
+    ResetSecondaryFields()
     DisconnectConnections()
     ClearVisuals()
 end
