@@ -192,13 +192,15 @@ Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
 
 --? Visuals
 
-Configuration.ShowFoV = ImportedConfiguration["ShowFoV"] or false
+Configuration.FoV = ImportedConfiguration["FoV"] or false
+Configuration.FoVKey = ImportedConfiguration["FoVKey"] or "R"
 Configuration.FoVThickness = ImportedConfiguration["FoVThickness"] or 2
 Configuration.FoVOpacity = ImportedConfiguration["FoVOpacity"] or 0.8
 Configuration.FoVFilled = ImportedConfiguration["FoVFilled"] or false
 Configuration.FoVColour = ImportedConfiguration["FoVColour"] or Color3.fromRGB(255, 255, 255)
 
 Configuration.SmartESP = ImportedConfiguration["SmartESP"] or false
+Configuration.ESPKey = ImportedConfiguration["ESPKey"] or "T"
 Configuration.ESPBox = ImportedConfiguration["ESPBox"] or false
 Configuration.ESPBoxFilled = ImportedConfiguration["ESPBoxFilled"] or false
 Configuration.NameESP = ImportedConfiguration["NameESP"] or false
@@ -218,6 +220,7 @@ Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 0.2
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
+local IsComputer = UserInputService.KeyboardEnabled and UserInputService.MouseEnabled
 
 
 --! Names Handler
@@ -241,6 +244,8 @@ local ShowWarning = false
 local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 local Aiming = false
 local Triggering = false
+local ShowingFoV = false
+local ShowingESP = false
 local Target = nil
 local Tween = nil
 
@@ -260,7 +265,7 @@ end
 local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChangedSignal("MouseDeltaSensitivity"):Connect(function()
     if not Fluent then
         SensitivityChanged:Disconnect()
-    elseif not Aiming or not DEBUG and (getfenv().mousemoverel and Configuration.AimMode == "Mouse" or getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod and Configuration.AimMode == "Silent") then
+    elseif not Aiming or not DEBUG and (getfenv().mousemoverel and IsComputer and Configuration.AimMode == "Mouse" or getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod and Configuration.AimMode == "Silent") then
         MouseSensitivity = UserInputService.MouseDeltaSensitivity
     end
 end)
@@ -293,12 +298,19 @@ do
     local AimbotToggle = AimbotSection:AddToggle("Aimbot", { Title = "Aimbot Toggle", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
     AimbotToggle:OnChanged(function(Value)
         Configuration.Aimbot = Value
+        if not IsComputer then
+            Aiming = Value
+        end
     end)
 
-    local OnePressAimingModeToggle = AimbotSection:AddToggle("OnePressAimingMode", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressAimingMode })
-    OnePressAimingModeToggle:OnChanged(function(Value)
-        Configuration.OnePressAimingMode = Value
-    end)
+    if IsComputer then
+        local OnePressAimingModeToggle = AimbotSection:AddToggle("OnePressAimingMode", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressAimingMode })
+        OnePressAimingModeToggle:OnChanged(function(Value)
+            Configuration.OnePressAimingMode = Value
+        end)
+    else
+        ShowWarning = true
+    end
 
     local AimModeDropdown = AimbotSection:AddDropdown("AimMode", {
         Title = "Aim Mode",
@@ -309,7 +321,7 @@ do
             Configuration.AimMode = Value
         end
     })
-    if getfenv().mousemoverel then
+    if getfenv().mousemoverel and IsComputer then
         table.insert(AimModeDropdown.Values, "Mouse")
         AimModeDropdown:BuildDropdownList()
     else
@@ -355,18 +367,22 @@ do
         Configuration.OffAfterKill = Value
     end)
 
-    local AimKeybind = AimbotSection:AddKeybind("AimKey", {
-        Title = "Aim Key",
-        Description = "Changes the Aim Key",
-        Default = Configuration.AimKey,
-        ChangedCallback = function(Value)
-            Configuration.AimKey = Value
+    if IsComputer then
+        local AimKeybind = AimbotSection:AddKeybind("AimKey", {
+            Title = "Aim Key",
+            Description = "Changes the Aim Key",
+            Default = Configuration.AimKey,
+            ChangedCallback = function(Value)
+                Configuration.AimKey = Value
+            end
+        })
+        if AimKeybind.Value == "RMB" then
+            Configuration.AimKey = Enum.UserInputType.MouseButton2
+        else
+            Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
         end
-    })
-    if AimKeybind.Value == "RMB" then
-        Configuration.AimKey = Enum.UserInputType.MouseButton2
     else
-        Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
+        ShowWarning = true
     end
 
     local AimPartDropdown = AimbotSection:AddDropdown("AimPart", {
@@ -523,7 +539,7 @@ do
         end
     })
 
-    if getfenv().mouse1click then
+    if getfenv().mouse1click and IsComputer then
         Tabs.TriggerBot = Window:AddTab({ Title = "TriggerBot", Icon = "target" })
 
         Tabs.TriggerBot:AddParagraph({
@@ -868,10 +884,28 @@ do
 
         local FoVSection = Tabs.Visuals:AddSection("FoV")
 
-        local ShowFoVToggle = FoVSection:AddToggle("ShowFoV", { Title = "Show FoV", Description = "Toggles the FoV Show", Default = Configuration.ShowFoV })
-        ShowFoVToggle:OnChanged(function(Value)
-            Configuration.ShowFoV = Value
+        local FoVToggle = FoVSection:AddToggle("FoV", { Title = "FoV", Description = "Graphically Displays the FoV Radius", Default = Configuration.FoV })
+        FoVToggle:OnChanged(function(Value)
+            Configuration.FoV = Value
         end)
+
+        if IsComputer then
+            local FoVKeybind = FoVSection:AddKeybind("FoVKey", {
+                Title = "FoV Key",
+                Description = "Changes the FoV Key",
+                Default = Configuration.FoVKey,
+                ChangedCallback = function(Value)
+                    Configuration.FoVKey = Value
+                end
+            })
+            if FoVKeybind.Value == "RMB" then
+                Configuration.FoVKey = Enum.UserInputType.MouseButton2
+            else
+                Configuration.FoVKey = Enum.KeyCode[FoVKeybind.Value]
+            end
+        else
+            ShowWarning = true
+        end
 
         FoVSection:AddSlider("FoVThickness", {
             Title = "FoV Thickness",
@@ -917,6 +951,24 @@ do
         SmartESPToggle:OnChanged(function(Value)
             Configuration.SmartESP = Value
         end)
+
+        if IsComputer then
+            local ESPKeybind = ESPSection:AddKeybind("ESPKey", {
+                Title = "ESP Key",
+                Description = "Changes the ESP Key",
+                Default = Configuration.ESPKey,
+                ChangedCallback = function(Value)
+                    Configuration.ESPKey = Value
+                end
+            })
+            if ESPKeybind.Value == "RMB" then
+                Configuration.ESPKey = Enum.UserInputType.MouseButton2
+            else
+                Configuration.ESPKey = Enum.KeyCode[ESPKeybind.Value]
+            end
+        else
+            ShowWarning = true
+        end
 
         local ESPBoxToggle = ESPSection:AddToggle("ESPBox", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
         ESPBoxToggle:OnChanged(function(Value)
@@ -1097,16 +1149,20 @@ do
         end
     })
 
-    UISection:AddKeybind("MinimizeKey", {
-        Title = "Minimize Key",
-        Description = "Changes the Minimize Key",
-        Default = Fluent.MinimizeKey,
-        ChangedCallback = function(Value)
-            UISettings.MinimizeKey = Value ~= Enum.UserInputType.MouseButton2 and UserInputService:GetStringForKeyCode(Value) or "RMB"
-            InterfaceManager:ExportSettings()
-        end
-    })
-    Fluent.MinimizeKeybind = Fluent.Options.MinimizeKey
+    if IsComputer then
+        UISection:AddKeybind("MinimizeKey", {
+            Title = "Minimize Key",
+            Description = "Changes the Minimize Key",
+            Default = Fluent.MinimizeKey,
+            ChangedCallback = function(Value)
+                UISettings.MinimizeKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and UserInputService:GetStringForKeyCode(Value) or "RMB"
+                InterfaceManager:ExportSettings()
+            end
+        })
+        Fluent.MinimizeKeybind = Fluent.Options.MinimizeKey
+    else
+        ShowWarning = true
+    end
 
     local NotificationsSection = Tabs.Settings:AddSection("Notifications")
 
@@ -1145,7 +1201,7 @@ do
                     if getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
                         local ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
                         for Key, Value in next, ImportedConfiguration do
-                            if Key == "AimKey" or Key == "TriggerKey" then
+                            if Key == "AimKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
                                 Fluent.Options[Key]:SetValue(Value)
                                 if Value == "RMB" then
                                     Configuration[Key] = Enum.UserInputType.MouseButton2
@@ -1229,8 +1285,8 @@ do
                 xpcall(function()
                     local ExportedConfiguration = { __LAST_UPDATED__ = os.date() }
                     for Key, Value in next, Configuration do
-                        if Key == "AimKey" or Key == "TriggerKey" then
-                            ExportedConfiguration[Key] = Value ~= Enum.UserInputType.MouseButton2 and UserInputService:GetStringForKeyCode(Value) or "RMB"
+                        if Key == "AimKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
+                            ExportedConfiguration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and UserInputService:GetStringForKeyCode(Value) or "RMB"
                         elseif Key == "FoVColour" or Key == "ESPColour" then
                             ExportedConfiguration[Key] = PackColour(Value)
                         else
@@ -1399,43 +1455,63 @@ end
 
 --! Input Handler
 
-local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
-    if not Fluent then
-        InputBegan:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() then
-        if Configuration.Aimbot and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
-            if Aiming then
-                ResetAimbotFields()
-                Notify("[Aiming Mode]: OFF")
-            else
-                Aiming = true
-                Notify("[Aiming Mode]: ON")
+do
+    if IsComputer then
+        local InputBegan; InputBegan = UserInputService.InputBegan:Connect(function(Input)
+            if not Fluent then
+                InputBegan:Disconnect()
+            elseif not UserInputService:GetFocusedTextBox() then
+                if Configuration.Aimbot and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
+                    if Aiming then
+                        ResetAimbotFields()
+                        Notify("[Aiming Mode]: OFF")
+                    else
+                        Aiming = true
+                        Notify("[Aiming Mode]: ON")
+                    end
+                elseif Configuration.TriggerBot and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
+                    if Triggering then
+                        Triggering = false
+                        Notify("[Triggering Mode]: OFF")
+                    else
+                        Triggering = true
+                        Notify("[Triggering Mode]: ON")
+                    end
+                elseif Input.KeyCode == Configuration.FoVKey or Input.UserInputType == Configuration.FoVKey then
+                    if ShowingFoV then
+                        ShowingFoV = false
+                        Notify("[FoV Show]: OFF")
+                    else
+                        ShowingFoV = true
+                        Notify("[FoV Show]: ON")
+                    end
+                elseif Input.KeyCode == Configuration.ESPKey or Input.UserInputType == Configuration.ESPKey then
+                    if ShowingESP then
+                        ShowingESP = false
+                        Notify("[ESP Show]: OFF")
+                    else
+                        ShowingESP = true
+                        Notify("[ESP Show]: ON")
+                    end
+                end
             end
-        elseif Configuration.TriggerBot and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
-            if Triggering then
-                Triggering = false
-                Notify("[Triggering Mode]: OFF")
-            else
-                Triggering = true
-                Notify("[Triggering Mode]: ON")
-            end
-        end
-    end
-end)
+        end)
 
-local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Input)
-    if not Fluent then
-        InputEnded:Disconnect()
-    elseif not UserInputService:GetFocusedTextBox() then
-        if Aiming and not Configuration.OnePressAimingMode and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
-            ResetAimbotFields()
-            Notify("[Aiming Mode]: OFF")
-        elseif Triggering and not Configuration.OnePressTriggeringMode and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
-            Triggering = false
-            Notify("[Triggering Mode]: OFF")
-        end
+        local InputEnded; InputEnded = UserInputService.InputEnded:Connect(function(Input)
+            if not Fluent then
+                InputEnded:Disconnect()
+            elseif not UserInputService:GetFocusedTextBox() then
+                if Aiming and not Configuration.OnePressAimingMode and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
+                    ResetAimbotFields()
+                    Notify("[Aiming Mode]: OFF")
+                elseif Triggering and not Configuration.OnePressTriggeringMode and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
+                    Triggering = false
+                    Notify("[Triggering Mode]: OFF")
+                end
+            end
+        end)
     end
-end)
+end
 
 
 --! Math Handler
@@ -1605,7 +1681,7 @@ end
 --! TriggerBot Handler
 
 local function HandleTriggerBot()
-    if not DEBUG and Fluent and getfenv().mouse1click and Triggering and (Configuration.SmartTriggerBot and Aiming or not Configuration.SmartTriggerBot) and Mouse.Target and IsReady(Mouse.Target:FindFirstAncestorWhichIsA("Model")) then
+    if not DEBUG and Fluent and getfenv().mouse1click and IsComputer and Triggering and (Configuration.SmartTriggerBot and Aiming or not Configuration.SmartTriggerBot) and Mouse.Target and IsReady(Mouse.Target:FindFirstAncestorWhichIsA("Model")) then
         getfenv().mouse1click()
     end
 end
@@ -1694,7 +1770,7 @@ local function VisualizeFoV()
     Visuals.FoV.Transparency = Configuration.FoVOpacity
     Visuals.FoV.Filled = Configuration.FoVFilled
     Visuals.FoV.Color = Configuration.FoVColour
-    Visuals.FoV.Visible = Configuration.ShowFoV
+    Visuals.FoV.Visible = Configuration.FoV and ShowingFoV
 end
 
 
@@ -1743,9 +1819,10 @@ function ESPLibrary:Initialize(Target)
                 self.TracerESP.Color = TeamColour
             end
         end
-        self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
-        self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
-        self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady and IsInViewport
+        local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
+        self.ESPBox.Visible = Configuration.ESPBox and ShowESP
+        self.NameESP.Visible = Configuration.NameESP and ShowESP
+        self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     end
     return self
 end
@@ -1793,9 +1870,10 @@ function ESPLibrary:Visualize()
                 self.TracerESP.Color = Configuration.ESPColour
             end
         end
-        self.ESPBox.Visible = Configuration.ESPBox and IsCharacterReady and IsInViewport
-        self.NameESP.Visible = Configuration.NameESP and IsCharacterReady and IsInViewport
-        self.TracerESP.Visible = Configuration.TracerESP and IsCharacterReady and IsInViewport
+        local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
+        self.ESPBox.Visible = Configuration.ESPBox and ShowESP
+        self.NameESP.Visible = Configuration.NameESP and ShowESP
+        self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     else
         self.ESPBox.Visible = false
         self.NameESP.Visible = false
@@ -1851,6 +1929,8 @@ end
 local function DisconnectAimbot()
     ResetAimbotFields()
     Triggering = false
+    ShowingFoV = false
+    ShowingESP = false
     DisconnectConnections()
     ClearVisuals()
 end
@@ -1960,7 +2040,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         end
         local IsTargetReady, _, PartViewportPosition, PartWorldPosition = IsReady(Target)
         if IsTargetReady then
-            if not DEBUG and getfenv().mousemoverel and Configuration.AimMode == "Mouse" then
+            if not DEBUG and getfenv().mousemoverel and IsComputer and Configuration.AimMode == "Mouse" then
                 if PartViewportPosition[2] then
                     ResetAimbotFields(true, true)
                     local MouseLocation = UserInputService:GetMouseLocation()

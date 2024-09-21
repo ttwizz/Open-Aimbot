@@ -35,7 +35,7 @@ ___
 
 ### Open Aimbot
 Open Aimbot is a **universal** open source framework. It offers a wide selection of extensive functionality, including:
-- ***Over 65 Features***
+- ***Over 70 Features***
 - ***Detection Bypasses***
 - *Team*, *Friend*, *Wall*, *Water*, *Verified Badge*, *FoV*, *Magnitude*, *Transparency*, *Group*, *Player*, ***Premium*** Checks
 - Ability to set *Sensitivity*, *Camera Shaking*, *Mouse & Camera Methods*, *Move Direction Prediction*, *Static, Dynamic & Auto Offset*, *Activation Keys*, *One-Press Mode*, *Target Objects*, *Ignored & Target Players*, *Display Notification Log*, *TriggerBot*, *ESP*, *FoV*, *Tracers* and other more subtle options
