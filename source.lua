@@ -21,8 +21,7 @@
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
 
-    Author: ttwiz_z (ttwizz)
-    Email: i@twix.cyou
+    Author: ttwiz_z (ttwizz) <i@twix.cyou>
     License: MIT
     GitHub: https://github.com/ttwizz/Open-Aimbot
 
@@ -1711,7 +1710,7 @@ local function Visualize(Object)
         if string.lower(Object) == "fov" then
             local FoV = getfenv().Drawing.new("Circle")
             FoV.Visible = false
-            FoV.ZIndex = 2
+            FoV.ZIndex = 4
             FoV.NumSides = 1000
             FoV.Radius = Configuration.FoVRadius
             FoV.Thickness = Configuration.FoVThickness
@@ -1722,7 +1721,7 @@ local function Visualize(Object)
         elseif string.lower(Object) == "espbox" then
             local ESPBox = getfenv().Drawing.new("Square")
             ESPBox.Visible = false
-            ESPBox.ZIndex = 1
+            ESPBox.ZIndex = 2
             ESPBox.Thickness = Configuration.ESPThickness
             ESPBox.Transparency = Configuration.ESPOpacity
             ESPBox.Filled = Configuration.ESPBoxFilled
@@ -1731,7 +1730,7 @@ local function Visualize(Object)
         elseif string.lower(Object) == "nameesp" then
             local NameESP = getfenv().Drawing.new("Text")
             NameESP.Visible = false
-            NameESP.ZIndex = 1
+            NameESP.ZIndex = 3
             NameESP.Center = true
             NameESP.Outline = true
             NameESP.OutlineColor = Color3.fromRGB(0, 0, 0)
@@ -1796,21 +1795,23 @@ end
 
 local ESPLibrary = {}
 
-function ESPLibrary:Initialize(Target)
+function ESPLibrary:Initialize(_Character)
     if not Fluent then
         ClearVisuals()
         return nil
-    elseif typeof(Target) ~= "Instance" then
+    elseif typeof(_Character) ~= "Instance" then
         return nil
     end
     local self = setmetatable({}, { __index = ESPLibrary })
-    self.Player = Players:GetPlayerFromCharacter(Target)
-    self.Character = Target
+    self.Player = Players:GetPlayerFromCharacter(_Character)
+    self.Character = _Character
     self.ESPBox = Visualize("ESPBox")
     self.NameESP = Visualize("NameESP")
+    self.TargetESP = Visualize("NameESP")
     self.TracerESP = Visualize("TracerESP")
     table.insert(Visuals, self.ESPBox)
     table.insert(Visuals, self.NameESP)
+    table.insert(Visuals, self.TargetESP)
     table.insert(Visuals, self.TracerESP)
     local Head = self.Character:FindFirstChild("Head")
     local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
@@ -1827,19 +1828,23 @@ function ESPLibrary:Initialize(Target)
             self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
-            self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
+            self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
+            self.TargetESP.Text = "[TARGET]"
+            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
+                self.TargetESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             end
         end
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
+        self.TargetESP.Visible = Configuration.NameESP and Aiming and IsReady(Target) and self.Character == Target and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     end
     return self
@@ -1872,7 +1877,12 @@ function ESPLibrary:Visualize()
             self.NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPOpacity
-            self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, (HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2) - 25)
+            self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
+            self.TargetESP.Text = "[TARGET]"
+            self.TargetESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.TargetESP.Size = Configuration.NameESPSize
+            self.TargetESP.Transparency = Configuration.ESPOpacity
+            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.TracerESP.Thickness = Configuration.ESPThickness
             self.TracerESP.Transparency = Configuration.ESPOpacity
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
@@ -1881,20 +1891,24 @@ function ESPLibrary:Visualize()
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
+                self.TargetESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             else
                 self.ESPBox.Color = Configuration.ESPColour
                 self.NameESP.Color = Configuration.ESPColour
+                self.TargetESP.Color = Configuration.ESPColour
                 self.TracerESP.Color = Configuration.ESPColour
             end
         end
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
+        self.TargetESP.Visible = Configuration.NameESP and Aiming and IsReady(Target) and self.Character == Target and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     else
         self.ESPBox.Visible = false
         self.NameESP.Visible = false
+        self.TargetESP.Visible = false
         self.TracerESP.Visible = false
     end
 end
@@ -1904,6 +1918,7 @@ function ESPLibrary:Disconnect()
     self.Character = nil
     ClearVisual(self.ESPBox)
     ClearVisual(self.NameESP)
+    ClearVisual(self.TargetESP)
     ClearVisual(self.TracerESP)
 end
 
