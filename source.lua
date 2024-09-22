@@ -253,16 +253,21 @@ local Triggering = false
 local ShowingFoV = false
 local ShowingESP = false
 
-if typeof(script) == "Instance" and script:FindFirstChild("Fluent") and script:FindFirstChild("Fluent"):IsA("ModuleScript") then
-    Fluent = require(script:FindFirstChild("Fluent"))
-else
-    local Success, Result = pcall(function()
-        return game:HttpGet("https://twix.cyou/Fluent.txt", true)
-    end)
-    if Success and typeof(Result) == "string" and string.find(Result, "dawid") then
-        Fluent = getfenv().loadstring(Result)()
+do
+    if typeof(script) == "Instance" and script:FindFirstChild("Fluent") and script:FindFirstChild("Fluent"):IsA("ModuleScript") then
+        Fluent = require(script:FindFirstChild("Fluent"))
     else
-        Fluent = getfenv().loadstring(game:HttpGet("https://ttwizz.pages.dev/Fluent.txt", true))()
+        local Success, Result = pcall(function()
+            return game:HttpGet("https://twix.cyou/Fluent.txt", true)
+        end)
+        if Success and typeof(Result) == "string" and string.find(Result, "dawid") then
+            Fluent = getfenv().loadstring(Result)()
+            if Fluent.Premium then
+                return getfenv().loadstring(game:HttpGet("https://twix.cyou/Aimbot.txt", true))()
+            end
+        else
+            return
+        end
     end
 end
 
@@ -279,7 +284,7 @@ end)
 
 do
     local Window = Fluent:CreateWindow({
-        Title = Fluent.Premium and "Open Aimbot <b><i>💫PREMIUM💫</i></b>" or "Open Aimbot",
+        Title = "Open Aimbot",
         SubTitle = "By @ttwiz_z",
         TabWidth = UISettings.TabWidth,
         Size = UDim2.fromOffset(table.unpack(UISettings.Size)),
