@@ -299,7 +299,7 @@ do
 
     local AimbotSection = Tabs.Aimbot:AddSection("Aimbot")
 
-    local AimbotToggle = AimbotSection:AddToggle("Aimbot", { Title = "Aimbot Toggle", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
+    local AimbotToggle = AimbotSection:AddToggle("Aimbot", { Title = "Aimbot", Description = "Toggles the Aimbot", Default = Configuration.Aimbot })
     AimbotToggle:OnChanged(function(Value)
         Configuration.Aimbot = Value
         if not IsComputer then
@@ -553,7 +553,7 @@ do
 
         local TriggerBotSection = Tabs.TriggerBot:AddSection("TriggerBot")
 
-        local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBot", { Title = "TriggerBot Toggle", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
+        local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBot", { Title = "TriggerBot", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
         TriggerBotToggle:OnChanged(function(Value)
             Configuration.TriggerBot = Value
         end)
@@ -1487,7 +1487,7 @@ do
                         Triggering = true
                         Notify("[Triggering Mode]: ON")
                     end
-                elseif not DEBUG and getfenv().Drawing and (Input.KeyCode == Configuration.FoVKey or Input.UserInputType == Configuration.FoVKey) then
+                elseif not DEBUG and getfenv().Drawing and Configuration.FoV and (Input.KeyCode == Configuration.FoVKey or Input.UserInputType == Configuration.FoVKey) then
                     if ShowingFoV then
                         ShowingFoV = false
                         Notify("[FoV Show]: OFF")
@@ -1495,7 +1495,7 @@ do
                         ShowingFoV = true
                         Notify("[FoV Show]: ON")
                     end
-                elseif not DEBUG and getfenv().Drawing and (Input.KeyCode == Configuration.ESPKey or Input.UserInputType == Configuration.ESPKey) then
+                elseif not DEBUG and getfenv().Drawing and (Configuration.ESPBox or Configuration.NameESP or Configuration.TracerESP) and (Input.KeyCode == Configuration.ESPKey or Input.UserInputType == Configuration.ESPKey) then
                     if ShowingESP then
                         ShowingESP = false
                         Notify("[ESP Show]: OFF")
@@ -1729,6 +1729,7 @@ local function Visualize(Object)
             NameESP.ZIndex = 1
             NameESP.Center = true
             NameESP.Outline = true
+            NameESP.OutlineColor = Color3.fromRGB(0, 0, 0)
             NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             NameESP.Size = Configuration.NameESPSize
             NameESP.Transparency = Configuration.ESPOpacity
@@ -1782,7 +1783,7 @@ local function VisualizeFoV()
     Visuals.FoV.Transparency = Configuration.FoVOpacity
     Visuals.FoV.Filled = Configuration.FoVFilled
     Visuals.FoV.Color = Configuration.FoVColour
-    Visuals.FoV.Visible = Configuration.FoV and ShowingFoV
+    Visuals.FoV.Visible = ShowingFoV
 end
 
 
@@ -2023,6 +2024,10 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
         ResetAimbotFields()
     elseif not Configuration.TriggerBot then
         Triggering = false
+    elseif not Configuration.FoV then
+        ShowingFoV = false
+    elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.TracerESP then
+        ShowingESP = false
     end
     HandleTriggerBot()
     if not DEBUG and getfenv().Drawing then
