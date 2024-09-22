@@ -205,7 +205,7 @@ Configuration.ESPKey = ImportedConfiguration["ESPKey"] or "T"
 Configuration.ESPBox = ImportedConfiguration["ESPBox"] or false
 Configuration.ESPBoxFilled = ImportedConfiguration["ESPBoxFilled"] or false
 Configuration.NameESP = ImportedConfiguration["NameESP"] or false
-Configuration.NameESPFont = ImportedConfiguration["NameESPFont"] or "UI"
+Configuration.NameESPFont = ImportedConfiguration["NameESPFont"] or "Monospace"
 Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
 Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
 Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
@@ -214,7 +214,7 @@ Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(2
 Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
 
 Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
-Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 0.2
+Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 0.5
 
 
 --! Constants
@@ -1066,7 +1066,7 @@ do
             Configuration.RainbowVisuals = Value
         end)
         task.spawn(function()
-            while task.wait() do
+            while task.wait(Configuration.RainbowDelay) do
                 for Index = 1, 230 do
                     if not Fluent then
                         break
@@ -1074,7 +1074,7 @@ do
                         FoVColourPicker:SetValue({ Index / 230, 1, 1 })
                         ESPColourPicker:SetValue({ Index / 230, 1, 1 })
                     end
-                    task.wait(Configuration.RainbowDelay / 10)
+                    task.wait(Configuration.RainbowDelay / 5)
                 end
             end
         end)
