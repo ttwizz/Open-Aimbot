@@ -137,11 +137,11 @@ local Configuration = {}
 
 Configuration.Aimbot = ImportedConfiguration["Aimbot"] or false
 Configuration.OnePressAimingMode = ImportedConfiguration["OnePressAimingMode"] or false
+Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimMode = ImportedConfiguration["AimMode"] or "Camera"
 Configuration.SilentAimMethods = ImportedConfiguration["SilentAimMethods"] or { "Mouse.Hit / Mouse.Target", "GetMouseLocation" }
 Configuration.SilentAimChance = ImportedConfiguration["SilentAimChance"] or 100
 Configuration.OffAfterKill = ImportedConfiguration["OffAfterKill"] or false
-Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
 Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
