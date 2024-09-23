@@ -30,7 +30,6 @@
     Discussions: https://github.com/ttwizz/Open-Aimbot/discussions
 
     Wiki: https://moderka.org/Open-Aimbot
-    Trustpilot: https://www.trustpilot.com/review/moderka.org
 
 •───────•°•❀•°•───────•୧‿̩͙ ˖︵ꕀ ⠀𓏶 ̣̣̥⠀ ꕀ︵˖ ̩͙‿୨•───────•°•❀•°•───────•]]
 
@@ -103,11 +102,13 @@ InterfaceManager:ExportSettings()
 
 --! Colors Handler
 
-local function PackColour(Colour)
+local ColorsHandler = {}
+
+function ColorsHandler:PackColour(Colour)
     return typeof(Colour) == "Color3" and { R = Colour.R * 255, G = Colour.G * 255, B = Colour.B * 255 } or typeof(Colour) == "table" and Colour or { R = 255, G = 255, B = 255 }
 end
 
-local function UnpackColour(Colour)
+function ColorsHandler:UnpackColour(Colour)
     return typeof(Colour) == "table" and Color3.fromRGB(Colour.R, Colour.G, Colour.B) or typeof(Colour) == "Color3" and Colour or Color3.fromRGB(255, 255, 255)
 end
 
@@ -121,7 +122,7 @@ pcall(function()
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
         for Key, Value in next, ImportedConfiguration do
             if Key == "FoVColour" or Key == "ESPColour" then
-                ImportedConfiguration[Key] = UnpackColour(Value)
+                ImportedConfiguration[Key] = ColorsHandler:UnpackColour(Value)
             end
         end
     end
@@ -316,8 +317,20 @@ do
         OnePressAimingModeToggle:OnChanged(function(Value)
             Configuration.OnePressAimingMode = Value
         end)
-    else
-        ShowWarning = true
+
+        local AimKeybind = AimbotSection:AddKeybind("AimKey", {
+            Title = "Aim Key",
+            Description = "Changes the Aim Key",
+            Default = Configuration.AimKey,
+            ChangedCallback = function(Value)
+                Configuration.AimKey = Value
+            end
+        })
+        if AimKeybind.Value == "RMB" then
+            Configuration.AimKey = Enum.UserInputType.MouseButton2
+        else
+            Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
+        end
     end
 
     local AimModeDropdown = AimbotSection:AddDropdown("AimMode", {
@@ -374,24 +387,6 @@ do
     OffAfterKillToggle:OnChanged(function(Value)
         Configuration.OffAfterKill = Value
     end)
-
-    if IsComputer then
-        local AimKeybind = AimbotSection:AddKeybind("AimKey", {
-            Title = "Aim Key",
-            Description = "Changes the Aim Key",
-            Default = Configuration.AimKey,
-            ChangedCallback = function(Value)
-                Configuration.AimKey = Value
-            end
-        })
-        if AimKeybind.Value == "RMB" then
-            Configuration.AimKey = Enum.UserInputType.MouseButton2
-        else
-            Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
-        end
-    else
-        ShowWarning = true
-    end
 
     local AimPartDropdown = AimbotSection:AddDropdown("AimPart", {
         Title = "Aim Part",
@@ -911,8 +906,6 @@ do
             else
                 Configuration.FoVKey = Enum.KeyCode[FoVKeybind.Value]
             end
-        else
-            ShowWarning = true
         end
 
         FoVSection:AddSlider("FoVThickness", {
@@ -974,8 +967,6 @@ do
             else
                 Configuration.ESPKey = Enum.KeyCode[ESPKeybind.Value]
             end
-        else
-            ShowWarning = true
         end
 
         local ESPBoxToggle = ESPSection:AddToggle("ESPBox", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
@@ -1168,8 +1159,6 @@ do
             end
         })
         Fluent.MinimizeKeybind = Fluent.Options.MinimizeKey
-    else
-        ShowWarning = true
     end
 
     local NotificationsSection = Tabs.Settings:AddSection("Notifications")
@@ -1219,7 +1208,7 @@ do
                             elseif Key == "AimPart" or typeof(Configuration[Key]) == "table" then
                                 Configuration[Key] = Value
                             elseif Key == "FoVColour" or Key == "ESPColour" then
-                                Fluent.Options[Key]:SetValueRGB(UnpackColour(Value))
+                                Fluent.Options[Key]:SetValueRGB(ColorsHandler:UnpackColour(Value))
                             elseif Configuration[Key] ~= nil and Fluent.Options[Key] then
                                 Fluent.Options[Key]:SetValue(Value)
                             end
@@ -1296,7 +1285,7 @@ do
                         if Key == "AimKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
                             ExportedConfiguration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and UserInputService:GetStringForKeyCode(Value) or "RMB"
                         elseif Key == "FoVColour" or Key == "ESPColour" then
-                            ExportedConfiguration[Key] = PackColour(Value)
+                            ExportedConfiguration[Key] = ColorsHandler:PackColour(Value)
                         else
                             ExportedConfiguration[Key] = Value
                         end
@@ -1450,7 +1439,9 @@ Notify("Successfully initialized!")
 
 --! Fields Handler
 
-local function ResetAimbotFields(SaveAiming, SaveTarget)
+local FieldsHandler = {}
+
+function FieldsHandler:ResetAimbotFields(SaveAiming, SaveTarget)
     Aiming = SaveAiming and Aiming or false
     Target = SaveTarget and Target or nil
     if Tween then
@@ -1460,7 +1451,7 @@ local function ResetAimbotFields(SaveAiming, SaveTarget)
     UserInputService.MouseDeltaSensitivity = MouseSensitivity
 end
 
-local function ResetSecondaryFields()
+function FieldsHandler:ResetSecondaryFields()
     Triggering = false
     ShowingFoV = false
     ShowingESP = false
@@ -1477,7 +1468,7 @@ do
             elseif not UserInputService:GetFocusedTextBox() then
                 if Configuration.Aimbot and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
                     if Aiming then
-                        ResetAimbotFields()
+                        FieldsHandler:ResetAimbotFields()
                         Notify("[Aiming Mode]: OFF")
                     else
                         Aiming = true
@@ -1516,7 +1507,7 @@ do
                 InputEnded:Disconnect()
             elseif not UserInputService:GetFocusedTextBox() then
                 if Aiming and not Configuration.OnePressAimingMode and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
-                    ResetAimbotFields()
+                    FieldsHandler:ResetAimbotFields()
                     Notify("[Aiming Mode]: OFF")
                 elseif Triggering and not Configuration.OnePressTriggeringMode and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
                     Triggering = false
@@ -1530,15 +1521,17 @@ end
 
 --! Math Handler
 
-local function CalculateDirection(Origin, Position, Magnitude)
+local MathHandler = {}
+
+function MathHandler:CalculateDirection(Origin, Position, Magnitude)
     return typeof(Origin) == "Vector3" and typeof(Position) == "Vector3" and typeof(Magnitude) == "number" and (Position - Origin).Unit * Magnitude or Vector3.zero
 end
 
-local function CalculateChance(Percentage)
+function MathHandler:CalculateChance(Percentage)
     return typeof(Percentage) == "number" and math.round(math.clamp(Percentage, 1, 100)) / 100 >= math.round(Random.new():NextNumber() * 100) / 100 or false
 end
 
-local function Abbreviate(Number)
+function MathHandler:Abbreviate(Number)
     if typeof(Number) == "number" then
         local Abbreviations = {
             N = 10 ^ 30,
@@ -1581,7 +1574,7 @@ local function IsReady(Target)
         elseif Configuration.FriendCheck and _Player:IsFriendsWith(Player.UserId) then
             return false
         elseif Configuration.WallCheck then
-            local RayDirection = CalculateDirection(NativePart.Position, TargetPart.Position, (TargetPart.Position - NativePart.Position).Magnitude)
+            local RayDirection = MathHandler:CalculateDirection(NativePart.Position, TargetPart.Position, (TargetPart.Position - NativePart.Position).Magnitude)
             local RaycastParameters = RaycastParams.new()
             RaycastParameters.FilterType = Enum.RaycastFilterType.Exclude
             RaycastParameters.FilterDescendantsInstances = { Player.Character }
@@ -1649,8 +1642,8 @@ end
 do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and table.find(Configuration.SilentAimMethods, "Mouse.Hit / Mouse.Target") and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) and self == Mouse then
-                ResetAimbotFields(true, true)
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and table.find(Configuration.SilentAimMethods, "Mouse.Hit / Mouse.Target") and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and MathHandler:CalculateChance(Configuration.SilentAimChance) and self == Mouse then
+                FieldsHandler:ResetAimbotFields(true, true)
                 if Index == "Hit" or Index == "hit" then
                     return select(6, IsReady(Target))
                 elseif Index == "Target" or Index == "target" then
@@ -1670,21 +1663,21 @@ do
             local Method = getfenv().getnamecallmethod()
             local Arguments = { ... }
             local self = Arguments[1]
-            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and CalculateChance(Configuration.SilentAimChance) then
-                ResetAimbotFields(true, true)
+            if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and MathHandler:CalculateChance(Configuration.SilentAimChance) then
+                FieldsHandler:ResetAimbotFields(true, true)
                 if table.find(Configuration.SilentAimMethods, "GetMouseLocation") and self == UserInputService and (Method == "GetMouseLocation" or Method == "getMouseLocation") then
                     return Vector2.new(select(3, IsReady(Target))[1].X, select(3, IsReady(Target))[1].Y)
                 elseif table.find(Configuration.SilentAimMethods, "Raycast") and self == workspace and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
-                    Arguments[3] = CalculateDirection(Arguments[2], select(4, IsReady(Target)), select(5, IsReady(Target)))
+                    Arguments[3] = MathHandler:CalculateDirection(Arguments[2], select(4, IsReady(Target)), select(5, IsReady(Target)))
                     return OldNameCall(table.unpack(Arguments))
                 elseif table.find(Configuration.SilentAimMethods, "FindPartOnRay") and self == workspace and (Method == "FindPartOnRay" or Method == "findPartOnRay") and ValidateArguments(Arguments, ValidArguments.FindPartOnRay) then
-                    Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
+                    Arguments[2] = Ray.new(Arguments[2].Origin, MathHandler:CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
                 elseif table.find(Configuration.SilentAimMethods, "FindPartOnRayWithIgnoreList") and self == workspace and (Method == "FindPartOnRayWithIgnoreList" or Method == "findPartOnRayWithIgnoreList") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithIgnoreList) then
-                    Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
+                    Arguments[2] = Ray.new(Arguments[2].Origin, MathHandler:CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
                 elseif table.find(Configuration.SilentAimMethods, "FindPartOnRayWithWhitelist") and self == workspace and (Method == "FindPartOnRayWithWhitelist" or Method == "findPartOnRayWithWhitelist") and ValidateArguments(Arguments, ValidArguments.FindPartOnRayWithWhitelist) then
-                    Arguments[2] = Ray.new(Arguments[2].Origin, CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
+                    Arguments[2] = Ray.new(Arguments[2].Origin, MathHandler:CalculateDirection(Arguments[2].Origin, select(4, IsReady(Target)), select(5, IsReady(Target))))
                     return OldNameCall(table.unpack(Arguments))
                 end
             end
@@ -1705,7 +1698,9 @@ end
 
 --! Visuals Handler
 
-local function Visualize(Object)
+local VisualsHandler = {}
+
+function VisualsHandler:Visualize(Object)
     if not DEBUG and Fluent and getfenv().Drawing and typeof(Object) == "string" then
         if string.lower(Object) == "fov" then
             local FoV = getfenv().Drawing.new("Circle")
@@ -1752,9 +1747,9 @@ local function Visualize(Object)
     return nil
 end
 
-local Visuals = { FoV = Visualize("FoV") }
+local Visuals = { FoV = VisualsHandler:Visualize("FoV") }
 
-local function ClearVisual(Visual, Key)
+function VisualsHandler:ClearVisual(Visual, Key)
     local FoundVisual = table.find(Visuals, Visual)
     if Visual and (FoundVisual or Key == "FoV") then
         if Visual.Destroy then
@@ -1770,15 +1765,15 @@ local function ClearVisual(Visual, Key)
     end
 end
 
-local function ClearVisuals()
+function VisualsHandler:ClearVisuals()
     for Key, Visual in next, Visuals do
-        ClearVisual(Visual, Key)
+        VisualsHandler:ClearVisual(Visual, Key)
     end
 end
 
-local function VisualizeFoV()
+function VisualsHandler:VisualizeFoV()
     if not Fluent then
-        return ClearVisuals()
+        return VisualsHandler:ClearVisuals()
     end
     local MouseLocation = UserInputService:GetMouseLocation()
     Visuals.FoV.Position = Vector2.new(MouseLocation.X, MouseLocation.Y)
@@ -1797,7 +1792,7 @@ local ESPLibrary = {}
 
 function ESPLibrary:Initialize(_Character)
     if not Fluent then
-        ClearVisuals()
+        VisualsHandler:ClearVisuals()
         return nil
     elseif typeof(_Character) ~= "Instance" then
         return nil
@@ -1805,12 +1800,14 @@ function ESPLibrary:Initialize(_Character)
     local self = setmetatable({}, { __index = ESPLibrary })
     self.Player = Players:GetPlayerFromCharacter(_Character)
     self.Character = _Character
-    self.ESPBox = Visualize("ESPBox")
-    self.NameESP = Visualize("NameESP")
-    self.TargetESP = Visualize("NameESP")
-    self.TracerESP = Visualize("TracerESP")
+    self.ESPBox = VisualsHandler:Visualize("ESPBox")
+    self.NameESP = VisualsHandler:Visualize("NameESP")
+    self.CrosshairESP = VisualsHandler:Visualize("NameESP")
+    self.TargetESP = VisualsHandler:Visualize("NameESP")
+    self.TracerESP = VisualsHandler:Visualize("TracerESP")
     table.insert(Visuals, self.ESPBox)
     table.insert(Visuals, self.NameESP)
+    table.insert(Visuals, self.CrosshairESP)
     table.insert(Visuals, self.TargetESP)
     table.insert(Visuals, self.TracerESP)
     local Head = self.Character:FindFirstChild("Head")
@@ -1822,13 +1819,16 @@ function ESPLibrary:Initialize(_Character)
             IsCharacterReady = IsReady(self.Character)
         end
         local HumanoidRootPartPosition, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
+        local HeadPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position)
         local TopPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position + Vector3.new(0, 0.5, 0))
         local BottomPosition = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Vector3.new(0, 3, 0))
         if IsInViewport then
             self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
+            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, MathHandler:Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
+            self.CrosshairESP.Text = "+"
+            self.CrosshairESP.Position = Vector2.new(HeadPosition.X, HeadPosition.Y)
             self.TargetESP.Text = "[TARGET]"
             self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
@@ -1837,6 +1837,7 @@ function ESPLibrary:Initialize(_Character)
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
+                self.CrosshairESP.Color = TeamColour
                 self.TargetESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             end
@@ -1844,6 +1845,7 @@ function ESPLibrary:Initialize(_Character)
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
+        self.CrosshairESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
         self.TargetESP.Visible = Configuration.NameESP and Aiming and IsReady(Target) and self.Character == Target and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     end
@@ -1852,7 +1854,7 @@ end
 
 function ESPLibrary:Visualize()
     if not Fluent then
-        return ClearVisuals()
+        return VisualsHandler:ClearVisuals()
     elseif not self.Character then
         return self:Disconnect()
     end
@@ -1865,6 +1867,7 @@ function ESPLibrary:Visualize()
             IsCharacterReady = IsReady(self.Character)
         end
         local HumanoidRootPartPosition, IsInViewport = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position)
+        local HeadPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position)
         local TopPosition = workspace.CurrentCamera:WorldToViewportPoint(Head.Position + Vector3.new(0, 0.5, 0))
         local BottomPosition = workspace.CurrentCamera:WorldToViewportPoint(HumanoidRootPart.Position - Vector3.new(0, 3, 0))
         if IsInViewport then
@@ -1873,11 +1876,16 @@ function ESPLibrary:Visualize()
             self.ESPBox.Thickness = Configuration.ESPThickness
             self.ESPBox.Transparency = Configuration.ESPOpacity
             self.ESPBox.Filled = Configuration.ESPBoxFilled
-            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
+            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, MathHandler:Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPOpacity
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
+            self.CrosshairESP.Text = "+"
+            self.CrosshairESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.CrosshairESP.Size = Configuration.NameESPSize
+            self.CrosshairESP.Transparency = Configuration.ESPOpacity
+            self.CrosshairESP.Position = Vector2.new(HeadPosition.X, HeadPosition.Y)
             self.TargetESP.Text = "[TARGET]"
             self.TargetESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.TargetESP.Size = Configuration.NameESPSize
@@ -1891,11 +1899,13 @@ function ESPLibrary:Visualize()
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
+                self.CrosshairESP.Color = TeamColour
                 self.TargetESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             else
                 self.ESPBox.Color = Configuration.ESPColour
                 self.NameESP.Color = Configuration.ESPColour
+                self.CrosshairESP.Color = Configuration.ESPColour
                 self.TargetESP.Color = Configuration.ESPColour
                 self.TracerESP.Color = Configuration.ESPColour
             end
@@ -1903,11 +1913,13 @@ function ESPLibrary:Visualize()
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
+        self.CrosshairESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
         self.TargetESP.Visible = Configuration.NameESP and Aiming and IsReady(Target) and self.Character == Target and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     else
         self.ESPBox.Visible = false
         self.NameESP.Visible = false
+        self.CrosshairESP.Visible = false
         self.TargetESP.Visible = false
         self.TracerESP.Visible = false
     end
@@ -1916,32 +1928,35 @@ end
 function ESPLibrary:Disconnect()
     self.Player = nil
     self.Character = nil
-    ClearVisual(self.ESPBox)
-    ClearVisual(self.NameESP)
-    ClearVisual(self.TargetESP)
-    ClearVisual(self.TracerESP)
+    VisualsHandler:ClearVisual(self.ESPBox)
+    VisualsHandler:ClearVisual(self.NameESP)
+    VisualsHandler:ClearVisual(self.CrosshairESP)
+    VisualsHandler:ClearVisual(self.TargetESP)
+    VisualsHandler:ClearVisual(self.TracerESP)
 end
 
 
 --! Tracking Handler
 
+local TrackingHandler = {}
+
 local Tracking = {}
 local Connections = {}
 
-local function VisualizeESP()
+function TrackingHandler:VisualizeESP()
     for _, Tracked in next, Tracking do
         Tracked:Visualize()
     end
 end
 
-local function DisconnectTracking(Key)
+function TrackingHandler:DisconnectTracking(Key)
     if Key and Tracking[Key] then
         Tracking[Key]:Disconnect()
         table.remove(Tracking, Key)
     end
 end
 
-local function DisconnectConnection(Key)
+function TrackingHandler:DisconnectConnection(Key)
     if Key and Connections[Key] then
         for _, Connection in next, Connections[Key] do
             Connection:Disconnect()
@@ -1950,20 +1965,20 @@ local function DisconnectConnection(Key)
     end
 end
 
-local function DisconnectConnections()
+function TrackingHandler:DisconnectConnections()
     for Key, _ in next, Connections do
-        DisconnectConnection(Key)
+        TrackingHandler:DisconnectConnection(Key)
     end
     for Key, _ in next, Tracking do
-        DisconnectTracking(Key)
+        TrackingHandler:DisconnectTracking(Key)
     end
 end
 
-local function DisconnectAimbot()
-    ResetAimbotFields()
-    ResetSecondaryFields()
-    DisconnectConnections()
-    ClearVisuals()
+function TrackingHandler:DisconnectAimbot()
+    FieldsHandler:ResetAimbotFields()
+    FieldsHandler:ResetSecondaryFields()
+    TrackingHandler:DisconnectConnections()
+    VisualsHandler:ClearVisuals()
 end
 
 local function CharacterAdded(_Character)
@@ -1977,13 +1992,13 @@ local function CharacterRemoving(_Character)
     if typeof(_Character) == "Instance" then
         for Key, Tracked in next, Tracking do
             if Tracked.Character == _Character then
-                DisconnectTracking(Key)
+                TrackingHandler:DisconnectTracking(Key)
             end
         end
     end
 end
 
-local function InitializePlayers()
+function TrackingHandler:InitializePlayers()
     if not DEBUG and getfenv().Drawing then
         for _, _Player in next, Players:GetPlayers() do
             if _Player ~= Player and _Player.Character then
@@ -1995,7 +2010,7 @@ local function InitializePlayers()
     end
 end
 
-task.spawn(InitializePlayers)
+task.spawn(TrackingHandler.InitializePlayers)
 
 
 --! Player Events Handler
@@ -2021,11 +2036,11 @@ local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_
     if Fluent then
         if _Player == Player then
             Fluent:Destroy()
-            DisconnectAimbot()
+            TrackingHandler:DisconnectAimbot()
             PlayerRemoving:Disconnect()
         else
-            DisconnectConnection(_Player.UserId)
-            DisconnectTracking(_Player.UserId)
+            TrackingHandler:DisconnectConnection(_Player.UserId)
+            TrackingHandler:DisconnectTracking(_Player.UserId)
         end
     else
         PlayerRemoving:Disconnect()
@@ -2038,10 +2053,10 @@ end)
 local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
     if Fluent.Unloaded then
         Fluent = nil
-        DisconnectAimbot()
+        TrackingHandler:DisconnectAimbot()
         AimbotLoop:Disconnect()
     elseif not Configuration.Aimbot then
-        ResetAimbotFields()
+        FieldsHandler:ResetAimbotFields()
     elseif not Configuration.TriggerBot then
         Triggering = false
     elseif not Configuration.FoV then
@@ -2051,8 +2066,8 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
     end
     HandleTriggerBot()
     if not DEBUG and getfenv().Drawing then
-        VisualizeFoV()
-        VisualizeESP()
+        VisualsHandler:VisualizeFoV()
+        TrackingHandler:VisualizeESP()
     end
     if Aiming then
         local OldTarget = Target
@@ -2070,19 +2085,19 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                     end
                 end
             else
-                ResetAimbotFields()
+                FieldsHandler:ResetAimbotFields()
             end
         end
         local IsTargetReady, _, PartViewportPosition, PartWorldPosition = IsReady(Target)
         if IsTargetReady then
             if not DEBUG and getfenv().mousemoverel and IsComputer and Configuration.AimMode == "Mouse" then
                 if PartViewportPosition[2] then
-                    ResetAimbotFields(true, true)
+                    FieldsHandler:ResetAimbotFields(true, true)
                     local MouseLocation = UserInputService:GetMouseLocation()
                     local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 5 or 10
                     getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) / Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) / Sensitivity)
                 else
-                    ResetAimbotFields(true)
+                    FieldsHandler:ResetAimbotFields(true)
                 end
             elseif Configuration.AimMode == "Camera" then
                 UserInputService.MouseDeltaSensitivity = 0
@@ -2094,7 +2109,7 @@ local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
                 end
             end
         else
-            ResetAimbotFields(true)
+            FieldsHandler:ResetAimbotFields(true)
         end
     end
 end)
