@@ -1548,9 +1548,14 @@ function MathHandler:Abbreviate(Number)
         local Selected = 0
         local Result = tostring(math.round(Number))
         for Key, Value in next, Abbreviations do
-            if math.abs(Number) >= Value and Value > Selected then
-                Selected = Value
-                Result = string.format("%s%s", tostring(math.round(Number / Value)), Key)
+            if math.abs(Number) < 10 ^ 33 then
+                if math.abs(Number) >= Value and Value > Selected then
+                    Selected = Value
+                    Result = string.format("%s%s", tostring(math.round(Number / Value)), Key)
+                end
+            else
+                Result = "inf"
+                break
             end
         end
         return Result
@@ -1827,7 +1832,7 @@ function ESPLibrary:Initialize(_Character)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, MathHandler:Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
-            self.CrosshairESP.Text = "+"
+            self.CrosshairESP.Text = "[+]"
             self.CrosshairESP.Position = Vector2.new(HeadPosition.X, HeadPosition.Y)
             self.TargetESP.Text = "[TARGET]"
             self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
@@ -1881,7 +1886,7 @@ function ESPLibrary:Visualize()
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPOpacity
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
-            self.CrosshairESP.Text = "+"
+            self.CrosshairESP.Text = "[+]"
             self.CrosshairESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.CrosshairESP.Size = Configuration.NameESPSize
             self.CrosshairESP.Transparency = Configuration.ESPOpacity
