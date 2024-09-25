@@ -194,6 +194,8 @@ Configuration.TargetPlayersCheck = ImportedConfiguration["TargetPlayersCheck"] o
 Configuration.TargetPlayersDropdownValues = ImportedConfiguration["TargetPlayersDropdownValues"] or {}
 Configuration.TargetPlayers = ImportedConfiguration["TargetPlayers"] or {}
 
+Configuration.PremiumCheck = ImportedConfiguration["PremiumCheck"] or false
+
 --? Visuals
 
 Configuration.FoV = ImportedConfiguration["FoV"] or false
@@ -895,6 +897,18 @@ do
         end
     })
 
+    local PremiumChecksSection = Tabs.Checks:AddSection("Premium Checks")
+
+    local PremiumCheckToggle = PremiumChecksSection:AddToggle("PremiumCheck", { Title = "Premium Check", Description = "Toggles the Premium Check", Default = Configuration.PremiumCheck })
+    PremiumCheckToggle:OnChanged(function(Value)
+        Configuration.PremiumCheck = Value
+    end)
+
+    PremiumChecksSection:AddParagraph({
+        Title = "Open Aimbot 💫PREMIUM💫",
+        Content = "✨Upgrade to unlock all Options✨\nContact @ttwiz_z via Discord to buy"
+    })
+
     if getfenv().Drawing then
         Tabs.Visuals = Window:AddTab({ Title = "Visuals", Icon = "box" })
 
@@ -1552,6 +1566,7 @@ end
 function MathHandler:Abbreviate(Number)
     if typeof(Number) == "number" then
         local Abbreviations = {
+            D = 10 ^ 33,
             N = 10 ^ 30,
             O = 10 ^ 27,
             Sp = 10 ^ 24,
@@ -1566,7 +1581,7 @@ function MathHandler:Abbreviate(Number)
         local Selected = 0
         local Result = tostring(math.round(Number))
         for Key, Value in next, Abbreviations do
-            if math.abs(Number) < 10 ^ 33 then
+            if math.abs(Number) < 10 ^ 36 then
                 if math.abs(Number) >= Value and Value > Selected then
                     Selected = Value
                     Result = string.format("%s%s", tostring(math.round(Number / Value)), Key)
@@ -1594,7 +1609,7 @@ local function IsReady(Target)
         local Head = Target:FindFirstChildWhichIsA("Head")
         local TargetPart = Target:FindFirstChild(Configuration.AimPart)
         local NativePart = Player.Character:FindFirstChild(Configuration.AimPart)
-        if Configuration.AliveCheck and Humanoid.Health == 0 or Configuration.GodCheck and (Humanoid.Health >= 10 ^ 33 or Target:FindFirstChildWhichIsA("ForceField")) then
+        if Configuration.AliveCheck and Humanoid.Health == 0 or Configuration.GodCheck and (Humanoid.Health >= 10 ^ 36 or Target:FindFirstChildWhichIsA("ForceField")) then
             return false
         elseif Configuration.TeamCheck and _Player.TeamColor == Player.TeamColor or Configuration.FriendCheck and _Player:IsFriendsWith(Player.UserId) then
             return false
@@ -1614,7 +1629,7 @@ local function IsReady(Target)
             return false
         elseif Configuration.TransparencyCheck and Head and Head:IsA("BasePart") and Head.Transparency >= Configuration.IgnoredTransparency then
             return false
-        elseif Configuration.WhitelistedGroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) or Configuration.BlacklistedGroupCheck and not _Player:IsInGroup(Configuration.BlacklistedGroup) then
+        elseif Configuration.WhitelistedGroupCheck and _Player:IsInGroup(Configuration.WhitelistedGroup) or Configuration.BlacklistedGroupCheck and not _Player:IsInGroup(Configuration.BlacklistedGroup) or Configuration.PremiumCheck and _Player:IsInGroup(0b11110100010000111111101) then
             return false
         elseif Configuration.IgnoredPlayersCheck and table.find(Configuration.IgnoredPlayers, _Player.Name) or Configuration.TargetPlayersCheck and not table.find(Configuration.TargetPlayers, _Player.Name) then
             return false
