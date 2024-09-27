@@ -30,6 +30,7 @@
     Discussions: https://github.com/ttwizz/Open-Aimbot/discussions
 
     Wiki: https://moderka.org/Open-Aimbot
+    Trustpilot: https://www.trustpilot.com/review/moderka.org
 
 •───────•°•❀•°•───────•୧‿̩͙ ˖︵ꕀ ⠀𓏶 ̣̣̥⠀ ꕀ︵˖ ̩͙‿୨•───────•°•❀•°•───────•]]
 
@@ -789,6 +790,23 @@ do
     })
 
     ExpertChecksSection:AddButton({
+        Title = "Deselect All Items",
+        Description = "Deselects All Elements",
+        Callback = function()
+            IgnoredPlayersDropdown:SetValue({})
+            Window:Dialog({
+                Title = "Open Aimbot",
+                Content = "All items have been deselected!",
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
+        end
+    })
+
+    ExpertChecksSection:AddButton({
         Title = "Clear Unselected Items",
         Description = "Removes Unselected Players",
         Callback = function()
@@ -870,6 +888,23 @@ do
                 table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
                 TargetPlayersDropdown:BuildDropdownList()
             end
+        end
+    })
+
+    ExpertChecksSection:AddButton({
+        Title = "Deselect All Items",
+        Description = "Deselects All Elements",
+        Callback = function()
+            TargetPlayersDropdown:SetValue({})
+            Window:Dialog({
+                Title = "Open Aimbot",
+                Content = "All items have been deselected!",
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
         end
     })
 
