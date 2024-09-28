@@ -30,7 +30,6 @@
     Discussions: https://github.com/ttwizz/Open-Aimbot/discussions
 
     Wiki: https://moderka.org/Open-Aimbot
-    Trustpilot: https://www.trustpilot.com/review/moderka.org
 
 •───────•°•❀•°•───────•୧‿̩͙ ˖︵ꕀ ⠀𓏶 ̣̣̥⠀ ꕀ︵˖ ̩͙‿୨•───────•°•❀•°•───────•]]
 
@@ -439,17 +438,14 @@ do
         Placeholder = "Part Name",
         Callback = function(Value)
             if #Value > 0 and table.find(Configuration.AimPartDropdownValues, Value) then
-                if #Configuration.AimPartDropdownValues == 1 then
-                    Configuration.AimPartDropdownValues[1] = "--"
-                    AimPartDropdown:SetValue("--")
-                    Configuration.AimPart = nil
-                end
-                table.remove(Configuration.AimPartDropdownValues, table.find(Configuration.AimPartDropdownValues, Value))
                 if Configuration.AimPart == Value then
                     AimPartDropdown:SetValue(nil)
-                else
-                    AimPartDropdown:BuildDropdownList()
                 end
+                table.remove(Configuration.AimPartDropdownValues, table.find(Configuration.AimPartDropdownValues, Value))
+                if #Configuration.AimPartDropdownValues == 0 then
+                    AimPartDropdown:SetValues(Configuration.AimPartDropdownValues)
+                end
+                AimPartDropdown:BuildDropdownList()
             end
         end
     })
@@ -779,11 +775,10 @@ do
                     IgnoredPlayersDropdown.Value[Value] = nil
                     table.remove(Configuration.IgnoredPlayers, table.find(Configuration.IgnoredPlayers, Value))
                 end
-                if #Configuration.IgnoredPlayersDropdownValues == 1 then
-                    Configuration.IgnoredPlayersDropdownValues[1] = "--"
-                    IgnoredPlayersDropdown:SetValue({ "--" })
-                end
                 table.remove(Configuration.IgnoredPlayersDropdownValues, table.find(Configuration.IgnoredPlayersDropdownValues, Value))
+                if #Configuration.IgnoredPlayersDropdownValues == 0 then
+                    IgnoredPlayersDropdown:SetValues(Configuration.IgnoredPlayersDropdownValues)
+                end
                 IgnoredPlayersDropdown:BuildDropdownList()
             end
         end
@@ -881,11 +876,10 @@ do
                     TargetPlayersDropdown.Value[Value] = nil
                     table.remove(Configuration.TargetPlayers, table.find(Configuration.TargetPlayers, Value))
                 end
-                if #Configuration.TargetPlayersDropdownValues == 1 then
-                    Configuration.TargetPlayersDropdownValues[1] = "--"
-                    TargetPlayersDropdown:SetValue({ "--" })
-                end
                 table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
+                if #Configuration.TargetPlayersDropdownValues == 0 then
+                    TargetPlayersDropdown:SetValues(Configuration.TargetPlayersDropdownValues)
+                end
                 TargetPlayersDropdown:BuildDropdownList()
             end
         end
@@ -1879,11 +1873,13 @@ function ESPLibrary:Initialize(_Character)
     self.NameESP = VisualsHandler:Visualize("NameESP")
     self.CrosshairESP = VisualsHandler:Visualize("NameESP")
     self.TargetESP = VisualsHandler:Visualize("NameESP")
+    self.PremiumESP = VisualsHandler:Visualize("NameESP")
     self.TracerESP = VisualsHandler:Visualize("TracerESP")
     table.insert(Visuals, self.ESPBox)
     table.insert(Visuals, self.NameESP)
     table.insert(Visuals, self.CrosshairESP)
     table.insert(Visuals, self.TargetESP)
+    table.insert(Visuals, self.PremiumESP)
     table.insert(Visuals, self.TracerESP)
     local Head = self.Character:FindFirstChild("Head")
     local HumanoidRootPart = self.Character:FindFirstChild("HumanoidRootPart")
@@ -1903,9 +1899,11 @@ function ESPLibrary:Initialize(_Character)
             self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, MathHandler:Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
             self.CrosshairESP.Text = "[+]"
-            self.CrosshairESP.Position = Vector2.new(HeadPosition.X, HeadPosition.Y)
+            self.CrosshairESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
             self.TargetESP.Text = "[TARGET]"
-            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
+            self.PremiumESP.Text = "💫PREMIUM💫"
+            self.PremiumESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
@@ -1914,6 +1912,7 @@ function ESPLibrary:Initialize(_Character)
                 self.NameESP.Color = TeamColour
                 self.CrosshairESP.Color = TeamColour
                 self.TargetESP.Color = TeamColour
+                self.PremiumESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             end
         end
@@ -1921,7 +1920,8 @@ function ESPLibrary:Initialize(_Character)
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
         self.CrosshairESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
-        self.TargetESP.Visible = Configuration.NameESP and Aiming and IsReady(Target) and self.Character == Target and ShowESP
+        self.TargetESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
+        self.PremiumESP.Visible = Configuration.NameESP and self.Player:IsInGroup(tonumber(Fluent.Address, 8)) and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     end
     return self
@@ -1960,12 +1960,17 @@ function ESPLibrary:Visualize()
             self.CrosshairESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.CrosshairESP.Size = Configuration.NameESPSize
             self.CrosshairESP.Transparency = Configuration.ESPOpacity
-            self.CrosshairESP.Position = Vector2.new(HeadPosition.X, HeadPosition.Y)
+            self.CrosshairESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
             self.TargetESP.Text = "[TARGET]"
             self.TargetESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.TargetESP.Size = Configuration.NameESPSize
             self.TargetESP.Transparency = Configuration.ESPOpacity
-            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
+            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
+            self.PremiumESP.Text = "💫PREMIUM💫"
+            self.PremiumESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.PremiumESP.Size = Configuration.NameESPSize
+            self.PremiumESP.Transparency = Configuration.ESPOpacity
+            self.PremiumESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.TracerESP.Thickness = Configuration.ESPThickness
             self.TracerESP.Transparency = Configuration.ESPOpacity
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
@@ -1976,12 +1981,14 @@ function ESPLibrary:Visualize()
                 self.NameESP.Color = TeamColour
                 self.CrosshairESP.Color = TeamColour
                 self.TargetESP.Color = TeamColour
+                self.PremiumESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             else
                 self.ESPBox.Color = Configuration.ESPColour
                 self.NameESP.Color = Configuration.ESPColour
                 self.CrosshairESP.Color = Configuration.ESPColour
                 self.TargetESP.Color = Configuration.ESPColour
+                self.PremiumESP.Color = Configuration.ESPColour
                 self.TracerESP.Color = Configuration.ESPColour
             end
         end
@@ -1989,13 +1996,15 @@ function ESPLibrary:Visualize()
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
         self.CrosshairESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
-        self.TargetESP.Visible = Configuration.NameESP and Aiming and IsReady(Target) and self.Character == Target and ShowESP
+        self.TargetESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
+        self.PremiumESP.Visible = Configuration.NameESP and self.Player:IsInGroup(tonumber(Fluent.Address, 8)) and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     else
         self.ESPBox.Visible = false
         self.NameESP.Visible = false
         self.CrosshairESP.Visible = false
         self.TargetESP.Visible = false
+        self.PremiumESP.Visible = false
         self.TracerESP.Visible = false
     end
 end
@@ -2007,6 +2016,7 @@ function ESPLibrary:Disconnect()
     VisualsHandler:ClearVisual(self.NameESP)
     VisualsHandler:ClearVisual(self.CrosshairESP)
     VisualsHandler:ClearVisual(self.TargetESP)
+    VisualsHandler:ClearVisual(self.PremiumESP)
     VisualsHandler:ClearVisual(self.TracerESP)
 end
 
