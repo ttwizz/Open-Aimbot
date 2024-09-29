@@ -331,11 +331,7 @@ do
                 Configuration.AimKey = Value
             end
         })
-        if AimKeybind.Value == "RMB" then
-            Configuration.AimKey = Enum.UserInputType.MouseButton2
-        else
-            Configuration.AimKey = Enum.KeyCode[AimKeybind.Value]
-        end
+        Configuration.AimKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, AimKeybind.Value) and Enum.KeyCode[AimKeybind.Value] or Enum.UserInputType.MouseButton2
     end
 
     local AimModeDropdown = AimbotSection:AddDropdown("AimMode", {
@@ -577,11 +573,7 @@ do
                 Configuration.TriggerKey = Value
             end
         })
-        if TriggerKeybind.Value == "RMB" then
-            Configuration.TriggerKey = Enum.UserInputType.MouseButton2
-        else
-            Configuration.TriggerKey = Enum.KeyCode[TriggerKeybind.Value]
-        end
+        Configuration.TriggerKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, TriggerKeybind.Value) and Enum.KeyCode[TriggerKeybind.Value] or Enum.UserInputType.MouseButton2
     else
         ShowWarning = true
     end
@@ -962,11 +954,7 @@ do
                     Configuration.FoVKey = Value
                 end
             })
-            if FoVKeybind.Value == "RMB" then
-                Configuration.FoVKey = Enum.UserInputType.MouseButton2
-            else
-                Configuration.FoVKey = Enum.KeyCode[FoVKeybind.Value]
-            end
+            Configuration.FoVKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, FoVKeybind.Value) and Enum.KeyCode[FoVKeybind.Value] or Enum.UserInputType.MouseButton2
         end
 
         FoVSection:AddSlider("FoVThickness", {
@@ -1023,11 +1011,7 @@ do
                     Configuration.ESPKey = Value
                 end
             })
-            if ESPKeybind.Value == "RMB" then
-                Configuration.ESPKey = Enum.UserInputType.MouseButton2
-            else
-                Configuration.ESPKey = Enum.KeyCode[ESPKeybind.Value]
-            end
+            Configuration.ESPKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, ESPKeybind.Value) and Enum.KeyCode[ESPKeybind.Value] or Enum.UserInputType.MouseButton2
         end
 
         local ESPBoxToggle = ESPSection:AddToggle("ESPBox", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
@@ -1261,11 +1245,7 @@ do
                         for Key, Value in next, ImportedConfiguration do
                             if Key == "AimKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
                                 Fluent.Options[Key]:SetValue(Value)
-                                if Value == "RMB" then
-                                    Configuration[Key] = Enum.UserInputType.MouseButton2
-                                else
-                                    Configuration[Key] = Enum.KeyCode[Value]
-                                end
+                                Configuration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and Enum.KeyCode[Value] or Enum.UserInputType.MouseButton2
                             elseif Key == "AimPart" or typeof(Configuration[Key]) == "table" then
                                 Configuration[Key] = Value
                             elseif Key == "FoVColour" or Key == "ESPColour" then
@@ -1836,13 +1816,13 @@ end
 
 function VisualsHandler:ClearVisuals()
     for Key, Visual in next, Visuals do
-        VisualsHandler:ClearVisual(Visual, Key)
+        self:ClearVisual(Visual, Key)
     end
 end
 
 function VisualsHandler:VisualizeFoV()
     if not Fluent then
-        return VisualsHandler:ClearVisuals()
+        return self:ClearVisuals()
     end
     local MouseLocation = UserInputService:GetMouseLocation()
     Visuals.FoV.Position = Vector2.new(MouseLocation.X, MouseLocation.Y)
@@ -1866,19 +1846,19 @@ function ESPLibrary:Initialize(_Character)
     elseif typeof(_Character) ~= "Instance" then
         return nil
     end
-    local self = setmetatable({}, { __index = ESPLibrary })
+    local self = setmetatable({}, { __index = self })
     self.Player = Players:GetPlayerFromCharacter(_Character)
     self.Character = _Character
     self.ESPBox = VisualsHandler:Visualize("ESPBox")
     self.NameESP = VisualsHandler:Visualize("NameESP")
-    self.CrosshairESP = VisualsHandler:Visualize("NameESP")
-    self.TargetESP = VisualsHandler:Visualize("NameESP")
+    self.HealthESP = VisualsHandler:Visualize("NameESP")
+    self.MagnitudeESP = VisualsHandler:Visualize("NameESP")
     self.PremiumESP = VisualsHandler:Visualize("NameESP")
     self.TracerESP = VisualsHandler:Visualize("TracerESP")
     table.insert(Visuals, self.ESPBox)
     table.insert(Visuals, self.NameESP)
-    table.insert(Visuals, self.CrosshairESP)
-    table.insert(Visuals, self.TargetESP)
+    table.insert(Visuals, self.HealthESP)
+    table.insert(Visuals, self.MagnitudeESP)
     table.insert(Visuals, self.PremiumESP)
     table.insert(Visuals, self.TracerESP)
     local Head = self.Character:FindFirstChild("Head")
@@ -1896,12 +1876,12 @@ function ESPLibrary:Initialize(_Character)
         if IsInViewport then
             self.ESPBox.Size = Vector2.new(2350 / HumanoidRootPartPosition.Z, TopPosition.Y - BottomPosition.Y)
             self.ESPBox.Position = Vector2.new(HumanoidRootPartPosition.X - self.ESPBox.Size.X / 2, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
-            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, MathHandler:Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
+            self.NameESP.Text = Aiming and IsReady(Target) and self.Character == Target and string.format("🎯@%s🎯", self.Player.Name) or string.format("@%s", self.Player.Name)
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
-            self.CrosshairESP.Text = "[+]"
-            self.CrosshairESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
-            self.TargetESP.Text = "[TARGET]"
-            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
+            self.HealthESP.Text = string.format("[%s%%]", MathHandler:Abbreviate(Humanoid.Health))
+            self.HealthESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
+            self.MagnitudeESP.Text = string.format("[%sm]", Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
+            self.MagnitudeESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
             self.PremiumESP.Text = "💫PREMIUM💫"
             self.PremiumESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
@@ -1910,8 +1890,8 @@ function ESPLibrary:Initialize(_Character)
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
-                self.CrosshairESP.Color = TeamColour
-                self.TargetESP.Color = TeamColour
+                self.HealthESP.Color = TeamColour
+                self.MagnitudeESP.Color = TeamColour
                 self.PremiumESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             end
@@ -1919,8 +1899,8 @@ function ESPLibrary:Initialize(_Character)
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
-        self.CrosshairESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
-        self.TargetESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
+        self.HealthESP.Visible = Configuration.ESPBox and ShowESP
+        self.MagnitudeESP.Visible = Configuration.ESPBox and ShowESP
         self.PremiumESP.Visible = Configuration.NameESP and self.Player:IsInGroup(tonumber(Fluent.Address, 8)) and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     end
@@ -1951,21 +1931,21 @@ function ESPLibrary:Visualize()
             self.ESPBox.Thickness = Configuration.ESPThickness
             self.ESPBox.Transparency = Configuration.ESPOpacity
             self.ESPBox.Filled = Configuration.ESPBoxFilled
-            self.NameESP.Text = string.format("@%s | %s%% | %sm", self.Player.Name, MathHandler:Abbreviate(Humanoid.Health), Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
+            self.NameESP.Text = Aiming and IsReady(Target) and self.Character == Target and string.format("🎯@%s🎯", self.Player.Name) or string.format("@%s", self.Player.Name)
             self.NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPOpacity
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
-            self.CrosshairESP.Text = "[+]"
-            self.CrosshairESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
-            self.CrosshairESP.Size = Configuration.NameESPSize
-            self.CrosshairESP.Transparency = Configuration.ESPOpacity
-            self.CrosshairESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
-            self.TargetESP.Text = "[TARGET]"
-            self.TargetESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
-            self.TargetESP.Size = Configuration.NameESPSize
-            self.TargetESP.Transparency = Configuration.ESPOpacity
-            self.TargetESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
+            self.HealthESP.Text = string.format("[%s%%]", MathHandler:Abbreviate(Humanoid.Health))
+            self.HealthESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.HealthESP.Size = Configuration.NameESPSize
+            self.HealthESP.Transparency = Configuration.ESPOpacity
+            self.HealthESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
+            self.MagnitudeESP.Text = string.format("[%sm]", Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
+            self.MagnitudeESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.MagnitudeESP.Size = Configuration.NameESPSize
+            self.MagnitudeESP.Transparency = Configuration.ESPOpacity
+            self.MagnitudeESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
             self.PremiumESP.Text = "💫PREMIUM💫"
             self.PremiumESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.PremiumESP.Size = Configuration.NameESPSize
@@ -1979,15 +1959,15 @@ function ESPLibrary:Visualize()
                 local TeamColour = self.Player.TeamColor.Color
                 self.ESPBox.Color = TeamColour
                 self.NameESP.Color = TeamColour
-                self.CrosshairESP.Color = TeamColour
-                self.TargetESP.Color = TeamColour
+                self.HealthESP.Color = TeamColour
+                self.MagnitudeESP.Color = TeamColour
                 self.PremiumESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             else
                 self.ESPBox.Color = Configuration.ESPColour
                 self.NameESP.Color = Configuration.ESPColour
-                self.CrosshairESP.Color = Configuration.ESPColour
-                self.TargetESP.Color = Configuration.ESPColour
+                self.HealthESP.Color = Configuration.ESPColour
+                self.MagnitudeESP.Color = Configuration.ESPColour
                 self.PremiumESP.Color = Configuration.ESPColour
                 self.TracerESP.Color = Configuration.ESPColour
             end
@@ -1995,15 +1975,15 @@ function ESPLibrary:Visualize()
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
-        self.CrosshairESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
-        self.TargetESP.Visible = Configuration.ESPBox and Aiming and IsReady(Target) and self.Character == Target and ShowESP
+        self.HealthESP.Visible = Configuration.ESPBox and ShowESP
+        self.MagnitudeESP.Visible = Configuration.ESPBox and ShowESP
         self.PremiumESP.Visible = Configuration.NameESP and self.Player:IsInGroup(tonumber(Fluent.Address, 8)) and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     else
         self.ESPBox.Visible = false
         self.NameESP.Visible = false
-        self.CrosshairESP.Visible = false
-        self.TargetESP.Visible = false
+        self.HealthESP.Visible = false
+        self.MagnitudeESP.Visible = false
         self.PremiumESP.Visible = false
         self.TracerESP.Visible = false
     end
@@ -2014,8 +1994,8 @@ function ESPLibrary:Disconnect()
     self.Character = nil
     VisualsHandler:ClearVisual(self.ESPBox)
     VisualsHandler:ClearVisual(self.NameESP)
-    VisualsHandler:ClearVisual(self.CrosshairESP)
-    VisualsHandler:ClearVisual(self.TargetESP)
+    VisualsHandler:ClearVisual(self.HealthESP)
+    VisualsHandler:ClearVisual(self.MagnitudeESP)
     VisualsHandler:ClearVisual(self.PremiumESP)
     VisualsHandler:ClearVisual(self.TracerESP)
 end
@@ -2052,17 +2032,17 @@ end
 
 function TrackingHandler:DisconnectConnections()
     for Key, _ in next, Connections do
-        TrackingHandler:DisconnectConnection(Key)
+        self:DisconnectConnection(Key)
     end
     for Key, _ in next, Tracking do
-        TrackingHandler:DisconnectTracking(Key)
+        self:DisconnectTracking(Key)
     end
 end
 
 function TrackingHandler:DisconnectAimbot()
     FieldsHandler:ResetAimbotFields()
     FieldsHandler:ResetSecondaryFields()
-    TrackingHandler:DisconnectConnections()
+    self:DisconnectConnections()
     VisualsHandler:ClearVisuals()
 end
 
