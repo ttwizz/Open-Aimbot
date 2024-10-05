@@ -71,6 +71,7 @@ local UISettings = {
     MinimizeKey = "RightShift",
     ShowNotifications = true,
     ShowWarnings = true,
+    RenderingMode = "RenderStepped",
     AutoImport = true
 }
 
@@ -121,7 +122,7 @@ pcall(function()
     if not DEBUG and getfenv().isfile and getfenv().readfile and getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) and UISettings.AutoImport then
         ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
         for Key, Value in next, ImportedConfiguration do
-            if Key == "FoVColour" or Key == "ESPColour" then
+            if Key == "FoVColour" or Key == "NameESPOutlineColour" or Key == "ESPColour" then
                 ImportedConfiguration[Key] = ColorsHandler:UnpackColour(Value)
             end
         end
@@ -212,6 +213,7 @@ Configuration.ESPBoxFilled = ImportedConfiguration["ESPBoxFilled"] or false
 Configuration.NameESP = ImportedConfiguration["NameESP"] or false
 Configuration.NameESPFont = ImportedConfiguration["NameESPFont"] or "Monospace"
 Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
+Configuration.NameESPOutlineColour = ImportedConfiguration["NameESPOutlineColour"] or Color3.fromRGB(0, 0, 0)
 Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
 Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
 Configuration.ESPOpacity = ImportedConfiguration["ESPOpacity"] or 0.8
@@ -228,6 +230,8 @@ local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
 local IsComputer = UserInputService.KeyboardEnabled and UserInputService.MouseEnabled
+
+local PremiumLabels = { "💫PREMIUM💫", "✨PREMIUM✨", "🌟PREMIUM🌟", "⭐PREMIUM⭐", "🤩PREMIUM🤩" }
 
 
 --! Names Handler
@@ -783,7 +787,7 @@ do
             IgnoredPlayersDropdown:SetValue({})
             Window:Dialog({
                 Title = "Open Aimbot",
-                Content = "All items have been deselected!",
+                Content = "All Items have been deselected!",
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -807,7 +811,7 @@ do
             IgnoredPlayersDropdown:BuildDropdownList()
             Window:Dialog({
                 Title = "Open Aimbot",
-                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 item has been cleared!" or string.format("%s items have been cleared!", Items),
+                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -884,7 +888,7 @@ do
             TargetPlayersDropdown:SetValue({})
             Window:Dialog({
                 Title = "Open Aimbot",
-                Content = "All items have been deselected!",
+                Content = "All Items have been deselected!",
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -908,7 +912,7 @@ do
             TargetPlayersDropdown:BuildDropdownList()
             Window:Dialog({
                 Title = "Open Aimbot",
-                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 item has been cleared!" or string.format("%s items have been cleared!", Items),
+                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -1051,6 +1055,15 @@ do
             end
         })
 
+        local NameESPOutlineColourPicker = ESPSection:AddColorpicker("NameESPOutlineColour", {
+            Title = "Name ESP Outline",
+            Description = "Changes the Name ESP Outline Colour",
+            Default = Configuration.NameESPOutlineColour,
+            Callback = function(Value)
+                Configuration.NameESPOutlineColour = Value
+            end
+        })
+
         local TracerESPToggle = ESPSection:AddToggle("TracerESP", { Title = "Tracer ESP", Description = "Creates the Tracer ESP in the direction of the Players", Default = Configuration.TracerESP })
         TracerESPToggle:OnChanged(function(Value)
             Configuration.TracerESP = Value
@@ -1107,6 +1120,7 @@ do
                         break
                     elseif Configuration.RainbowVisuals then
                         FoVColourPicker:SetValue({ Index / 230, 1, 1 })
+                        NameESPOutlineColourPicker:SetValue({ (230 - Index) / 230, 1, 1 })
                         ESPColourPicker:SetValue({ Index / 230, 1, 1 })
                     end
                     task.wait(Configuration.RainbowDelay / 5)
@@ -1221,6 +1235,28 @@ do
         InterfaceManager:ExportSettings()
     end)
 
+    local PerformanceSection = Tabs.Settings:AddSection("Performance")
+
+    PerformanceSection:AddDropdown("RenderingMode", {
+        Title = "Rendering Mode",
+        Description = "Changes the Rendering Mode",
+        Values = { "Heartbeat", "RenderStepped", "Stepped" },
+        Default = UISettings.RenderingMode,
+        Callback = function(Value)
+            UISettings.RenderingMode = Value
+            InterfaceManager:ExportSettings()
+            Window:Dialog({
+                Title = "Open Aimbot",
+                Content = "Changes will take effect after the Restart!",
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
+        end
+    })
+
     if getfenv().isfile and getfenv().readfile and getfenv().writefile and getfenv().delfile then
         local ConfigurationManager = Tabs.Settings:AddSection("Configuration Manager")
 
@@ -1248,7 +1284,7 @@ do
                                 Configuration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and Enum.KeyCode[Value] or Enum.UserInputType.MouseButton2
                             elseif Key == "AimPart" or typeof(Configuration[Key]) == "table" then
                                 Configuration[Key] = Value
-                            elseif Key == "FoVColour" or Key == "ESPColour" then
+                            elseif Key == "FoVColour" or Key == "NameESPOutlineColour" or Key == "ESPColour" then
                                 Fluent.Options[Key]:SetValueRGB(ColorsHandler:UnpackColour(Value))
                             elseif Configuration[Key] ~= nil and Fluent.Options[Key] then
                                 Fluent.Options[Key]:SetValue(Value)
@@ -1325,7 +1361,7 @@ do
                     for Key, Value in next, Configuration do
                         if Key == "AimKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
                             ExportedConfiguration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and UserInputService:GetStringForKeyCode(Value) or "RMB"
-                        elseif Key == "FoVColour" or Key == "ESPColour" then
+                        elseif Key == "FoVColour" or Key == "NameESPOutlineColour" or Key == "ESPColour" then
                             ExportedConfiguration[Key] = ColorsHandler:PackColour(Value)
                         else
                             ExportedConfiguration[Key] = Value
@@ -1777,7 +1813,7 @@ function VisualsHandler:Visualize(Object)
             NameESP.ZIndex = 3
             NameESP.Center = true
             NameESP.Outline = true
-            NameESP.OutlineColor = Color3.fromRGB(0, 0, 0)
+            NameESP.OutlineColor = Configuration.NameESPOutlineColour
             NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             NameESP.Size = Configuration.NameESPSize
             NameESP.Transparency = Configuration.ESPOpacity
@@ -1882,16 +1918,21 @@ function ESPLibrary:Initialize(_Character)
             self.HealthESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
             self.MagnitudeESP.Text = string.format("[%sm]", Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
             self.MagnitudeESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
-            self.PremiumESP.Text = "💫PREMIUM💫"
+            self.PremiumESP.Text = PremiumLabels[Random.new():NextInteger(1, #PremiumLabels)]
             self.PremiumESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             self.TracerESP.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
                 local TeamColour = self.Player.TeamColor.Color
+                local InvertedTeamColour = Color3.fromRGB(255 - TeamColour.R * 255, 255 - TeamColour.G * 255, 255 - TeamColour.B * 255)
                 self.ESPBox.Color = TeamColour
+                self.NameESP.OutlineColor = InvertedTeamColour
                 self.NameESP.Color = TeamColour
+                self.HealthESP.OutlineColor = InvertedTeamColour
                 self.HealthESP.Color = TeamColour
+                self.MagnitudeESP.OutlineColor = InvertedTeamColour
                 self.MagnitudeESP.Color = TeamColour
+                self.PremiumESP.OutlineColor = InvertedTeamColour
                 self.PremiumESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             end
@@ -1946,7 +1987,7 @@ function ESPLibrary:Visualize()
             self.MagnitudeESP.Size = Configuration.NameESPSize
             self.MagnitudeESP.Transparency = Configuration.ESPOpacity
             self.MagnitudeESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
-            self.PremiumESP.Text = "💫PREMIUM💫"
+            self.PremiumESP.Text = PremiumLabels[Random.new():NextInteger(1, #PremiumLabels)]
             self.PremiumESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.PremiumESP.Size = Configuration.NameESPSize
             self.PremiumESP.Transparency = Configuration.ESPOpacity
@@ -1957,17 +1998,26 @@ function ESPLibrary:Visualize()
             self.TracerESP.To = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
             if Configuration.ESPUseTeamColour and not Configuration.RainbowVisuals then
                 local TeamColour = self.Player.TeamColor.Color
+                local InvertedTeamColour = Color3.fromRGB(255 - TeamColour.R * 255, 255 - TeamColour.G * 255, 255 - TeamColour.B * 255)
                 self.ESPBox.Color = TeamColour
+                self.NameESP.OutlineColor = InvertedTeamColour
                 self.NameESP.Color = TeamColour
+                self.HealthESP.OutlineColor = InvertedTeamColour
                 self.HealthESP.Color = TeamColour
+                self.MagnitudeESP.OutlineColor = InvertedTeamColour
                 self.MagnitudeESP.Color = TeamColour
+                self.PremiumESP.OutlineColor = InvertedTeamColour
                 self.PremiumESP.Color = TeamColour
                 self.TracerESP.Color = TeamColour
             else
                 self.ESPBox.Color = Configuration.ESPColour
+                self.NameESP.OutlineColor = Configuration.NameESPOutlineColour
                 self.NameESP.Color = Configuration.ESPColour
+                self.HealthESP.OutlineColor = Configuration.NameESPOutlineColour
                 self.HealthESP.Color = Configuration.ESPColour
+                self.MagnitudeESP.OutlineColor = Configuration.NameESPOutlineColour
                 self.MagnitudeESP.Color = Configuration.ESPColour
+                self.PremiumESP.OutlineColor = Configuration.NameESPOutlineColour
                 self.PremiumESP.Color = Configuration.ESPColour
                 self.TracerESP.Color = Configuration.ESPColour
             end
@@ -2115,7 +2165,7 @@ end)
 
 --! Aimbot Handler
 
-local AimbotLoop; AimbotLoop = RunService.RenderStepped:Connect(function()
+local AimbotLoop; AimbotLoop = RunService[UISettings.RenderingMode]:Connect(function()
     if Fluent.Unloaded then
         Fluent = nil
         TrackingHandler:DisconnectAimbot()
