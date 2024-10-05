@@ -35,13 +35,13 @@ ___
 
 ### Open Aimbot
 Open Aimbot is a **universal** open source framework. It offers a wide selection of extensive functionality, including:
-- ***Over 55 Features***
+- ***Over 70 Features***
 - ***Detection Bypasses***
-- *Team*, *Friend*, *Wall*, *Water*, *Verified Badge*, *FoV*, *Magnitude*, *Transparency*, *Group*, *Player* Checks
+- *Alive*, *God*, *Team*, *Friend*, *Follow*, *Verified Badge*, *Wall*, *Water*, *FoV*, *Magnitude*, *Transparency*, *Group*, *Player*, ***Premium*** Checks
 - Ability to set *Sensitivity*, *Camera Shaking*, *Mouse & Camera Methods*, *Move Direction Prediction*, *Static, Dynamic & Auto Offset*, *Activation Keys*, *One-Press Mode*, *Target Objects*, *Ignored & Target Players*, *Display Notification Log*, *TriggerBot*, *ESP*, *FoV*, *Tracers* and other more subtle options
 - Availability of ***Silent Aim***, *Security Warnings*, *Maximum User-Friendliness* and ***Configuration Manager***
 - A *Beautiful* and *Unique Interface* that supports *Minimization*, *Maximization* and even ***Resizing***
-- ***Support For Absolutely All Exploits***
+- ***Support For Absolutely All Exploits And Devices***
 - ***Clean*** and ***Understandable Source Code***, providing the simple possibility of *Modification* for your own purposes and *Contribution*
 
 #### Made with love,
@@ -51,6 +51,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/ttwizz/Open-Aimbot/ma
 ```
 
 <p align="center">
-    <img src="https://i.gyazo.com/61a0f3bb57fb30efdb0b3837b2483bdf.gif" alt="Open Aimbot" />
+    <img src="https://i.gyazo.com/62a3afa25dfd6a8f158a476fdb1e3af1.gif" alt="Open Aimbot" />
     Copyright (c) 2024 ttwiz_z
 </p>
