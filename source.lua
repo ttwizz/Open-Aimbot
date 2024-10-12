@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     ✨Universal Aim Assist Framework✨
-    Release 1.9
+    Release 1.9.1
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -30,6 +30,8 @@
     Discussions: https://github.com/ttwizz/Open-Aimbot/discussions
 
     Wiki: https://moderka.org/Open-Aimbot
+
+    Trustpilot: https://www.trustpilot.com/review/moderka.org
 
 •───────•°•❀•°•───────•୧‿̩͙ ˖︵ꕀ ⠀𓏶 ̣̣̥⠀ ꕀ︵˖ ̩͙‿୨•───────•°•❀•°•───────•]]
 
@@ -221,7 +223,7 @@ Configuration.ESPColour = ImportedConfiguration["ESPColour"] or Color3.fromRGB(2
 Configuration.ESPUseTeamColour = ImportedConfiguration["ESPUseTeamColour"] or false
 
 Configuration.RainbowVisuals = ImportedConfiguration["RainbowVisuals"] or false
-Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 0.5
+Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 5
 
 
 --! Constants
@@ -252,6 +254,8 @@ end
 
 local Fluent = nil
 local ShowWarning = false
+
+local Clock = os.clock()
 
 local Aiming = false
 local Target = nil
@@ -402,16 +406,6 @@ do
             Configuration.AimPart = Value
         end
     })
-    task.spawn(function()
-        while task.wait(1) do
-            if not Fluent then
-                break
-            end
-            if Configuration.RandomAimPart and #Configuration.AimPartDropdownValues > 0 then
-                AimPartDropdown:SetValue(Configuration.AimPartDropdownValues[Random.new():NextInteger(1, #Configuration.AimPartDropdownValues)])
-            end
-        end
-    end)
 
     local RandomAimPartToggle = AimbotSection:AddToggle("RandomAimPart", { Title = "Random Aim Part", Description = "Selects every second a Random Aim Part from Dropdown", Default = Configuration.RandomAimPart })
     RandomAimPartToggle:OnChanged(function(Value)
@@ -990,7 +984,7 @@ do
             Configuration.FoVFilled = Value
         end)
 
-        local FoVColourPicker = FoVSection:AddColorpicker("FoVColour", {
+        FoVSection:AddColorpicker("FoVColour", {
             Title = "FoV Colour",
             Description = "Changes the FoV Colour",
             Default = Configuration.FoVColour,
@@ -1055,7 +1049,7 @@ do
             end
         })
 
-        local NameESPOutlineColourPicker = ESPSection:AddColorpicker("NameESPOutlineColour", {
+        ESPSection:AddColorpicker("NameESPOutlineColour", {
             Title = "Name ESP Outline",
             Description = "Changes the Name ESP Outline Colour",
             Default = Configuration.NameESPOutlineColour,
@@ -1093,7 +1087,7 @@ do
             end
         })
 
-        local ESPColourPicker = ESPSection:AddColorpicker("ESPColour", {
+        ESPSection:AddColorpicker("ESPColour", {
             Title = "ESP Colour",
             Description = "Changes the ESP Colour",
             Default = Configuration.ESPColour,
@@ -1113,27 +1107,13 @@ do
         RainbowVisualsToggle:OnChanged(function(Value)
             Configuration.RainbowVisuals = Value
         end)
-        task.spawn(function()
-            while task.wait(Configuration.RainbowDelay) do
-                for Index = 1, 230 do
-                    if not Fluent then
-                        break
-                    elseif Configuration.RainbowVisuals then
-                        FoVColourPicker:SetValue({ Index / 230, 1, 1 })
-                        NameESPOutlineColourPicker:SetValue({ (230 - Index) / 230, 1, 1 })
-                        ESPColourPicker:SetValue({ Index / 230, 1, 1 })
-                    end
-                    task.wait(Configuration.RainbowDelay / 5)
-                end
-            end
-        end)
 
         VisualsSection:AddSlider("RainbowDelay", {
             Title = "Rainbow Delay",
             Description = "Changes the Rainbow Delay",
             Default = Configuration.RainbowDelay,
-            Min = 0.1,
-            Max = 1,
+            Min = 1,
+            Max = 10,
             Rounding = 1,
             Callback = function(Value)
                 Configuration.RainbowDelay = Value
@@ -1487,6 +1467,16 @@ do
             Window:Dialog({
                 Title = "Warning",
                 Content = "Your Software does not support all the Features of Open Aimbot!",
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
+        else
+            Window:Dialog({
+                Title = "Open Aimbot 💫PREMIUM💫",
+                Content = "✨Upgrade to unlock all Options✨ – Contact @ttwiz_z via Discord to buy",
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -2125,7 +2115,7 @@ function TrackingHandler:InitializePlayers()
     end
 end
 
-task.spawn(TrackingHandler.InitializePlayers)
+TrackingHandler:InitializePlayers()
 
 
 --! Player Events Handler
@@ -2180,9 +2170,19 @@ local AimbotLoop; AimbotLoop = RunService[UISettings.RenderingMode]:Connect(func
         ShowingESP = false
     end
     HandleTriggerBot()
+    if os.clock() - Clock >= 1 and Configuration.RandomAimPart and #Configuration.AimPartDropdownValues > 0 then
+        Fluent.Options.AimPart:SetValue(Configuration.AimPartDropdownValues[Random.new():NextInteger(1, #Configuration.AimPartDropdownValues)])
+        Clock = os.clock()
+    end
     if not DEBUG and getfenv().Drawing then
         VisualsHandler:VisualizeFoV()
         TrackingHandler:VisualizeESP()
+        if Configuration.RainbowVisuals then
+            local Hue = os.clock() % Configuration.RainbowDelay / Configuration.RainbowDelay
+            Fluent.Options.FoVColour:SetValue({ Hue, 1, 1 })
+            Fluent.Options.NameESPOutlineColour:SetValue({ 1 - Hue, 1, 1 })
+            Fluent.Options.ESPColour:SetValue({ Hue, 1, 1 })
+        end
     end
     if Aiming then
         local OldTarget = Target
