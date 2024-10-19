@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     ✨Universal Aim Assist Framework✨
-    Release 1.9.1
+    Release 1.9.2
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -67,7 +67,7 @@ local TweenService = game:GetService("TweenService")
 local UISettings = {
     TabWidth = 160,
     Size = { 580, 460 },
-    Theme = "Dark Typewriter",
+    Theme = "VSC Dark High Contrast",
     Acrylic = false,
     Transparency = true,
     MinimizeKey = "RightShift",
@@ -161,12 +161,21 @@ Configuration.Sensitivity = ImportedConfiguration["Sensitivity"] or 50
 Configuration.UseNoise = ImportedConfiguration["UseNoise"] or false
 Configuration.NoiseFrequency = ImportedConfiguration["NoiseFrequency"] or 50
 
---? TriggerBot
+--? Bots
+
+Configuration.SpinBot = ImportedConfiguration["SpinBot"] or false
+Configuration.OnePressSpinningMode = ImportedConfiguration["OnePressSpinningMode"] or false
+Configuration.SpinKey = ImportedConfiguration["SpinKey"] or "Q"
+Configuration.SpinBotVelocity = ImportedConfiguration["SpinBotVelocity"] or 50
+Configuration.SpinPartDropdownValues = ImportedConfiguration["SpinPartDropdownValues"] or { "Head", "HumanoidRootPart" }
+Configuration.SpinPart = ImportedConfiguration["SpinPart"] or "HumanoidRootPart"
+Configuration.RandomSpinPart = ImportedConfiguration["RandomSpinPart"] or false
 
 Configuration.TriggerBot = ImportedConfiguration["TriggerBot"] or false
 Configuration.OnePressTriggeringMode = ImportedConfiguration["OnePressTriggeringMode"] or false
 Configuration.SmartTriggerBot = ImportedConfiguration["SmartTriggerBot"] or false
-Configuration.TriggerKey = ImportedConfiguration["TriggerKey"] or "V"
+Configuration.TriggerKey = ImportedConfiguration["TriggerKey"] or "E"
+Configuration.TriggerBotChance = ImportedConfiguration["TriggerBotChance"] or 100
 
 --? Checks
 
@@ -216,6 +225,8 @@ Configuration.NameESP = ImportedConfiguration["NameESP"] or false
 Configuration.NameESPFont = ImportedConfiguration["NameESPFont"] or "Monospace"
 Configuration.NameESPSize = ImportedConfiguration["NameESPSize"] or 16
 Configuration.NameESPOutlineColour = ImportedConfiguration["NameESPOutlineColour"] or Color3.fromRGB(0, 0, 0)
+Configuration.HealthESP = ImportedConfiguration["HealthESP"] or false
+Configuration.MagnitudeESP = ImportedConfiguration["MagnitudeESP"] or false
 Configuration.TracerESP = ImportedConfiguration["TracerESP"] or false
 Configuration.ESPThickness = ImportedConfiguration["ESPThickness"] or 2
 Configuration.ESPOpacity = ImportedConfiguration["ESPOpacity"] or 0.8
@@ -239,7 +250,7 @@ local PremiumLabels = { "💫PREMIUM💫", "✨PREMIUM✨", "🌟PREMIUM🌟", "
 --! Names Handler
 
 local function GetFullName(String)
-    if typeof(String) == "string" and #String >= 3 and #String <= 20 then
+    if typeof(String) == "string" and #String > 0 then
         for _, _Player in next, Players:GetPlayers() do
             if string.sub(string.lower(_Player.Name), 1, #string.lower(String)) == string.lower(String) then
                 return _Player.Name
@@ -254,7 +265,6 @@ end
 
 local Fluent = nil
 local ShowWarning = false
-
 local Clock = os.clock()
 
 local Aiming = false
@@ -262,6 +272,7 @@ local Target = nil
 local Tween = nil
 local MouseSensitivity = UserInputService.MouseDeltaSensitivity
 
+local Spinning = false
 local Triggering = false
 local ShowingFoV = false
 local ShowingESP = false
@@ -436,11 +447,28 @@ do
                     AimPartDropdown:SetValue(nil)
                 end
                 table.remove(Configuration.AimPartDropdownValues, table.find(Configuration.AimPartDropdownValues, Value))
-                if #Configuration.AimPartDropdownValues == 0 then
-                    AimPartDropdown:SetValues(Configuration.AimPartDropdownValues)
-                end
-                AimPartDropdown:BuildDropdownList()
+                AimPartDropdown:SetValues(Configuration.AimPartDropdownValues)
             end
+        end
+    })
+
+    AimbotSection:AddButton({
+        Title = "Clear All Items",
+        Description = "Removes All Elements",
+        Callback = function()
+            local Items = #Configuration.AimPartDropdownValues
+            AimPartDropdown:SetValue(nil)
+            Configuration.AimPartDropdownValues = {}
+            AimPartDropdown:SetValues(Configuration.AimPartDropdownValues)
+            Window:Dialog({
+                Title = "Open Aimbot",
+                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
         end
     })
 
@@ -538,15 +566,123 @@ do
         end
     })
 
-    if getfenv().mouse1click and IsComputer then
-        Tabs.TriggerBot = Window:AddTab({ Title = "TriggerBot", Icon = "target" })
+    Tabs.Bots = Window:AddTab({ Title = "Bots", Icon = "bot" })
 
-        Tabs.TriggerBot:AddParagraph({
-            Title = "Open Aimbot",
-            Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
+    Tabs.Bots:AddParagraph({
+        Title = "Open Aimbot",
+        Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
+    })
+
+    local SpinBotSection = Tabs.Bots:AddSection("SpinBot")
+
+    SpinBotSection:AddParagraph({
+        Title = "NOTE",
+        Content = "SpinBot does not function normally in RenderStepped Rendering Mode. Set a different Rendering Mode value than RenderStepped to solve this problem."
+    })
+
+    local SpinBotToggle = SpinBotSection:AddToggle("SpinBot", { Title = "SpinBot", Description = "Toggles the SpinBot", Default = Configuration.SpinBot })
+    SpinBotToggle:OnChanged(function(Value)
+        Configuration.SpinBot = Value
+        if not IsComputer then
+            Spinning = Value
+        end
+    end)
+
+    if IsComputer then
+        local OnePressSpinningModeToggle = SpinBotSection:AddToggle("OnePressSpinningMode", { Title = "One-Press Mode", Description = "Uses the One-Press Mode instead of the Holding Mode", Default = Configuration.OnePressSpinningMode })
+        OnePressSpinningModeToggle:OnChanged(function(Value)
+            Configuration.OnePressSpinningMode = Value
+        end)
+
+        local SpinKeybind = SpinBotSection:AddKeybind("SpinKey", {
+            Title = "Spin Key",
+            Description = "Changes the Spin Key",
+            Default = Configuration.SpinKey,
+            ChangedCallback = function(Value)
+                Configuration.SpinKey = Value
+            end
         })
+        Configuration.SpinKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, SpinKeybind.Value) and Enum.KeyCode[SpinKeybind.Value] or Enum.UserInputType.MouseButton2
+    end
 
-        local TriggerBotSection = Tabs.TriggerBot:AddSection("TriggerBot")
+    SpinBotSection:AddSlider("SpinBotVelocity", {
+        Title = "SpinBot Velocity",
+        Description = "Changes the SpinBot Velocity",
+        Default = Configuration.SpinBotVelocity,
+        Min = 1,
+        Max = 50,
+        Rounding = 1,
+        Callback = function(Value)
+            Configuration.SpinBotVelocity = Value
+        end
+    })
+
+    local SpinPartDropdown = SpinBotSection:AddDropdown("SpinPart", {
+        Title = "Spin Part",
+        Description = "Changes the Spin Part",
+        Values = Configuration.SpinPartDropdownValues,
+        Default = Configuration.SpinPart,
+        Callback = function(Value)
+            Configuration.SpinPart = Value
+        end
+    })
+
+    local RandomSpinPartToggle = SpinBotSection:AddToggle("RandomSpinPart", { Title = "Random Spin Part", Description = "Selects every second a Random Spin Part from Dropdown", Default = Configuration.RandomSpinPart })
+    RandomSpinPartToggle:OnChanged(function(Value)
+        Configuration.RandomSpinPart = Value
+    end)
+
+    SpinBotSection:AddInput("AddSpinPart", {
+        Title = "Add Spin Part",
+        Description = "After typing, press Enter",
+        Finished = true,
+        Placeholder = "Part Name",
+        Callback = function(Value)
+            if #Value > 0 and not table.find(Configuration.SpinPartDropdownValues, Value) then
+                table.insert(Configuration.SpinPartDropdownValues, Value)
+                SpinPartDropdown:SetValue(Value)
+            end
+        end
+    })
+
+    SpinBotSection:AddInput("RemoveSpinPart", {
+        Title = "Remove Spin Part",
+        Description = "After typing, press Enter",
+        Finished = true,
+        Placeholder = "Part Name",
+        Callback = function(Value)
+            if #Value > 0 and table.find(Configuration.SpinPartDropdownValues, Value) then
+                if Configuration.SpinPart == Value then
+                    SpinPartDropdown:SetValue(nil)
+                end
+                table.remove(Configuration.SpinPartDropdownValues, table.find(Configuration.SpinPartDropdownValues, Value))
+                SpinPartDropdown:SetValues(Configuration.SpinPartDropdownValues)
+            end
+        end
+    })
+
+    SpinBotSection:AddButton({
+        Title = "Clear All Items",
+        Description = "Removes All Elements",
+        Callback = function()
+            local Items = #Configuration.SpinPartDropdownValues
+            SpinPartDropdown:SetValue(nil)
+            Configuration.SpinPartDropdownValues = {}
+            SpinPartDropdown:SetValues(Configuration.SpinPartDropdownValues)
+            Window:Dialog({
+                Title = "Open Aimbot",
+                Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
+                Buttons = {
+                    {
+                        Title = "Confirm"
+                    }
+                }
+            })
+        end
+    })
+
+    if getfenv().mouse1click and IsComputer then
+        local TriggerBotSection = Tabs.Bots:AddSection("TriggerBot")
 
         local TriggerBotToggle = TriggerBotSection:AddToggle("TriggerBot", { Title = "TriggerBot", Description = "Toggles the TriggerBot", Default = Configuration.TriggerBot })
         TriggerBotToggle:OnChanged(function(Value)
@@ -572,6 +708,18 @@ do
             end
         })
         Configuration.TriggerKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, TriggerKeybind.Value) and Enum.KeyCode[TriggerKeybind.Value] or Enum.UserInputType.MouseButton2
+
+        TriggerBotSection:AddSlider("TriggerBotChance", {
+            Title = "TriggerBot Chance",
+            Description = "Changes the Hit Chance for TriggerBot",
+            Default = Configuration.TriggerBotChance,
+            Min = 1,
+            Max = 100,
+            Rounding = 1,
+            Callback = function(Value)
+                Configuration.TriggerBotChance = Value
+            end
+        })
     else
         ShowWarning = true
     end
@@ -741,8 +889,8 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            if #Value > 0 and not table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
                 table.insert(Configuration.IgnoredPlayersDropdownValues, Value)
                 if not table.find(Configuration.IgnoredPlayers, Value) then
                     IgnoredPlayersDropdown.Value[Value] = true
@@ -759,17 +907,15 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            if #Value > 0 and table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
                 if table.find(Configuration.IgnoredPlayers, Value) then
                     IgnoredPlayersDropdown.Value[Value] = nil
                     table.remove(Configuration.IgnoredPlayers, table.find(Configuration.IgnoredPlayers, Value))
+                    IgnoredPlayersDropdown:Display()
                 end
                 table.remove(Configuration.IgnoredPlayersDropdownValues, table.find(Configuration.IgnoredPlayersDropdownValues, Value))
-                if #Configuration.IgnoredPlayersDropdownValues == 0 then
-                    IgnoredPlayersDropdown:SetValues(Configuration.IgnoredPlayersDropdownValues)
-                end
-                IgnoredPlayersDropdown:BuildDropdownList()
+                IgnoredPlayersDropdown:SetValues(Configuration.IgnoredPlayersDropdownValues)
             end
         end
     })
@@ -778,10 +924,11 @@ do
         Title = "Deselect All Items",
         Description = "Deselects All Elements",
         Callback = function()
+            local Items = #Configuration.IgnoredPlayers
             IgnoredPlayersDropdown:SetValue({})
             Window:Dialog({
                 Title = "Open Aimbot",
-                Content = "All Items have been deselected!",
+                Content = Items == 0 and "Nothing has been deselected!" or Items == 1 and "1 Item has been deselected!" or string.format("%s Items have been deselected!", Items),
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -795,14 +942,17 @@ do
         Title = "Clear Unselected Items",
         Description = "Removes Unselected Players",
         Callback = function()
+            local Cache = {}
             local Items = 0
-            for Index, Value in next, Configuration.IgnoredPlayersDropdownValues do
-                if not IgnoredPlayersDropdown.Value[Value] then
-                    table.remove(Configuration.IgnoredPlayersDropdownValues, Index)
+            for _, Value in next, Configuration.IgnoredPlayersDropdownValues do
+                if table.find(Configuration.IgnoredPlayers, Value) then
+                    table.insert(Cache, Value)
+                else
                     Items = Items + 1
                 end
             end
-            IgnoredPlayersDropdown:BuildDropdownList()
+            Configuration.IgnoredPlayersDropdownValues = Cache
+            IgnoredPlayersDropdown:SetValues(Configuration.IgnoredPlayersDropdownValues)
             Window:Dialog({
                 Title = "Open Aimbot",
                 Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
@@ -842,8 +992,8 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            if #Value > 0 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
                 table.insert(Configuration.TargetPlayersDropdownValues, Value)
                 if not table.find(Configuration.TargetPlayers, Value) then
                     TargetPlayersDropdown.Value[Value] = true
@@ -860,17 +1010,15 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or Value
-            if #Value >= 3 and #Value <= 20 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
+            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            if #Value > 0 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
                 if table.find(Configuration.TargetPlayers, Value) then
                     TargetPlayersDropdown.Value[Value] = nil
                     table.remove(Configuration.TargetPlayers, table.find(Configuration.TargetPlayers, Value))
+                    TargetPlayersDropdown:Display()
                 end
                 table.remove(Configuration.TargetPlayersDropdownValues, table.find(Configuration.TargetPlayersDropdownValues, Value))
-                if #Configuration.TargetPlayersDropdownValues == 0 then
-                    TargetPlayersDropdown:SetValues(Configuration.TargetPlayersDropdownValues)
-                end
-                TargetPlayersDropdown:BuildDropdownList()
+                TargetPlayersDropdown:SetValues(Configuration.TargetPlayersDropdownValues)
             end
         end
     })
@@ -879,10 +1027,11 @@ do
         Title = "Deselect All Items",
         Description = "Deselects All Elements",
         Callback = function()
+            local Items = #Configuration.TargetPlayers
             TargetPlayersDropdown:SetValue({})
             Window:Dialog({
                 Title = "Open Aimbot",
-                Content = "All Items have been deselected!",
+                Content = Items == 0 and "Nothing has been deselected!" or Items == 1 and "1 Item has been deselected!" or string.format("%s Items have been deselected!", Items),
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -896,14 +1045,17 @@ do
         Title = "Clear Unselected Items",
         Description = "Removes Unselected Players",
         Callback = function()
+            local Cache = {}
             local Items = 0
-            for Index, Value in next, Configuration.TargetPlayersDropdownValues do
-                if not TargetPlayersDropdown.Value[Value] then
-                    table.remove(Configuration.TargetPlayersDropdownValues, Index)
+            for _, Value in next, Configuration.TargetPlayersDropdownValues do
+                if table.find(Configuration.TargetPlayers, Value) then
+                    table.insert(Cache, Value)
+                else
                     Items = Items + 1
                 end
             end
-            TargetPlayersDropdown:BuildDropdownList()
+            Configuration.TargetPlayersDropdownValues = Cache
+            TargetPlayersDropdown:SetValues(Configuration.TargetPlayersDropdownValues)
             Window:Dialog({
                 Title = "Open Aimbot",
                 Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
@@ -1058,6 +1210,16 @@ do
             end
         })
 
+        local HealthESPToggle = ESPSection:AddToggle("HealthESP", { Title = "Health ESP", Description = "Creates the Health ESP in the ESP Box", Default = Configuration.HealthESP })
+        HealthESPToggle:OnChanged(function(Value)
+            Configuration.HealthESP = Value
+        end)
+
+        local MagnitudeESPToggle = ESPSection:AddToggle("MagnitudeESP", { Title = "Magnitude ESP", Description = "Creates the Magnitude ESP in the ESP Box", Default = Configuration.MagnitudeESP })
+        MagnitudeESPToggle:OnChanged(function(Value)
+            Configuration.MagnitudeESP = Value
+        end)
+
         local TracerESPToggle = ESPSection:AddToggle("TracerESP", { Title = "Tracer ESP", Description = "Creates the Tracer ESP in the direction of the Players", Default = Configuration.TracerESP })
         TracerESPToggle:OnChanged(function(Value)
             Configuration.TracerESP = Value
@@ -1200,22 +1362,27 @@ do
         Fluent.MinimizeKeybind = Fluent.Options.MinimizeKey
     end
 
-    local NotificationsSection = Tabs.Settings:AddSection("Notifications")
+    local NotificationsWarningsSection = Tabs.Settings:AddSection("Notifications & Warnings")
 
-    local NotificationsToggle = NotificationsSection:AddToggle("ShowNotifications", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = UISettings.ShowNotifications })
+    local NotificationsToggle = NotificationsWarningsSection:AddToggle("ShowNotifications", { Title = "Show Notifications", Description = "Toggles the Notifications Show", Default = UISettings.ShowNotifications })
     NotificationsToggle:OnChanged(function(Value)
         Fluent.ShowNotifications = Value
         UISettings.ShowNotifications = Value
         InterfaceManager:ExportSettings()
     end)
 
-    local WarningsToggle = NotificationsSection:AddToggle("ShowWarnings", { Title = "Show Warnings", Description = "Toggles the Security Warnings Show", Default = UISettings.ShowWarnings })
+    local WarningsToggle = NotificationsWarningsSection:AddToggle("ShowWarnings", { Title = "Show Warnings", Description = "Toggles the Security Warnings Show", Default = UISettings.ShowWarnings })
     WarningsToggle:OnChanged(function(Value)
         UISettings.ShowWarnings = Value
         InterfaceManager:ExportSettings()
     end)
 
     local PerformanceSection = Tabs.Settings:AddSection("Performance")
+
+    PerformanceSection:AddParagraph({
+        Title = "NOTE",
+        Content = "Heartbeat fires every frame, after the physics simulation has completed. RenderStepped fires every frame, prior to the frame being rendered. Stepped fires every frame, prior to the physics simulation."
+    })
 
     PerformanceSection:AddDropdown("RenderingMode", {
         Title = "Rendering Mode",
@@ -1259,10 +1426,10 @@ do
                     if getfenv().isfile(string.format("%s.ttwizz", game.GameId)) and getfenv().readfile(string.format("%s.ttwizz", game.GameId)) then
                         local ImportedConfiguration = HttpService:JSONDecode(getfenv().readfile(string.format("%s.ttwizz", game.GameId)))
                         for Key, Value in next, ImportedConfiguration do
-                            if Key == "AimKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
+                            if Key == "AimKey" or Key == "SpinKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
                                 Fluent.Options[Key]:SetValue(Value)
                                 Configuration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and Enum.KeyCode[Value] or Enum.UserInputType.MouseButton2
-                            elseif Key == "AimPart" or typeof(Configuration[Key]) == "table" then
+                            elseif Key == "AimPart" or Key == "SpinPart" or typeof(Configuration[Key]) == "table" then
                                 Configuration[Key] = Value
                             elseif Key == "FoVColour" or Key == "NameESPOutlineColour" or Key == "ESPColour" then
                                 Fluent.Options[Key]:SetValueRGB(ColorsHandler:UnpackColour(Value))
@@ -1281,6 +1448,9 @@ do
                                 elseif Key == "AimPart" then
                                     Option:SetValues(Configuration.AimPartDropdownValues)
                                     Option:SetValue(Configuration.AimPart)
+                                elseif Key == "SpinPart" then
+                                    Option:SetValues(Configuration.SpinPartDropdownValues)
+                                    Option:SetValue(Configuration.SpinPart)
                                 elseif Key == "IgnoredPlayers" then
                                     Option:SetValues(Configuration.IgnoredPlayersDropdownValues)
                                     local Players = {}
@@ -1339,7 +1509,7 @@ do
                 xpcall(function()
                     local ExportedConfiguration = { __LAST_UPDATED__ = os.date() }
                     for Key, Value in next, Configuration do
-                        if Key == "AimKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
+                        if Key == "AimKey" or Key == "SpinKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
                             ExportedConfiguration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and UserInputService:GetStringForKeyCode(Value) or "RMB"
                         elseif Key == "FoVColour" or Key == "NameESPOutlineColour" or Key == "ESPColour" then
                             ExportedConfiguration[Key] = ColorsHandler:PackColour(Value)
@@ -1501,7 +1671,7 @@ local function Notify(Message)
     end
 end
 
-Notify("Successfully initialized!")
+Notify("✨Upgrade to unlock all Options✨")
 
 
 --! Fields Handler
@@ -1519,6 +1689,7 @@ function FieldsHandler:ResetAimbotFields(SaveAiming, SaveTarget)
 end
 
 function FieldsHandler:ResetSecondaryFields()
+    Spinning = false
     Triggering = false
     ShowingFoV = false
     ShowingESP = false
@@ -1540,6 +1711,14 @@ do
                     else
                         Aiming = true
                         Notify("[Aiming Mode]: ON")
+                    end
+                elseif Configuration.SpinBot and (Input.KeyCode == Configuration.SpinKey or Input.UserInputType == Configuration.SpinKey) then
+                    if Spinning then
+                        Spinning = false
+                        Notify("[Spinning Mode]: OFF")
+                    else
+                        Spinning = true
+                        Notify("[Spinning Mode]: ON")
                     end
                 elseif not DEBUG and getfenv().mouse1click and Configuration.TriggerBot and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
                     if Triggering then
@@ -1576,6 +1755,9 @@ do
                 if Aiming and not Configuration.OnePressAimingMode and (Input.KeyCode == Configuration.AimKey or Input.UserInputType == Configuration.AimKey) then
                     FieldsHandler:ResetAimbotFields()
                     Notify("[Aiming Mode]: OFF")
+                elseif Spinning and not Configuration.OnePressSpinningMode and (Input.KeyCode == Configuration.SpinKey or Input.UserInputType == Configuration.SpinKey) then
+                    Spinning = false
+                    Notify("[Spinning Mode]: OFF")
                 elseif Triggering and not Configuration.OnePressTriggeringMode and (Input.KeyCode == Configuration.TriggerKey or Input.UserInputType == Configuration.TriggerKey) then
                     Triggering = false
                     Notify("[Triggering Mode]: OFF")
@@ -1762,11 +1944,29 @@ do
 end
 
 
---! TriggerBot Handler
+--! Bots Handler
 
-local function HandleTriggerBot()
-    if not DEBUG and Fluent and getfenv().mouse1click and IsComputer and Triggering and (Configuration.SmartTriggerBot and Aiming or not Configuration.SmartTriggerBot) and Mouse.Target and IsReady(Mouse.Target:FindFirstAncestorWhichIsA("Model")) then
+local function HandleBots()
+    if Spinning and Configuration.SpinPart and Player.Character and Player.Character:FindFirstChildWhichIsA("Humanoid") and Player.Character:FindFirstChild(Configuration.SpinPart) and Player.Character:FindFirstChild(Configuration.SpinPart):IsA("BasePart") then
+        Player.Character:FindFirstChild(Configuration.SpinPart).CFrame = Player.Character:FindFirstChild(Configuration.SpinPart).CFrame * CFrame.fromEulerAnglesXYZ(0, math.rad(Configuration.SpinBotVelocity), 0)
+    end
+    if not DEBUG and getfenv().mouse1click and IsComputer and Triggering and (Configuration.SmartTriggerBot and Aiming or not Configuration.SmartTriggerBot) and Mouse.Target and IsReady(Mouse.Target:FindFirstAncestorWhichIsA("Model")) and MathHandler:CalculateChance(Configuration.TriggerBotChance) then
         getfenv().mouse1click()
+    end
+end
+
+
+--! Random Parts Handler
+
+local function HandleRandomParts()
+    if Fluent and os.clock() - Clock >= 1 then
+        if Configuration.RandomAimPart and #Configuration.AimPartDropdownValues > 0 then
+            Fluent.Options.AimPart:SetValue(Configuration.AimPartDropdownValues[Random.new():NextInteger(1, #Configuration.AimPartDropdownValues)])
+        end
+        if Configuration.RandomSpinPart and #Configuration.SpinPartDropdownValues > 0 then
+            Fluent.Options.SpinPart:SetValue(Configuration.SpinPartDropdownValues[Random.new():NextInteger(1, #Configuration.SpinPartDropdownValues)])
+        end
+        Clock = os.clock()
     end
 end
 
@@ -1860,6 +2060,17 @@ function VisualsHandler:VisualizeFoV()
     Visuals.FoV.Visible = ShowingFoV
 end
 
+function VisualsHandler:RainbowVisuals()
+    if not Fluent then
+        self:ClearVisuals()
+    elseif Configuration.RainbowVisuals then
+        local Hue = os.clock() % Configuration.RainbowDelay / Configuration.RainbowDelay
+        Fluent.Options.FoVColour:SetValue({ Hue, 1, 1 })
+        Fluent.Options.NameESPOutlineColour:SetValue({ 1 - Hue, 1, 1 })
+        Fluent.Options.ESPColour:SetValue({ Hue, 1, 1 })
+    end
+end
+
 
 --! ESP Library
 
@@ -1930,8 +2141,8 @@ function ESPLibrary:Initialize(_Character)
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
-        self.HealthESP.Visible = Configuration.ESPBox and ShowESP
-        self.MagnitudeESP.Visible = Configuration.ESPBox and ShowESP
+        self.HealthESP.Visible = Configuration.HealthESP and ShowESP
+        self.MagnitudeESP.Visible = Configuration.MagnitudeESP and ShowESP
         self.PremiumESP.Visible = Configuration.NameESP and self.Player:IsInGroup(tonumber(Fluent.Address, 8)) and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     end
@@ -2015,8 +2226,8 @@ function ESPLibrary:Visualize()
         local ShowESP = ShowingESP and IsCharacterReady and IsInViewport
         self.ESPBox.Visible = Configuration.ESPBox and ShowESP
         self.NameESP.Visible = Configuration.NameESP and ShowESP
-        self.HealthESP.Visible = Configuration.ESPBox and ShowESP
-        self.MagnitudeESP.Visible = Configuration.ESPBox and ShowESP
+        self.HealthESP.Visible = Configuration.HealthESP and ShowESP
+        self.MagnitudeESP.Visible = Configuration.MagnitudeESP and ShowESP
         self.PremiumESP.Visible = Configuration.NameESP and self.Player:IsInGroup(tonumber(Fluent.Address, 8)) and ShowESP
         self.TracerESP.Visible = Configuration.TracerESP and ShowESP
     else
@@ -2162,6 +2373,8 @@ local AimbotLoop; AimbotLoop = RunService[UISettings.RenderingMode]:Connect(func
         AimbotLoop:Disconnect()
     elseif not Configuration.Aimbot then
         FieldsHandler:ResetAimbotFields()
+    elseif not Configuration.SpinBot then
+        Spinning = false
     elseif not Configuration.TriggerBot then
         Triggering = false
     elseif not Configuration.FoV then
@@ -2169,20 +2382,12 @@ local AimbotLoop; AimbotLoop = RunService[UISettings.RenderingMode]:Connect(func
     elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.TracerESP then
         ShowingESP = false
     end
-    HandleTriggerBot()
-    if os.clock() - Clock >= 1 and Configuration.RandomAimPart and #Configuration.AimPartDropdownValues > 0 then
-        Fluent.Options.AimPart:SetValue(Configuration.AimPartDropdownValues[Random.new():NextInteger(1, #Configuration.AimPartDropdownValues)])
-        Clock = os.clock()
-    end
+    HandleBots()
+    HandleRandomParts()
     if not DEBUG and getfenv().Drawing then
         VisualsHandler:VisualizeFoV()
+        VisualsHandler:RainbowVisuals()
         TrackingHandler:VisualizeESP()
-        if Configuration.RainbowVisuals then
-            local Hue = os.clock() % Configuration.RainbowDelay / Configuration.RainbowDelay
-            Fluent.Options.FoVColour:SetValue({ Hue, 1, 1 })
-            Fluent.Options.NameESPOutlineColour:SetValue({ 1 - Hue, 1, 1 })
-            Fluent.Options.ESPColour:SetValue({ Hue, 1, 1 })
-        end
     end
     if Aiming then
         local OldTarget = Target
