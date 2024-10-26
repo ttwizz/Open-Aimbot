@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     ✨Universal Aim Assist Framework✨
-    Release 1.9.2
+    Release 1.9.3
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -241,9 +241,9 @@ Configuration.RainbowDelay = ImportedConfiguration["RainbowDelay"] or 5
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
-
 local IsComputer = UserInputService.KeyboardEnabled and UserInputService.MouseEnabled
 
+local MonthlyLabels = { "🎅%s❄️", "☃️%s🏂", "🌷%s☘️", "🌺%s🎀", "🐝%s🌼", "🌈%s😎", "🌞%s🏖️", "☀️%s💐", "🌦%s🍁", "🎃%s💀", "🍂%s☕", "🎄%s🎁" }
 local PremiumLabels = { "💫PREMIUM💫", "✨PREMIUM✨", "🌟PREMIUM🌟", "⭐PREMIUM⭐", "🤩PREMIUM🤩" }
 
 
@@ -308,7 +308,7 @@ end)
 
 do
     local Window = Fluent:CreateWindow({
-        Title = "Open Aimbot",
+        Title = string.format("%s <b><i>🔥FREE🔥</i></b>", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
         SubTitle = "By @ttwiz_z",
         TabWidth = UISettings.TabWidth,
         Size = UDim2.fromOffset(table.unpack(UISettings.Size)),
@@ -322,7 +322,7 @@ do
     Window:SelectTab(1)
 
     Tabs.Aimbot:AddParagraph({
-        Title = "Open Aimbot",
+        Title = string.format("%s 🔥FREE🔥", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
         Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
@@ -461,7 +461,7 @@ do
             Configuration.AimPartDropdownValues = {}
             AimPartDropdown:SetValues(Configuration.AimPartDropdownValues)
             Window:Dialog({
-                Title = "Open Aimbot",
+                Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                 Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
                 Buttons = {
                     {
@@ -569,7 +569,7 @@ do
     Tabs.Bots = Window:AddTab({ Title = "Bots", Icon = "bot" })
 
     Tabs.Bots:AddParagraph({
-        Title = "Open Aimbot",
+        Title = string.format("%s 🔥FREE🔥", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
         Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
@@ -670,7 +670,7 @@ do
             Configuration.SpinPartDropdownValues = {}
             SpinPartDropdown:SetValues(Configuration.SpinPartDropdownValues)
             Window:Dialog({
-                Title = "Open Aimbot",
+                Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                 Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
                 Buttons = {
                     {
@@ -727,7 +727,7 @@ do
     Tabs.Checks = Window:AddTab({ Title = "Checks", Icon = "list-checks" })
 
     Tabs.Checks:AddParagraph({
-        Title = "Open Aimbot",
+        Title = string.format("%s 🔥FREE🔥", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
         Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
@@ -927,7 +927,7 @@ do
             local Items = #Configuration.IgnoredPlayers
             IgnoredPlayersDropdown:SetValue({})
             Window:Dialog({
-                Title = "Open Aimbot",
+                Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                 Content = Items == 0 and "Nothing has been deselected!" or Items == 1 and "1 Item has been deselected!" or string.format("%s Items have been deselected!", Items),
                 Buttons = {
                     {
@@ -954,7 +954,7 @@ do
             Configuration.IgnoredPlayersDropdownValues = Cache
             IgnoredPlayersDropdown:SetValues(Configuration.IgnoredPlayersDropdownValues)
             Window:Dialog({
-                Title = "Open Aimbot",
+                Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                 Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
                 Buttons = {
                     {
@@ -1030,7 +1030,7 @@ do
             local Items = #Configuration.TargetPlayers
             TargetPlayersDropdown:SetValue({})
             Window:Dialog({
-                Title = "Open Aimbot",
+                Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                 Content = Items == 0 and "Nothing has been deselected!" or Items == 1 and "1 Item has been deselected!" or string.format("%s Items have been deselected!", Items),
                 Buttons = {
                     {
@@ -1057,7 +1057,7 @@ do
             Configuration.TargetPlayersDropdownValues = Cache
             TargetPlayersDropdown:SetValues(Configuration.TargetPlayersDropdownValues)
             Window:Dialog({
-                Title = "Open Aimbot",
+                Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                 Content = Items == 0 and "Nothing has been cleared!" or Items == 1 and "1 Item has been cleared!" or string.format("%s Items have been cleared!", Items),
                 Buttons = {
                     {
@@ -1076,7 +1076,7 @@ do
     end)
 
     PremiumChecksSection:AddParagraph({
-        Title = "Open Aimbot 💫PREMIUM💫",
+        Title = string.format("%s 💫PREMIUM💫", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
         Content = "✨Upgrade to unlock all Options✨\nContact @ttwiz_z via Discord to buy"
     })
 
@@ -1084,7 +1084,7 @@ do
         Tabs.Visuals = Window:AddTab({ Title = "Visuals", Icon = "box" })
 
         Tabs.Visuals:AddParagraph({
-            Title = "Open Aimbot",
+            Title = string.format("%s 🔥FREE🔥", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
             Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
         })
 
@@ -1288,7 +1288,7 @@ do
     Tabs.Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
     Tabs.Settings:AddParagraph({
-        Title = "Open Aimbot",
+        Title = string.format("%s 🔥FREE🔥", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
         Content = "✨Universal Aim Assist Framework✨\nhttps://github.com/ttwizz/Open-Aimbot"
     })
 
@@ -1393,7 +1393,7 @@ do
             UISettings.RenderingMode = Value
             InterfaceManager:ExportSettings()
             Window:Dialog({
-                Title = "Open Aimbot",
+                Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                 Content = "Changes will take effect after the Restart!",
                 Buttons = {
                     {
@@ -1583,7 +1583,7 @@ do
             Callback = function()
                 getfenv().setclipboard("https://twix.cyou/pix")
                 Window:Dialog({
-                    Title = "Open Aimbot",
+                    Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                     Content = "Invite Link has been copied to the Clipboard!",
                     Buttons = {
                         {
@@ -1600,7 +1600,7 @@ do
             Callback = function()
                 getfenv().setclipboard("https://moderka.org/Open-Aimbot")
                 Window:Dialog({
-                    Title = "Open Aimbot",
+                    Title = string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"),
                     Content = "Wiki Link has been copied to the Clipboard!",
                     Buttons = {
                         {
@@ -1636,7 +1636,7 @@ do
         elseif ShowWarning then
             Window:Dialog({
                 Title = "Warning",
-                Content = "Your Software does not support all the Features of Open Aimbot!",
+                Content = string.format("Your Software does not support all the Features of %s 🔥FREE🔥!", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
                 Buttons = {
                     {
                         Title = "Confirm"
@@ -1645,7 +1645,7 @@ do
             })
         else
             Window:Dialog({
-                Title = "Open Aimbot 💫PREMIUM💫",
+                Title = string.format("%s 💫PREMIUM💫", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
                 Content = "✨Upgrade to unlock all Options✨ – Contact @ttwiz_z via Discord to buy",
                 Buttons = {
                     {
@@ -1663,7 +1663,7 @@ end
 local function Notify(Message)
     if Fluent and typeof(Message) == "string" then
         Fluent:Notify({
-            Title = "Open Aimbot",
+            Title = string.format("%s 🔥FREE🔥", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
             Content = Message,
             SubContent = "By @ttwiz_z",
             Duration = 1.5
