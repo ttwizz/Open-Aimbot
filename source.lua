@@ -299,7 +299,9 @@ local SensitivityChanged; SensitivityChanged = UserInputService:GetPropertyChang
     if not Fluent then
         SensitivityChanged:Disconnect()
     elseif not Aiming or not DEBUG and (getfenv().mousemoverel and IsComputer and Configuration.AimMode == "Mouse" or getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod and Configuration.AimMode == "Silent") then
-        MouseSensitivity = UserInputService.MouseDeltaSensitivity
+        if identifyexecutor() and not string.find(identifyexecutor(), "Synapse") then
+            MouseSensitivity = UserInputService.MouseDeltaSensitivity
+        end        
     end
 end)
 
@@ -368,7 +370,7 @@ do
     else
         ShowWarning = true
     end
-    if getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
+    if getfenv().hookmetamethod and not string.find(identifyexecutor(), "Synapse") and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         table.insert(AimModeDropdown.Values, "Silent")
         AimModeDropdown:BuildDropdownList()
 
@@ -1897,7 +1899,7 @@ end
 --! Silent Aim Handler
 
 do
-    if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
+    if not DEBUG and not string.find(identifyexecutor(), "Synapse") and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
             if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and table.find(Configuration.SilentAimMethods, "Mouse.Hit / Mouse.Target") and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and MathHandler:CalculateChance(Configuration.SilentAimChance) and self == Mouse then
                 FieldsHandler:ResetAimbotFields(true, true)
