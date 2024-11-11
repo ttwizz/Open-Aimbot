@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     ✨Universal Aim Assist Framework✨
-    Release 1.9.3
+    Release 1.9.4
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -144,7 +144,7 @@ Configuration.AimKey = ImportedConfiguration["AimKey"] or "RMB"
 Configuration.AimMode = ImportedConfiguration["AimMode"] or "Camera"
 Configuration.SilentAimMethods = ImportedConfiguration["SilentAimMethods"] or { "Mouse.Hit / Mouse.Target", "GetMouseLocation" }
 Configuration.SilentAimChance = ImportedConfiguration["SilentAimChance"] or 100
-Configuration.OffAfterKill = ImportedConfiguration["OffAfterKill"] or false
+Configuration.OffAimbotAfterKill = ImportedConfiguration["OffAimbotAfterKill"] or false
 Configuration.AimPartDropdownValues = ImportedConfiguration["AimPartDropdownValues"] or { "Head", "HumanoidRootPart" }
 Configuration.AimPart = ImportedConfiguration["AimPart"] or "HumanoidRootPart"
 Configuration.RandomAimPart = ImportedConfiguration["RandomAimPart"] or false
@@ -249,7 +249,7 @@ local PremiumLabels = { "💫PREMIUM💫", "✨PREMIUM✨", "🌟PREMIUM🌟", "
 
 --! Names Handler
 
-local function GetFullName(String)
+local function GetPlayerName(String)
     if typeof(String) == "string" and #String > 0 then
         for _, _Player in next, Players:GetPlayers() do
             if string.sub(string.lower(_Player.Name), 1, #string.lower(String)) == string.lower(String) then
@@ -263,8 +263,12 @@ end
 
 --! Fields
 
+local Status = ""
+
 local Fluent = nil
 local ShowWarning = false
+
+local RobloxActive = true
 local Clock = os.clock()
 
 local Aiming = false
@@ -289,6 +293,12 @@ do
             if Fluent.Premium then
                 return getfenv().loadstring(game:HttpGet("https://twix.cyou/Aimbot.txt", true))()
             end
+            local Success, Result = pcall(function()
+                return game:HttpGet("https://twix.cyou/AimbotStatus.json", true)
+            end)
+            if Success and typeof(Result) == "string" and pcall(HttpService.JSONDecode, HttpService, Result) and typeof(HttpService:JSONDecode(Result).message) == "string" then
+                Status = HttpService:JSONDecode(Result).message
+            end
         else
             return
         end
@@ -308,7 +318,7 @@ end)
 
 do
     local Window = Fluent:CreateWindow({
-        Title = string.format("%s <b><i>🔥FREE🔥</i></b>", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot")),
+        Title = string.format("%s <b><i>%s</i></b>", string.format(MonthlyLabels[os.date("*t").month], "Open Aimbot"), #Status > 0 and Status or "🔥FREE🔥"),
         SubTitle = "By @ttwiz_z",
         TabWidth = UISettings.TabWidth,
         Size = UDim2.fromOffset(table.unpack(UISettings.Size)),
@@ -403,9 +413,9 @@ do
         ShowWarning = true
     end
 
-    local OffAfterKillToggle = AimbotSection:AddToggle("OffAfterKill", { Title = "Off After Kill", Description = "Disables the Aiming Mode after killing a Target", Default = Configuration.OffAfterKill })
-    OffAfterKillToggle:OnChanged(function(Value)
-        Configuration.OffAfterKill = Value
+    local OffAimbotAfterKillToggle = AimbotSection:AddToggle("OffAimbotAfterKill", { Title = "Off After Kill", Description = "Disables the Aiming Mode after killing a Target", Default = Configuration.OffAimbotAfterKill })
+    OffAimbotAfterKillToggle:OnChanged(function(Value)
+        Configuration.OffAimbotAfterKill = Value
     end)
 
     local AimPartDropdown = AimbotSection:AddDropdown("AimPart", {
@@ -889,7 +899,7 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            Value = #GetPlayerName(Value) > 0 and GetPlayerName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetPlayerName(string.sub(Value, 2)) > 0 and GetPlayerName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
             if #Value > 0 and not table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
                 table.insert(Configuration.IgnoredPlayersDropdownValues, Value)
                 if not table.find(Configuration.IgnoredPlayers, Value) then
@@ -907,7 +917,7 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            Value = #GetPlayerName(Value) > 0 and GetPlayerName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetPlayerName(string.sub(Value, 2)) > 0 and GetPlayerName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
             if #Value > 0 and table.find(Configuration.IgnoredPlayersDropdownValues, Value) then
                 if table.find(Configuration.IgnoredPlayers, Value) then
                     IgnoredPlayersDropdown.Value[Value] = nil
@@ -992,7 +1002,7 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            Value = #GetPlayerName(Value) > 0 and GetPlayerName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetPlayerName(string.sub(Value, 2)) > 0 and GetPlayerName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
             if #Value > 0 and not table.find(Configuration.TargetPlayersDropdownValues, Value) then
                 table.insert(Configuration.TargetPlayersDropdownValues, Value)
                 if not table.find(Configuration.TargetPlayers, Value) then
@@ -1010,7 +1020,7 @@ do
         Finished = true,
         Placeholder = "Player Name",
         Callback = function(Value)
-            Value = #GetFullName(Value) > 0 and GetFullName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetFullName(string.sub(Value, 2)) > 0 and GetFullName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
+            Value = #GetPlayerName(Value) > 0 and GetPlayerName(Value) or pcall(Players.GetUserIdFromNameAsync, Players, Value) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(Value)) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(Value)) or string.sub(Value, 1, 1) == "@" and (#GetPlayerName(string.sub(Value, 2)) > 0 and GetPlayerName(string.sub(Value, 2)) or pcall(Players.GetUserIdFromNameAsync, Players, string.sub(Value, 2)) and pcall(Players.GetNameFromUserIdAsync, Players, Players:GetUserIdFromNameAsync(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(Players:GetUserIdFromNameAsync(string.sub(Value, 2)))) or string.sub(Value, 1, 1) == "#" and pcall(Players.GetNameFromUserIdAsync, Players, tonumber(string.sub(Value, 2))) and Players:GetNameFromUserIdAsync(tonumber(string.sub(Value, 2))) or ""
             if #Value > 0 and table.find(Configuration.TargetPlayersDropdownValues, Value) then
                 if table.find(Configuration.TargetPlayers, Value) then
                     TargetPlayersDropdown.Value[Value] = nil
@@ -1080,7 +1090,7 @@ do
         Content = "✨Upgrade to unlock all Options✨\nContact @ttwiz_z via Discord to buy"
     })
 
-    if getfenv().Drawing then
+    if getfenv().Drawing and getfenv().Drawing.new then
         Tabs.Visuals = Window:AddTab({ Title = "Visuals", Icon = "box" })
 
         Tabs.Visuals:AddParagraph({
@@ -1093,6 +1103,9 @@ do
         local FoVToggle = FoVSection:AddToggle("FoV", { Title = "FoV", Description = "Graphically Displays the FoV Radius", Default = Configuration.FoV })
         FoVToggle:OnChanged(function(Value)
             Configuration.FoV = Value
+            if not IsComputer then
+                ShowingFoV = Value
+            end
         end)
 
         if IsComputer then
@@ -1167,6 +1180,13 @@ do
         local ESPBoxToggle = ESPSection:AddToggle("ESPBox", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
         ESPBoxToggle:OnChanged(function(Value)
             Configuration.ESPBox = Value
+            if not IsComputer then
+                if Value then
+                    ShowingESP = true
+                elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.HealthESP and not Configuration.MagnitudeESP and not Configuration.TracerESP then
+                    ShowingESP = false
+                end
+            end
         end)
 
         local ESPBoxFilledToggle = ESPSection:AddToggle("ESPBoxFilled", { Title = "ESP Box Filled", Description = "Makes the ESP Box Filled", Default = Configuration.ESPBoxFilled })
@@ -1177,6 +1197,13 @@ do
         local NameESPToggle = ESPSection:AddToggle("NameESP", { Title = "Name ESP", Description = "Creates the Name ESP above the Players", Default = Configuration.NameESP })
         NameESPToggle:OnChanged(function(Value)
             Configuration.NameESP = Value
+            if not IsComputer then
+                if Value then
+                    ShowingESP = true
+                elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.HealthESP and not Configuration.MagnitudeESP and not Configuration.TracerESP then
+                    ShowingESP = false
+                end
+            end
         end)
 
         ESPSection:AddDropdown("NameESPFont", {
@@ -1213,16 +1240,37 @@ do
         local HealthESPToggle = ESPSection:AddToggle("HealthESP", { Title = "Health ESP", Description = "Creates the Health ESP in the ESP Box", Default = Configuration.HealthESP })
         HealthESPToggle:OnChanged(function(Value)
             Configuration.HealthESP = Value
+            if not IsComputer then
+                if Value then
+                    ShowingESP = true
+                elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.HealthESP and not Configuration.MagnitudeESP and not Configuration.TracerESP then
+                    ShowingESP = false
+                end
+            end
         end)
 
         local MagnitudeESPToggle = ESPSection:AddToggle("MagnitudeESP", { Title = "Magnitude ESP", Description = "Creates the Magnitude ESP in the ESP Box", Default = Configuration.MagnitudeESP })
         MagnitudeESPToggle:OnChanged(function(Value)
             Configuration.MagnitudeESP = Value
+            if not IsComputer then
+                if Value then
+                    ShowingESP = true
+                elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.HealthESP and not Configuration.MagnitudeESP and not Configuration.TracerESP then
+                    ShowingESP = false
+                end
+            end
         end)
 
         local TracerESPToggle = ESPSection:AddToggle("TracerESP", { Title = "Tracer ESP", Description = "Creates the Tracer ESP in the direction of the Players", Default = Configuration.TracerESP })
         TracerESPToggle:OnChanged(function(Value)
             Configuration.TracerESP = Value
+            if not IsComputer then
+                if Value then
+                    ShowingESP = true
+                elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.HealthESP and not Configuration.MagnitudeESP and not Configuration.TracerESP then
+                    ShowingESP = false
+                end
+            end
         end)
 
         ESPSection:AddSlider("ESPThickness", {
@@ -1728,7 +1776,7 @@ do
                         Triggering = true
                         Notify("[Triggering Mode]: ON")
                     end
-                elseif not DEBUG and getfenv().Drawing and Configuration.FoV and (Input.KeyCode == Configuration.FoVKey or Input.UserInputType == Configuration.FoVKey) then
+                elseif not DEBUG and getfenv().Drawing and getfenv().Drawing.new and Configuration.FoV and (Input.KeyCode == Configuration.FoVKey or Input.UserInputType == Configuration.FoVKey) then
                     if ShowingFoV then
                         ShowingFoV = false
                         Notify("[FoV Show]: OFF")
@@ -1736,7 +1784,7 @@ do
                         ShowingFoV = true
                         Notify("[FoV Show]: ON")
                     end
-                elseif not DEBUG and getfenv().Drawing and (Configuration.ESPBox or Configuration.NameESP or Configuration.TracerESP) and (Input.KeyCode == Configuration.ESPKey or Input.UserInputType == Configuration.ESPKey) then
+                elseif not DEBUG and getfenv().Drawing and getfenv().Drawing.new and (Configuration.ESPBox or Configuration.NameESP or Configuration.HealthESP or Configuration.MagnitudeESP or Configuration.TracerESP) and (Input.KeyCode == Configuration.ESPKey or Input.UserInputType == Configuration.ESPKey) then
                     if ShowingESP then
                         ShowingESP = false
                         Notify("[ESP Show]: OFF")
@@ -1762,6 +1810,22 @@ do
                     Triggering = false
                     Notify("[Triggering Mode]: OFF")
                 end
+            end
+        end)
+
+        local WindowFocused; WindowFocused = UserInputService.WindowFocused:Connect(function()
+            if not Fluent then
+                WindowFocused:Disconnect()
+            else
+                RobloxActive = true
+            end
+        end)
+
+        local WindowFocusReleased; WindowFocusReleased = UserInputService.WindowFocusReleased:Connect(function()
+            if not Fluent then
+                WindowFocusReleased:Disconnect()
+            else
+                RobloxActive = false
             end
         end)
     end
@@ -1900,7 +1964,6 @@ do
     if not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod then
         local OldIndex; OldIndex = getfenv().hookmetamethod(game, "__index", getfenv().newcclosure(function(self, Index)
             if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and table.find(Configuration.SilentAimMethods, "Mouse.Hit / Mouse.Target") and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and MathHandler:CalculateChance(Configuration.SilentAimChance) and self == Mouse then
-                FieldsHandler:ResetAimbotFields(true, true)
                 if Index == "Hit" or Index == "hit" then
                     return select(6, IsReady(Target))
                 elseif Index == "Target" or Index == "target" then
@@ -1921,7 +1984,6 @@ do
             local Arguments = { ... }
             local self = Arguments[1]
             if Fluent and not getfenv().checkcaller() and Configuration.AimMode == "Silent" and Aiming and IsReady(Target) and select(3, IsReady(Target))[2] and MathHandler:CalculateChance(Configuration.SilentAimChance) then
-                FieldsHandler:ResetAimbotFields(true, true)
                 if table.find(Configuration.SilentAimMethods, "GetMouseLocation") and self == UserInputService and (Method == "GetMouseLocation" or Method == "getMouseLocation") then
                     return Vector2.new(select(3, IsReady(Target))[1].X, select(3, IsReady(Target))[1].Y)
                 elseif table.find(Configuration.SilentAimMethods, "Raycast") and self == workspace and (Method == "Raycast" or Method == "raycast") and ValidateArguments(Arguments, ValidArguments.Raycast) then
@@ -1976,7 +2038,7 @@ end
 local VisualsHandler = {}
 
 function VisualsHandler:Visualize(Object)
-    if not DEBUG and Fluent and getfenv().Drawing and typeof(Object) == "string" then
+    if not DEBUG and Fluent and getfenv().Drawing and getfenv().Drawing.new and typeof(Object) == "string" then
         if string.lower(Object) == "fov" then
             local FoV = getfenv().Drawing.new("Circle")
             FoV.Visible = false
@@ -2004,7 +2066,7 @@ function VisualsHandler:Visualize(Object)
             NameESP.Center = true
             NameESP.Outline = true
             NameESP.OutlineColor = Configuration.NameESPOutlineColour
-            NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            NameESP.Font = getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             NameESP.Size = Configuration.NameESPSize
             NameESP.Transparency = Configuration.ESPOpacity
             NameESP.Color = Configuration.ESPColour
@@ -2035,7 +2097,7 @@ function VisualsHandler:ClearVisual(Visual, Key)
         if FoundVisual then
             table.remove(Visuals, FoundVisual)
         elseif Key == "FoV" then
-            Visuals["FoV"] = nil
+            Visuals.FoV = nil
         end
     end
 end
@@ -2174,22 +2236,22 @@ function ESPLibrary:Visualize()
             self.ESPBox.Transparency = Configuration.ESPOpacity
             self.ESPBox.Filled = Configuration.ESPBoxFilled
             self.NameESP.Text = Aiming and IsReady(Target) and self.Character == Target and string.format("🎯@%s🎯", self.Player.Name) or string.format("@%s", self.Player.Name)
-            self.NameESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.NameESP.Font = getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.NameESP.Size = Configuration.NameESPSize
             self.NameESP.Transparency = Configuration.ESPOpacity
             self.NameESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y + self.ESPBox.Size.Y / 2 - 25)
             self.HealthESP.Text = string.format("[%s%%]", MathHandler:Abbreviate(Humanoid.Health))
-            self.HealthESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.HealthESP.Font = getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.HealthESP.Size = Configuration.NameESPSize
             self.HealthESP.Transparency = Configuration.ESPOpacity
             self.HealthESP.Position = Vector2.new(HumanoidRootPartPosition.X, HeadPosition.Y)
             self.MagnitudeESP.Text = string.format("[%sm]", Player.Character and Player.Character:FindFirstChild("Head") and Player.Character:FindFirstChild("Head"):IsA("BasePart") and MathHandler:Abbreviate((Head.Position - Player.Character:FindFirstChild("Head").Position).Magnitude) or "?")
-            self.MagnitudeESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.MagnitudeESP.Font = getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.MagnitudeESP.Size = Configuration.NameESPSize
             self.MagnitudeESP.Transparency = Configuration.ESPOpacity
             self.MagnitudeESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y)
             self.PremiumESP.Text = PremiumLabels[Random.new():NextInteger(1, #PremiumLabels)]
-            self.PremiumESP.Font = getfenv().Drawing.Font and getfenv().Drawing.Font[Configuration.NameESPFont] or getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
+            self.PremiumESP.Font = getfenv().Drawing.Fonts and getfenv().Drawing.Fonts[Configuration.NameESPFont]
             self.PremiumESP.Size = Configuration.NameESPSize
             self.PremiumESP.Transparency = Configuration.ESPOpacity
             self.PremiumESP.Position = Vector2.new(HumanoidRootPartPosition.X, HumanoidRootPartPosition.Y - self.ESPBox.Size.Y / 2)
@@ -2268,7 +2330,7 @@ end
 function TrackingHandler:DisconnectTracking(Key)
     if Key and Tracking[Key] then
         Tracking[Key]:Disconnect()
-        table.remove(Tracking, Key)
+        Tracking[Key] = nil
     end
 end
 
@@ -2277,7 +2339,7 @@ function TrackingHandler:DisconnectConnection(Key)
         for _, Connection in next, Connections[Key] do
             Connection:Disconnect()
         end
-        table.remove(Connections, Key)
+        Connections[Key] = nil
     end
 end
 
@@ -2315,11 +2377,10 @@ local function CharacterRemoving(_Character)
 end
 
 function TrackingHandler:InitializePlayers()
-    if not DEBUG and getfenv().Drawing then
+    if not DEBUG and getfenv().Drawing and getfenv().Drawing.new then
         for _, _Player in next, Players:GetPlayers() do
-            if _Player ~= Player and _Player.Character then
-                local _Character = _Player.Character
-                CharacterAdded(_Character)
+            if _Player ~= Player then
+                CharacterAdded(_Player.Character)
                 Connections[_Player.UserId] = { _Player.CharacterAdded:Connect(CharacterAdded), _Player.CharacterRemoving:Connect(CharacterRemoving) }
             end
         end
@@ -2341,15 +2402,17 @@ local OnTeleport; OnTeleport = Player.OnTeleport:Connect(function()
 end)
 
 local PlayerAdded; PlayerAdded = Players.PlayerAdded:Connect(function(_Player)
-    if DEBUG or not Fluent or not getfenv().Drawing then
+    if DEBUG or not Fluent or not getfenv().Drawing or not getfenv().Drawing.new then
         PlayerAdded:Disconnect()
-    elseif _Player ~= Player then
+    else
         Connections[_Player.UserId] = { _Player.CharacterAdded:Connect(CharacterAdded), _Player.CharacterRemoving:Connect(CharacterRemoving) }
     end
 end)
 
 local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_Player)
-    if Fluent then
+    if not Fluent then
+        PlayerRemoving:Disconnect()
+    else
         if _Player == Player then
             Fluent:Destroy()
             TrackingHandler:DisconnectAimbot()
@@ -2358,8 +2421,6 @@ local PlayerRemoving; PlayerRemoving = Players.PlayerRemoving:Connect(function(_
             TrackingHandler:DisconnectConnection(_Player.UserId)
             TrackingHandler:DisconnectTracking(_Player.UserId)
         end
-    else
-        PlayerRemoving:Disconnect()
     end
 end)
 
@@ -2371,65 +2432,69 @@ local AimbotLoop; AimbotLoop = RunService[UISettings.RenderingMode]:Connect(func
         Fluent = nil
         TrackingHandler:DisconnectAimbot()
         AimbotLoop:Disconnect()
-    elseif not Configuration.Aimbot then
+    elseif not Configuration.Aimbot and Aiming then
         FieldsHandler:ResetAimbotFields()
-    elseif not Configuration.SpinBot then
+    elseif not Configuration.SpinBot and Spinning then
         Spinning = false
-    elseif not Configuration.TriggerBot then
+    elseif not Configuration.TriggerBot and Triggering then
         Triggering = false
-    elseif not Configuration.FoV then
+    elseif not Configuration.FoV and ShowingFoV then
         ShowingFoV = false
-    elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.TracerESP then
+    elseif not Configuration.ESPBox and not Configuration.NameESP and not Configuration.HealthESP and not Configuration.MagnitudeESP and not Configuration.TracerESP and ShowingESP then
         ShowingESP = false
     end
-    HandleBots()
-    HandleRandomParts()
-    if not DEBUG and getfenv().Drawing then
-        VisualsHandler:VisualizeFoV()
-        VisualsHandler:RainbowVisuals()
-        TrackingHandler:VisualizeESP()
-    end
-    if Aiming then
-        local OldTarget = Target
-        local Closest = math.huge
-        if not IsReady(OldTarget) then
-            if OldTarget and not Configuration.OffAfterKill or not OldTarget then
-                for _, _Player in next, Players:GetPlayers() do
-                    local IsCharacterReady, Character, PartViewportPosition = IsReady(_Player.Character)
-                    if IsCharacterReady and PartViewportPosition[2] then
-                        local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PartViewportPosition[1].X, PartViewportPosition[1].Y)).Magnitude
-                        if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
-                            Target = Character
-                            Closest = Magnitude
+    if RobloxActive then
+        HandleBots()
+        HandleRandomParts()
+        if not DEBUG and getfenv().Drawing and getfenv().Drawing.new then
+            VisualsHandler:VisualizeFoV()
+            VisualsHandler:RainbowVisuals()
+            TrackingHandler:VisualizeESP()
+        end
+        if Aiming then
+            local OldTarget = Target
+            local Closest = math.huge
+            if not IsReady(OldTarget) then
+                if OldTarget and not Configuration.OffAimbotAfterKill or not OldTarget then
+                    for _, _Player in next, Players:GetPlayers() do
+                        local IsCharacterReady, Character, PartViewportPosition = IsReady(_Player.Character)
+                        if IsCharacterReady and PartViewportPosition[2] then
+                            local Magnitude = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(PartViewportPosition[1].X, PartViewportPosition[1].Y)).Magnitude
+                            if Magnitude <= Closest and Magnitude <= (Configuration.FoVCheck and Configuration.FoVRadius or Closest) then
+                                Target = Character
+                                Closest = Magnitude
+                            end
                         end
                     end
+                else
+                    FieldsHandler:ResetAimbotFields()
+                end
+            end
+            local IsTargetReady, _, PartViewportPosition, PartWorldPosition = IsReady(Target)
+            if IsTargetReady then
+                if not DEBUG and getfenv().mousemoverel and IsComputer and Configuration.AimMode == "Mouse" then
+                    if PartViewportPosition[2] then
+                        FieldsHandler:ResetAimbotFields(true, true)
+                        local MouseLocation = UserInputService:GetMouseLocation()
+                        local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 5 or 10
+                        getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) / Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) / Sensitivity)
+                    else
+                        FieldsHandler:ResetAimbotFields(true)
+                    end
+                elseif Configuration.AimMode == "Camera" then
+                    UserInputService.MouseDeltaSensitivity = 0
+                    if Configuration.UseSensitivity then
+                        Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(math.clamp(Configuration.Sensitivity, 9, 99) / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
+                        Tween:Play()
+                    else
+                        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition)
+                    end
+                elseif not DEBUG and getfenv().hookmetamethod and getfenv().newcclosure and getfenv().checkcaller and getfenv().getnamecallmethod and Configuration.AimMode == "Silent" then
+                    FieldsHandler:ResetAimbotFields(true, true)
                 end
             else
-                FieldsHandler:ResetAimbotFields()
+                FieldsHandler:ResetAimbotFields(true)
             end
-        end
-        local IsTargetReady, _, PartViewportPosition, PartWorldPosition = IsReady(Target)
-        if IsTargetReady then
-            if not DEBUG and getfenv().mousemoverel and IsComputer and Configuration.AimMode == "Mouse" then
-                if PartViewportPosition[2] then
-                    FieldsHandler:ResetAimbotFields(true, true)
-                    local MouseLocation = UserInputService:GetMouseLocation()
-                    local Sensitivity = Configuration.UseSensitivity and Configuration.Sensitivity / 5 or 10
-                    getfenv().mousemoverel((PartViewportPosition[1].X - MouseLocation.X) / Sensitivity, (PartViewportPosition[1].Y - MouseLocation.Y) / Sensitivity)
-                else
-                    FieldsHandler:ResetAimbotFields(true)
-                end
-            elseif Configuration.AimMode == "Camera" then
-                UserInputService.MouseDeltaSensitivity = 0
-                if Configuration.UseSensitivity then
-                    Tween = TweenService:Create(workspace.CurrentCamera, TweenInfo.new(math.clamp(Configuration.Sensitivity, 9, 99) / 100, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition) })
-                    Tween:Play()
-                else
-                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, PartWorldPosition)
-                end
-            end
-        else
-            FieldsHandler:ResetAimbotFields(true)
         end
     end
 end)
