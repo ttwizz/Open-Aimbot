@@ -16,7 +16,7 @@
 ༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻༺☆༻____________☾✧ ✩ ✧☽____________༺☆༻
 
     ✨Universal Aim Assist Framework✨
-    Release 1.9.4
+    Release 1.9.5
 
     twix.cyou/pix
     twix.cyou/OpenAimbotV3rm
@@ -360,7 +360,7 @@ do
                 Configuration.AimKey = Value
             end
         })
-        Configuration.AimKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, AimKeybind.Value) and Enum.KeyCode[AimKeybind.Value] or Enum.UserInputType.MouseButton2
+        Configuration.AimKey = AimKeybind.Value ~= "RMB" and Enum.KeyCode[AimKeybind.Value] or Enum.UserInputType.MouseButton2
     end
 
     local AimModeDropdown = AimbotSection:AddDropdown("AimMode", {
@@ -612,7 +612,7 @@ do
                 Configuration.SpinKey = Value
             end
         })
-        Configuration.SpinKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, SpinKeybind.Value) and Enum.KeyCode[SpinKeybind.Value] or Enum.UserInputType.MouseButton2
+        Configuration.SpinKey = SpinKeybind.Value ~= "RMB" and Enum.KeyCode[SpinKeybind.Value] or Enum.UserInputType.MouseButton2
     end
 
     SpinBotSection:AddSlider("SpinBotVelocity", {
@@ -717,7 +717,7 @@ do
                 Configuration.TriggerKey = Value
             end
         })
-        Configuration.TriggerKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, TriggerKeybind.Value) and Enum.KeyCode[TriggerKeybind.Value] or Enum.UserInputType.MouseButton2
+        Configuration.TriggerKey = TriggerKeybind.Value ~= "RMB" and Enum.KeyCode[TriggerKeybind.Value] or Enum.UserInputType.MouseButton2
 
         TriggerBotSection:AddSlider("TriggerBotChance", {
             Title = "TriggerBot Chance",
@@ -1090,7 +1090,7 @@ do
         Content = "✨Upgrade to unlock all Options✨\nContact @ttwiz_z via Discord to buy"
     })
 
-    if getfenv().Drawing and getfenv().Drawing.new then
+    if DEBUG or getfenv().Drawing and getfenv().Drawing.new then
         Tabs.Visuals = Window:AddTab({ Title = "Visuals", Icon = "box" })
 
         Tabs.Visuals:AddParagraph({
@@ -1117,7 +1117,7 @@ do
                     Configuration.FoVKey = Value
                 end
             })
-            Configuration.FoVKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, FoVKeybind.Value) and Enum.KeyCode[FoVKeybind.Value] or Enum.UserInputType.MouseButton2
+            Configuration.FoVKey = FoVKeybind.Value ~= "RMB" and Enum.KeyCode[FoVKeybind.Value] or Enum.UserInputType.MouseButton2
         end
 
         FoVSection:AddSlider("FoVThickness", {
@@ -1174,7 +1174,7 @@ do
                     Configuration.ESPKey = Value
                 end
             })
-            Configuration.ESPKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, ESPKeybind.Value) and Enum.KeyCode[ESPKeybind.Value] or Enum.UserInputType.MouseButton2
+            Configuration.ESPKey = ESPKeybind.Value ~= "RMB" and Enum.KeyCode[ESPKeybind.Value] or Enum.UserInputType.MouseButton2
         end
 
         local ESPBoxToggle = ESPSection:AddToggle("ESPBox", { Title = "ESP Box", Description = "Creates the ESP Box around the Players", Default = Configuration.ESPBox })
@@ -1402,8 +1402,8 @@ do
             Title = "Minimize Key",
             Description = "Changes the Minimize Key",
             Default = Fluent.MinimizeKey,
-            ChangedCallback = function(Value)
-                UISettings.MinimizeKey = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and UserInputService:GetStringForKeyCode(Value) or "RMB"
+            ChangedCallback = function()
+                UISettings.MinimizeKey = Fluent.Options.MinimizeKey.Value
                 InterfaceManager:ExportSettings()
             end
         })
@@ -1476,7 +1476,7 @@ do
                         for Key, Value in next, ImportedConfiguration do
                             if Key == "AimKey" or Key == "SpinKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
                                 Fluent.Options[Key]:SetValue(Value)
-                                Configuration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and Enum.KeyCode[Value] or Enum.UserInputType.MouseButton2
+                                Configuration[Key] = Value ~= "RMB" and Enum.KeyCode[Value] or Enum.UserInputType.MouseButton2
                             elseif Key == "AimPart" or Key == "SpinPart" or typeof(Configuration[Key]) == "table" then
                                 Configuration[Key] = Value
                             elseif Key == "FoVColour" or Key == "NameESPOutlineColour" or Key == "ESPColour" then
@@ -1558,7 +1558,7 @@ do
                     local ExportedConfiguration = { __LAST_UPDATED__ = os.date() }
                     for Key, Value in next, Configuration do
                         if Key == "AimKey" or Key == "SpinKey" or Key == "TriggerKey" or Key == "FoVKey" or Key == "ESPKey" then
-                            ExportedConfiguration[Key] = pcall(UserInputService.GetStringForKeyCode, UserInputService, Value) and UserInputService:GetStringForKeyCode(Value) or "RMB"
+                            ExportedConfiguration[Key] = Fluent.Options[Key].Value
                         elseif Key == "FoVColour" or Key == "NameESPOutlineColour" or Key == "ESPColour" then
                             ExportedConfiguration[Key] = ColorsHandler:PackColour(Value)
                         else
